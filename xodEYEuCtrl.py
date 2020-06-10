@@ -5,7 +5,7 @@
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # *****************************************************************************
 #
-# __::((xodEYEu_tb.py))::__
+# __::((xodEYEctrl.py))::__
 #
 # Python ODMK img processing research testbench
 # testbench for odmkEYEuObj.py
