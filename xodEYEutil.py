@@ -40,7 +40,7 @@ sys.path.insert(0, rootDir+'util')
 
 
 # temp python debugger - use >>>pdb.set_trace() to set break
-#import pdb
+import pdb
 
 
 
@@ -422,7 +422,7 @@ def concatAllDir(dirList, concatDir, reName):
     for i in range(len(dirList)):
         imgFileList.extend(sorted(glob.glob(dirList[i]+'*')))                
             
-
+    #pdb.set_trace()
 
     imgCount = len(imgFileList)
     n_digits = int(ceil(np.log10(imgCount))) + 2
@@ -437,6 +437,7 @@ def concatAllDir(dirList, concatDir, reName):
         imgNormalizeNm = reName+strInc+'.jpg'
 
         currentNm = os.path.split(imgFileList[i])[1]
+        
         shutil.copy(imgFileList[i], concatDir)
         currentFile = os.path.join(concatDir+currentNm)
         
