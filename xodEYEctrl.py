@@ -130,8 +130,9 @@ print('// *--------------------------------------------------------------* //')
 
 preProcess = 0
 srcSequence = 0
-cntrlEYE = 'xodBSlothSwitch'
-#cntrlEYE = 'xodImgXfade'
+# cntrlEYE = 'xodBSlothSwitch'
+cntrlEYE = 'xodXfadeTelescopeI'
+# cntrlEYE = 0
 effxSel = 0
 postProcess = 0
 cntrlRender = 1
@@ -154,9 +155,9 @@ print('// *--------------------------------------------------------------* //')
 
 # *---------------------------------------------------------------------------*
 # *-- Set wav file source --*
-#earSrcNm = 'gorgulans_beatx01.wav'
-#earSrcNm = 'tonzuraSkinkX133_u.wav'
-earSrcNm = 'tonzuraFiveSix133_cut_u.wav'
+earSrcNm = 'gorgulans_beatx01.wav'
+#earSrcNm = 'astroman2020_bts136bpmx04.wav'
+#earSrcNm = 'cabalisk_spaced.wav'
 
 
 earSrcDir = audioScrDir
@@ -170,11 +171,11 @@ print('\nWav Source Directory:\n'+earSrc+'\n')
 eyeDir = rootDir+'eye/eyeSrc/'
 maskDir = rootDir+'eye/odmkVIDEOuEXP/mask/mask1920x1080/'
 
-sourceDir = ['deliriumTemple1560x1560/']
+# sourceDir = ['deliriumTemple1560x1560/']
 
-#sourceDir = ['gorgulanXfadeSrc133x1/', 'gorgulanXfadeSrc133x2/']
-
-
+# sourceDir = ['gorgulanXfadeSrc133x1/', 'gorgulanXfadeSrc133x2/']
+#sourceDir = ['neuroVulture/']
+sourceDir = ['aztecGodz1560/']
 
 #if 0:
 #    #srcDir = eyeDir+'deliriumTemple3508x3508/'       # source image directory
@@ -198,12 +199,12 @@ sourceDir = ['deliriumTemple1560x1560/']
 #        print('Img Source Dir:\n'+srcDirList[p]+'\n')
 
 
-eyeOutDir = eyeDir+'testout/gorgulanEXP/'    # output image directory
-eyeOutFileName = 'gorgulanEXP'         # output image name
+eyeOutDir = eyeDir+'testout/neuroEXP/'    # output image directory
+eyeOutFileName = '/neuroEXP'         # output image name
 print('Img Output Directory:\n'+eyeOutDir+'\n')
 
 if cntrlRender==1:
-    eyeOutMvDir = eyeDir+'testout/gorgulanEXP_mv/'    # output movie directory
+    eyeOutMvDir = eyeDir+'testout/neuroEXP_mv/'    # output movie directory
     print('Movie Output Directory:\n'+eyeOutMvDir+'\n')
 
 print('\n// *--------------------------------------------------------------* //')
@@ -224,8 +225,8 @@ framesPerSec = 30 # video frames per second:
 
 #bpm = 186            # 93 - 186 - 372
 #bpm = 408            # 68 - 136 - 272 - 544 - (408)
-#bpm = 266          # 66.5 - 99.75 - 133 - 199.5 - 266 - 399 - 532
-bpm = 133
+bpm = 266          # 66.5 - 99.75 - 133 - 199.5 - 266 - 399 - 532
+#bpm = 133
 timeSig = 4         # time signature: 4 = 4/4; 3 = 3/4
 
 # set format of source img { fjpg, fbmp }
@@ -454,7 +455,6 @@ print('audio sample rate: ------------------- '+str(fs))
 print('wav file datatype: ------------------- '+str(sf.info(earSrc).subtype))
 
 period = 1.0 / fs
-
 
     
 # // *********************************************************************** //
@@ -819,7 +819,7 @@ if cntrlEYE == "xodImgRndSel":
     imgRndSelNm = eyeOutFileName
     # output dir where processed img files are stored:
     # eyeOutDir = 'myOutputDirName'    # defined above
-    imgRndSeldir = eyeDir+eyeOutDir
+    imgRndSeldir = eyeOutDir
     os.makedirs(imgRndSeldir, exist_ok=True)  # If Dir does not exist, makedir
 
     eyeu.xodImgRndSel(imgSeqArray, numFrames, imgRndSeldir, imgOutNm=imgRndSelNm)
@@ -1085,8 +1085,8 @@ if cntrlEYE == 'xodImgXfade':
     outXfadeDir = eyeOutDir
     os.makedirs(outXfadeDir, exist_ok=True)
 
-    #xfadeFrames = int(np.ceil(eyeClks.framesPerBeat))*16
-    xfadeFrames = 4
+    xfadeFrames = int(np.ceil(eyeClks.framesPerBeat))
+    #xfadeFrames = 4
     sLength = xLength
     
     eyeu.xodImgXfade(imgSeqArray, sLength, framesPerSec, xfadeFrames, n_digits,

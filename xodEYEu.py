@@ -1162,13 +1162,13 @@ class xodEYEu:
     
         numFrames = int(ceil(xLength * framesPerSec))
         numXfades = int(ceil(numFrames / xfadeFrames))
-        #numFinalXfade = int(ceil(numFrames - (floor(numFrames / xfadeFrames) * xfadeFrames)))
+        numFinalXfade = int(ceil(numFrames - (floor(numFrames / xfadeFrames) * xfadeFrames)))
     
         print('// *---source image dimensions = '+str(SzX)+' x '+str(SzY))
         print('// *---Total number of frames = '+str(numFrames)+'---*')
         print('// *---number of img per xfade = '+str(xfadeFrames)+'---*')
         print('// *---number of xfades = '+str(numXfades)+'---*')
-        #print('// *---number of img for Final xfade = '+str(numFinalXfade)+'---*')
+        print('// *---number of img for Final xfade = '+str(numFinalXfade)+'---*')
         print('\nProcessing ... ... ...\n\n')
         
         
