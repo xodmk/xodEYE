@@ -33,18 +33,18 @@ import soundfile as sf
 # from PIL import ImageOps
 # from PIL import ImageEnhance
 
-rootDir = 'C:/XODMK/xodmkCode/xodmkPython/'
-audioScrDir = 'C:/XODMK/xodmkCode/xodmkPython/audio/wavsrc/'
-audioOutDir = 'C:/XODMK/xodmkCode/xodmkPython/audio/wavout/'
+#rootDir = 'C:/XODMK/xodmkCode/xodmkPython/'
+#audioScrDir = 'C:/XODMK/xodmkCode/xodmkPython/audio/wavsrc/'
+#audioOutDir = 'C:/XODMK/xodmkCode/xodmkPython/audio/wavout/'
 
 
 # temp python debugger - use >>>pdb.set_trace() to set break
 import pdb
 
 
-#rootDir = '../'
-#audioScrDir = '../audio/wavsrc/'
-#audioOutDir = '../audio/wavout/'
+rootDir = '../'
+audioScrDir = '../audio/wavsrc/'
+audioOutDir = '../audio/wavout/'
 
 
 sys.path.insert(0, rootDir+'eye/')
@@ -155,7 +155,7 @@ print('// *--------------------------------------------------------------* //')
 
 # *---------------------------------------------------------------------------*
 # *-- Set wav file source --*
-earSrcNm = 'gorgulans_beatx01.wav'
+earSrcNm = 'bassInvader_brks06.wav'
 #earSrcNm = 'astroman2020_bts136bpmx04.wav'
 #earSrcNm = 'cabalisk_spaced.wav'
 
