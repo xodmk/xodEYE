@@ -149,8 +149,12 @@ class xodFFmpeg:
                      '-y' if self.overwrite else '-n',
                      movie_name]
         
+        #check_call(movie_cmd)
         
-        check_call(movie_cmd)
+        print("ffmpeg cmd: %s" % movie_cmd)
+        rc = check_call(movie_cmd)
+        if rc:
+            raise Exception("ffmpeg failed")
 
 
 

@@ -76,19 +76,11 @@ class xodEYEv:
         >>tbEYEu = eyeInst.odmkEYEu(eyeLength, 93, 30.0, 41000, rootDir)
     '''
 
-    def __init__(self, bpm, timeSig, SzX, SzY, imgFormat, framesPerSec=30.0, fs=48000, rootDir='None'):
+    def __init__(self, xLength, bpm, timeSig, SzX, SzY, imgFormat, framesPerSec=30.0, fs=48000):
 
         # *---set primary parameters from inputs---*
-
-        if rootDir != 'None':
-            self.rootDir = rootDir
-            os.makedirs(rootDir, exist_ok=True)
-        else:
-            self.rootDir = os.path.dirname(os.path.abspath(__file__))
-        self.odmkEYEuOutDir = os.path.join(self.rootDir, "odmkVIDEOuOutDir/")
-        os.makedirs(self.odmkEYEuOutDir, exist_ok=True)
-        # myfile_path = os.path.join(self.rootDir, "myfile.txt")
-
+        
+        self.xLength = xLength
         self.fs = fs
         self.bWidth = 24         # audio sample bit width
         # ub313 bpm = 178 , 267
@@ -99,8 +91,8 @@ class xodEYEv:
 
         self.framesPerSec = framesPerSec
 
-        self.eyeDir = rootDir+'eye/eyeSrc/'
-        os.makedirs(self.eyeDir, exist_ok=True)
+        #self.eyeDir = rootDir+'eye/eyeSrc/'
+        #os.makedirs(self.eyeDir, exist_ok=True)
 
         # // *-------------------------------------------------------------* //
         # // *---::Set Master Dimensions::---* //
@@ -418,29 +410,31 @@ class xodEYEv:
     # // *--------------------------------------------------------------* //
     
     
-    def xodLinEFFX(self, imgSeqArray, numFrames, xBFrames, effx, fadeInOut, fwdRev,
+    def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx, fadeInOut, fwdRev,
                    n_digit, eyeOutDirName, eyeOutFileName):
         
         ''' Tempo based linear effects
             numFrames - total video output frames
-            xBFrames - frames per beat
+            xFrames - frames per beat
             effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
                                       3 = div ; 4 = sobelXY ; 5 sobelZ
             fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
             fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
             imgOutDir - full path output directory '''
             
+            
+        numFrames = int(ceil(xLength * framesPerSec))
     
-        xBeats = int(np.floor(numFrames/xBFrames))
-        xTail = int(np.floor(numFrames - xBeats*xBFrames))
+        xBeats = int(np.floor(numFrames/xFrames))
+        xTail = int(np.floor(numFrames - xBeats*xFrames))
 
 
         for i in range(xBeats):
-            offsetIdx = eyeutil.circ_idx(i*xBFrames, len(imgSeqArray))
-            self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xBFrames, effx, 
+            offsetIdx = eyeutil.circ_idx(i*xFrames, len(imgSeqArray))
+            self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, effx, 
                                fadeInOut, fwdRev, n_digit, eyeOutDirName, eyeOutFileName)
         
-        offsetIdx = eyeutil.circ_idx(xBeats*xBFrames, len(imgSeqArray))
+        offsetIdx = eyeutil.circ_idx(xBeats*xFrames, len(imgSeqArray))
         self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, effx, 
                            fadeInOut, fwdRev, n_digit, eyeOutDirName, eyeOutFileName)
 
@@ -469,6 +463,9 @@ class xodEYEv:
             imgLinEFFXNm = imgOutNm
         else:
             imgLinEFFXNm = 'imgLinEFFX'
+            
+            
+        #pdb.set_trace()
             
         f_idx = eyeutil.getLatestIdx(imgOutDir, imgLinEFFXNm)
 
@@ -692,60 +689,7 @@ class xodEYEv:
             imio.imwrite(imgRotateSeqFull, rotate_gz1)
     
         return
-    
-    
-    # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - Image CrossFade Sequence Algorithm::---*')
-    # // *--------------------------------------------------------------* //    
-        
-    def odmkImgXfade(self, imgList, xLength, framesPerSec, xfadeFrames, imgOutDir, imgOutNm='None'):
-        ''' outputs a sequence of images fading from img1 -> img2 for xLength seconds
-            Linearly alpha-blends images using PIL Image.blend
-            assume images in imgList are numpy arrays'''
-    
-        if imgOutNm != 'None':
-            imgXfadeNm = imgOutNm
-        else:
-            imgXfadeNm = 'ImgXfade'
-    
-        numFrames = int(ceil(xLength * framesPerSec))
-        numXfades = int(ceil(numFrames / xfadeFrames))
-    
-        print('// *---numFrames = '+str(numFrames)+'---*')
-        print('// *---xfadeFrames = '+str(xfadeFrames)+'---*')
-        print('// *---numXfades = '+str(numXfades)+'---*')    
-    
-        numImg = len(imgList)
-        numxfadeImg = numImg * xfadeFrames
-        n_digits = int(ceil(np.log10(numFrames))) + 2
-        nextInc = 0
-        alphaX = np.linspace(0.0, 1.0, xfadeFrames)
 
-    
-        frameCnt = 0
-        xfdirection = 1    # 1 = forward; -1 = backward
-        for j in range(numXfades - 1):
-            if frameCnt <= numFrames:
-                if (frameCnt % numxfadeImg) == 0:
-                    xfdirection = -xfdirection
-                if xfdirection == 1:
-                    imgPIL1 = Image.fromarray(imgList[j % (numImg-1)])
-                    imgPIL2 = Image.fromarray(imgList[(j % (numImg-1)) + 1])
-                else:
-                    imgPIL1 = Image.fromarray(imgList[(numImg-2) - (j % numImg) + 1])
-                    imgPIL2 = Image.fromarray(imgList[(numImg-2) - (j % numImg)])
-                for i in range(xfadeFrames):
-                    alphaB = Image.blend(imgPIL1, imgPIL2, alphaX[i])
-                    nextInc += 1
-                    zr = ''
-                    for j in range(n_digits - len(str(nextInc))):
-                        zr += '0'
-                    strInc = zr+str(nextInc)
-                    imgXfadeFull = imgOutDir+imgXfadeNm+strInc+'.jpg'
-                    imio.imwrite(imgXfadeFull, alphaB)
-                    frameCnt += 1
-    
-        return
         
         
     # // *--------------------------------------------------------------* //
@@ -2744,7 +2688,274 @@ class xodEYEv:
     
     
     
+    # // *--------------------------------------------------------------* //
+    # // *---::XODMKEYEu - Dual Channel Masked Telescope img f::---*
+    # // *--------------------------------------------------------------* //
     
+    def xodMskDualV(self, imgFileList, mskFileList, xLength, framesPerSec, xfadeFrames, 
+                      n_digits, imgOutDir, imgOutNm='None', effx=0, inOrOut=0):
+        ''' xodMskDualESP function 
+            effx = 0 -> full frame fade
+            effx = 1 -> telescope fades 
+            effx = 2 -> heavy telescope fades
+            effx = 3 -> maddog telescope fades
+            effx = 4 -> random switch between 0 - 3 per xFade
+        '''
+    
+        if imgOutNm != 'None':
+            xodMskDualESPNm = imgOutNm
+        else:
+            xodMskDualESPNm = 'imgMskLfoParascope'
+            
+
+        numImg = len(imgFileList)
+        numMsk = len(mskFileList)
+            
+        imgBpTscOut = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+        imgBpTscAlt = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+        if effx > 2:
+            imgBpTscX   = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+        
+
+        SzX = imgBpTscOut.width
+        SzY = imgBpTscOut.height
+    
+        numFrames = int(ceil(xLength * framesPerSec))
+        numXfades = int(ceil(numFrames / xfadeFrames))
+        numFinalXfade = int(ceil(numFrames - (floor(numFrames / xfadeFrames) * xfadeFrames)))
+    
+        print('// *---source image dimensions = '+str(SzX)+' x '+str(SzY))
+        print('// *---numFrames = '+str(numFrames)+'---*')
+        print('// *---numxfadeImg = '+str(xfadeFrames)+'---*')
+        print('// *---numXfades = '+str(numXfades)+'---*')
+
+        
+        alphaX = np.linspace(0.2, 0.8, xfadeFrames)
+
+        focal = np.array([int(SzX/2), int(SzY/2)])
+
+        # generate an LFO sin control signal - 1 cycle per xfadeFrames
+        # T = 1.0 / framesPerSec    # sample period
+        # LFO1_T = 3 * xfadeFrames * T
+        # x = np.linspace(0.0, (xfadeFrames+1)*T, xfadeFrames+1)
+        # x = x[0:len(x)-1]
+        # LFO1AMP = 2
+        # LFO1 = LFO1AMP*np.sin(LFO1_T * 2.0*np.pi * x)
+
+        frameCnt = 0
+        for j in range(numXfades):
+            
+            if inOrOut == 0:        # fade out fx
+                inOut = 0
+            elif inOrOut == 1:      # fade in fx
+                inOut = 1
+            else:
+                inOut = round(random.random())
+                
+            if effx > 3:
+                fx = round(3*random.random())
+            else:
+                fx = effx
+                
+
+            imgMsk1 = Image.open(mskFileList[round(numMsk*random.random()) % numMsk])
+            imgMsk1 = imgMsk1.convert("L")
+            imgMsk2 = Image.open(mskFileList[round(numMsk*random.random()) % numMsk])
+            imgMsk2 = imgMsk2.convert("L")
+
+
+            imgClone1 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+            imgClone2 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+            if fx == 0:
+                imgClone3 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+                imgClone4 = imgBpTscAlt
+            elif fx == 1:
+                imgClone3 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+                imgClone4 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+            elif fx == 2:
+                imgClone3 = imgBpTscOut
+                imgClone4 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+                imgMsk3 = Image.open(mskFileList[round(numMsk*random.random()) % numMsk])
+                imgMsk3 = imgMsk3.convert("L")
+            else:
+                imgClone3 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+                imgClone4 = imgBpTscAlt
+                imgClone5 = imgBpTscOut
+                imgMsk3 = Image.open(mskFileList[round(numMsk*random.random()) % numMsk])
+                imgMsk3 = imgMsk3.convert("L")
+                imgMsk4 = Image.open(mskFileList[round(numMsk*random.random()) % numMsk])
+                imgMsk4 = imgMsk4.convert("L")
+
+
+                
+            # initialize output 
+            imgBpTsc1 = imgClone1.copy()
+            imgBpTsc2 = imgClone2.copy()
+            imgBpTsc3 = imgClone3.copy()
+            imgBpTsc4 = imgClone4.copy()
+            if fx > 2:
+                imgBpTsc5 = imgClone5.copy()
+
+            newDimX = SzX     # start with master img dimensions
+            newDimY = SzY
+            if fx > 1:
+                newDimX2 = SzX
+                newDimY2 = SzY
+            if fx > 2:
+                newDimX3 = SzX
+                newDimY3 = SzY
+            
+            # Set size of iteration subframe resize
+            if fx == 0:
+                hop_sz = 0
+            elif effx == 1:
+                hopScl = 0.1 + 6 * random.random()
+                hop_sz = np.ceil(SzX / (hopScl * xfadeFrames))
+            elif fx == 2:
+                hopScl = 0.1 + 3 * random.random()
+                hop_sz = np.ceil(SzX / (hopScl * xfadeFrames))
+                hopScl2 = 0.1 + 3 * random.random()
+                hop_sz2 = np.ceil(SzX / (hopScl2 * xfadeFrames))
+            else:
+                if int(random.random()):
+                    hopScl = 0.1 + 3 * random.random()
+                    hop_sz = np.ceil(SzX / (hopScl * xfadeFrames))
+                else:
+                    hop_sz = 0
+                hopScl2 = 0.1 + 5 * random.random()
+                hop_sz2 = np.ceil(SzX / (hopScl2 * xfadeFrames))
+                hopScl3 = 0.1 + 9 * random.random()
+                hop_sz3 = np.ceil(SzX / (hopScl3 * xfadeFrames))
+                                 
+
+            # handles final xfade 
+            if j == numXfades-1:
+                xCnt = numFinalXfade
+            else:
+                xCnt = xfadeFrames
+            curInc = frameCnt
+
+            # functionalize then call for each telescope    
+            for t in range(xfadeFrames):
+                if frameCnt < numFrames:    # process until end of total length
+
+                    if newDimX > hop_sz:
+                        newDimX -= hop_sz
+                        if newDimX < 2:
+                            newDimX = 2
+                        newDimX = int(newDimX)
+                    if newDimY > hop_sz:
+                        newDimY -= hop_sz
+                        if newDimY < 2:
+                            newDimY = 2
+                        newDimY = int(newDimY)
+
+                    if fx > 1:
+                        if newDimX2 > hop_sz2:
+                            newDimX2 -= hop_sz2
+                            if newDimX2 < 2:
+                                newDimX2 = 2
+                            newDimX2 = int(newDimX2)
+                        if newDimY2 > hop_sz2:
+                            newDimY2 -= hop_sz2
+                            if newDimY2 < 2:
+                                newDimY2 = 2
+                            newDimY2 = int(newDimY2)
+                            
+                    if fx > 2:
+                        if newDimX3 > hop_sz3:
+                            newDimX3 -= hop_sz3
+                            if newDimX3 < 2:
+                                newDimX3 = 2
+                            newDimX3 = int(newDimX3)
+                        if newDimY3 > hop_sz3:
+                            newDimY3 -= hop_sz3
+                            if newDimY3 < 2:
+                                newDimY3 = 2
+                            newDimY3 = int(newDimY3)
+
+                        
+                    # scale image to new dimensions
+                    if fx == 0:
+                        newXYbox0 = ( int(focal[0] - SzX/2), int(focal[1] - SzY/2) )
+                        imgBpTsc1.paste(imgClone1, box=newXYbox0, mask=imgMsk1)
+                        imgBpTsc2.paste(imgClone4, box=newXYbox0, mask=imgMsk2)
+                        imgBpTsc3.paste(imgClone4, box=newXYbox0)
+                        imgBpTsc4.paste(imgClone3, box=newXYbox0)
+                    elif fx == 1:
+                        imgItr1 = imgClone1.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgItr2 = imgClone2.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgItr3 = imgClone3.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgItr4 = imgClone4.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        newXYbox0 = ( int(focal[0] - newDimX/2), int(focal[1] - newDimY/2) )
+                        imgMsk3 = imgMsk2.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgBpTsc1.paste(imgItr2, box=newXYbox0, mask=imgMsk3)
+                        imgBpTsc2.paste(imgItr1, box=newXYbox0, mask=imgMsk3)
+                        imgBpTsc3.paste(imgClone4, box=newXYbox0)
+                        imgBpTsc4.paste(imgClone3, box=newXYbox0)
+                    elif fx == 2:
+                        imgItr1 = imgClone1.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgItr2 = imgClone2.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgClone3 = imgBpTscOut.copy()
+                        imgItr3 = imgClone3.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
+                        imgItr4 = imgClone4.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
+                        newXYbox0 = ( int(focal[0] - newDimX/2), int(focal[1] - newDimY/2) )
+                        newXYbox1 = ( int(focal[0] - newDimX2/2), int(focal[1] - newDimY2/2) )
+                        imgMsk3 = imgMsk2.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgMsk4 = imgMsk3.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
+                        imgBpTsc1.paste(imgItr2, box=newXYbox0, mask=imgMsk3)
+                        imgBpTsc2.paste(imgItr1, box=newXYbox0, mask=imgMsk3)
+                        imgBpTsc3.paste(imgItr3, box=newXYbox1, mask=imgMsk4)
+                        imgBpTsc4.paste(imgItr4, box=newXYbox1, mask=imgMsk4)
+                    else:
+                        imgItr1 = imgClone1.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgItr2 = imgClone2.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgItr3 = imgClone4.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
+                        imgItr4 = imgClone3.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
+                        imgItr5 = imgClone5.resize((newDimX3, newDimY3), resample=Image.BICUBIC)
+                        newXYbox0 = ( int(focal[0] - newDimX/2), int(focal[1] - newDimY/2) )
+                        newXYbox1 = ( int(focal[0] - newDimX2/2), int(focal[1] - newDimY2/2) )
+                        newXYbox2 = ( int(focal[0] - newDimX3/2), int(focal[1] - newDimY2/2) )
+                        imgMsk3 = imgMsk1.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                        imgMsk4 = imgMsk2.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
+                        imgMsk5 = imgMsk3.resize((newDimX3, newDimY3), resample=Image.BICUBIC)
+                        imgBpTsc1.paste(imgItr2, box=newXYbox0, mask=imgMsk3)
+                        imgBpTsc2.paste(imgItr1, box=newXYbox0, mask=imgMsk3)
+                        imgBpTsc3.paste(imgItr3, box=newXYbox1, mask=imgMsk4)
+                        imgBpTsc4.paste(imgItr4, box=newXYbox1, mask=imgMsk4)
+                        imgBpTsc5.paste(imgItr5, box=newXYbox2, mask=imgMsk5)
+
+
+                    # output base image
+                    outXYbox = ( int(focal[0] - SzX/2), int(focal[1] - SzY/2) )
+                    imgBpTscOut = Image.blend(imgBpTsc1, imgBpTsc2, alphaX[t])
+                    imgBpTscOut = ImageOps.autocontrast(imgBpTscOut, cutoff=1)
+                    imgBpTscAlt = Image.blend(imgBpTsc3, imgBpTsc4, alphaX[t])
+                    imgBpTscAlt = ImageOps.autocontrast(imgBpTscAlt, cutoff=1)
+                    if fx > 2:
+                        imgBpTscX = Image.blend(imgBpTsc5, imgBpTsc1, alphaX[t])
+                        imgBpTscX = ImageOps.autocontrast(imgBpTscX, cutoff=1)
+                        imgBpTscAlt.paste(imgBpTscX, box=outXYbox, mask=imgMsk1)
+                    imgBpTscOut.paste(imgBpTscAlt, box=outXYbox, mask=imgMsk1)
+
+                    # update name counter & concat with base img name
+                    # inOrOut controls direction of parascope func
+                    zr = ''
+                    if inOut == 1:
+                        for j in range(n_digits - len(str(frameCnt))):
+                            zr += '0'
+                        strInc = zr+str(frameCnt)
+                    else:
+                        for j in range(n_digits - len(str(curInc + xCnt))):
+                            zr += '0'
+                        strInc = zr+str(curInc + xCnt)
+                    xodMskDualESPFull = imgOutDir+xodMskDualESPNm+strInc+'.jpg'
+                    imgBpTscOut.save(xodMskDualESPFull)
+                    
+                    xCnt -= 1
+                    frameCnt += 1                    
+    
+        return    
     
     
     

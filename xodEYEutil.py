@@ -143,7 +143,11 @@ def genFileList(dirList):
 
 
 def getLatestIdx(imgDir, imgNm):
-    f_list = glob.glob(imgDir+'/*.jpg')
+    f_list = []
+    imagelist = glob.glob(imgDir+'/*.jpg')
+    for s in imagelist:
+        f_list.append(s.replace('\\', '/'))
+    #f_list = glob.glob(imgDir+'/*.jpg')
     if not f_list:
         f_idx = 0
     else:
@@ -151,7 +155,7 @@ def getLatestIdx(imgDir, imgNm):
         f_fname = os.path.split(f_latest)[1]
         f_idx = f_fname.replace(imgNm, '')
         f_idx = int(f_idx.replace('.jpg', ''))
-
+        
     return f_idx
 
 
@@ -191,16 +195,78 @@ def genRandBurstFilename(imgFileList, burst):
         yield file_name
 
 
-def xodResizeAll(srcDir, SzX, SzY, outDir, outName='None'):
-    ''' resizes all .jpg files in image object list. '''
+#def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None'):
+#    ''' resizes all .jpg files in image object list. '''
+#
+#    try:
+#        next(os.scandir(srcDir))
+#    except:
+#        print('Soure directory is empty')
+#        return False
+#
+#    try:
+#        os.path.isdir(outDir)
+#    except:
+#        print('Output directory is does not exist')
+#        return False
+#
+#
+#    if imgOutNm != 'None':
+#        imgScaledOutNm = imgOutNm
+#    else:
+#        imgScaledOutNm = 'xodResizeAllOut'
+#
+#        
+#    imgFileList = []
+#    imgFileList.extend(sorted(glob.glob(srcDir+'*')))
+#    imgCount = len(imgFileList)
+#    # Find num digits required to represent max index
+#    n_digits = int(ceil(np.log10(imgCount))) + 2
+#    nextInc = 0
+#    for k in range(imgCount):
+#        srcImg = Image.open(imgFileList[k])
+#        imgScaled = srcImg.resize((SzX, SzY), Image.BICUBIC)
+#        # auto increment output file name
+#        nextInc += 1
+#        zr = ''    # reset lead-zero count to zero each itr
+#        for j in range(n_digits - len(str(nextInc))):
+#            zr += '0'
+#        strInc = zr+str(nextInc)
+#        imgScaledNm = imgScaledOutNm+strInc+'.jpg'
+#
+#        imgScaledFull = outDir+imgScaledNm
+#        imio.imwrite(imgScaledFull, imgScaled)
+#
+#
+#    return
 
 
-    os.makedirs(outDir, exist_ok=True)
-    
-    if outName != 'None':
-        imgScaledOutNm = outName
+def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
+    ''' resizes all .jpg files in image object list. 
+        keepAspect: 
+            width = uses SzX & auto calculates Y to preserve aspect ratio
+            height = uses SzY & auto calculates X '''
+
+    try:
+        next(os.scandir(srcDir))
+    except:
+        print('Soure directory is empty')
+        return False
+
+    try:
+        os.path.isdir(outDir)
+    except:
+        print('Output directory is does not exist')
+        return False
+
+
+    if imgOutNm != 'None':
+        imgScaledOutNm = imgOutNm
     else:
         imgScaledOutNm = 'xodResizeAllOut'
+        
+    if keepAspect == width:
+        
 
         
     imgFileList = []
@@ -211,6 +277,13 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, outName='None'):
     nextInc = 0
     for k in range(imgCount):
         srcImg = Image.open(imgFileList[k])
+        
+        pdb.set_trace()
+        
+        #if keepAspect == width:
+        #    srcImg.
+        
+        
         imgScaled = srcImg.resize((SzX, SzY), Image.BICUBIC)
         # auto increment output file name
         nextInc += 1
@@ -442,6 +515,7 @@ def concatAllDir(dirList, concatDir, reName):
         currentFile = os.path.join(concatDir+currentNm)
         
         imgConcatNmFull = os.path.join(concatDir+imgNormalizeNm)
+        
         os.rename(currentFile, imgConcatNmFull)
 
     return
@@ -501,6 +575,69 @@ def imgInterlaceDir(self, dir1, dir2, interlaceDir, reName):
     return
 
 
+
+# // *--------------------------------------------------------------* //
+# // *---::ODMKEYE - interlace img files in two directoroies::---*
+# // *--------------------------------------------------------------* //
+
+def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
+    ''' Takes two directories containing .jpg /.bmp images,
+        renames and interlaces all files into output dir. 
+        xfadeFrames specifies n frames for each switch 
+        length is determined by 2 * largest directory '''
+
+
+    imgFileList1 = []
+    imgFileList2 = []
+    
+
+    if self.imgFormat=='fjpg':
+        imgFileList1.extend(sorted(glob.glob(dir1+'*.jpg')))
+        imgFileList2.extend(sorted(glob.glob(dir2+'*.jpg')))    
+    elif self.imgFormat=='fbmp':
+        imgFileList1.extend(sorted(glob.glob(dir1+'*.bmp')))
+        imgFileList2.extend(sorted(glob.glob(dir2+'*.bmp')))     
+
+    imgCount = 2*max(len(imgFileList1), len(imgFileList2))
+    
+    list1Count = len(imgFileList1)
+    list2Count = len(imgFileList2)
+    
+    n_digits = int(ceil(np.log10(imgCount))) + 2
+    nextInc = 0
+    dirIdx1 = 0
+    dirIdx2 = 0
+    sel = 0
+    for i in range(imgCount):
+        nextInc += 1
+        zr = ''
+        for j in range(n_digits - len(str(nextInc))):
+            zr += '0'
+        strInc = zr+str(nextInc)
+        # print('strInc = '+str(strInc))
+        if self.imgFormat=='fjpg':
+            imgNormalizeNm = reName+strInc+'.jpg' 
+        elif self.imgFormat=='fbmp':
+            imgNormalizeNm = reName+strInc+'.bmp'
+        #imgConcatNmFull = concatDir+imgNormalizeNm
+        if i % xfadeFrames == 0:
+            sel = not(sel)
+        if sel == 0: 
+            currentNm = os.path.split(imgFileList1[dirIdx1 % list1Count])[1]
+            shutil.copy(imgFileList1[dirIdx1 % list1Count], interlaceDir)
+            currentFile = os.path.join(interlaceDir+currentNm)
+            dirIdx1 += 1
+        else:
+            currentNm = os.path.split(imgFileList2[dirIdx2 % list2Count])[1]                
+            shutil.copy(imgFileList2[dirIdx2 % list2Count], interlaceDir)
+            currentFile = os.path.join(interlaceDir+currentNm)
+            dirIdx2 += 1
+        
+        imgInterlaceDirNmFull = os.path.join(interlaceDir+imgNormalizeNm)
+        os.rename(currentFile, imgInterlaceDirNmFull)
+        #pdb.set_trace()
+
+    return
 
 
 # // *********************************************************************** //    

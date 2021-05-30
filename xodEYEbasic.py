@@ -37,13 +37,12 @@ from matplotlib.colors import LightSource
 
 
 
-rootDir = '../'
-eyeDir = rootDir+'eye/'
+eyeDir = './'
 
-eyeBasicDirName = 'eyeBasicTestDir\\'
+eyeBasicDirName = 'eyeBasicTestDir/'
 testDir = eyeDir+eyeBasicDirName
 
-jpgSrcDir = testDir+'src\\'
+jpgSrcDir = testDir+'src/'
 imgOutDir = testDir
 os.makedirs(imgOutDir, exist_ok=True)
 
@@ -852,7 +851,7 @@ def eyeRotate(img, ang, rotd=0):
 #    return eyeOut
 
 
-if (1):
+if (0):
 
     eyeTest1 = jpgSrcDir+'odmkSeijinNext_x0025.jpg'
     eyeTest2 = jpgSrcDir+'odmkSeijinNext_x5019.jpg'
@@ -2235,8 +2234,7 @@ def eyeRadialEXP1(img1, exp):
 #    eyeOut_g = imgArray[:, :, 1]
 #    eyeOut_b = imgArray[:, :, 2]   
     
-    
-    
+
     centerPxl = np.array((int(SzX/2), int(SzY/2)))
     print('centerPxl = '+str(centerPxl[0])+', '+str(centerPxl[1]))
 
@@ -2310,8 +2308,6 @@ if (0):
 # // *********************************************************************** //
 # // *********************************************************************** //
 # // *********************************************************************** //
-
-
 
 
 def eyeFmask(mask1, img1):
