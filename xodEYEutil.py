@@ -21,6 +21,7 @@ import os, sys
 import glob, shutil
 from math import floor, ceil
 import random
+import colorsys
 import numpy as np
 import scipy as sp
 from scipy.signal import convolve2d
@@ -195,54 +196,12 @@ def genRandBurstFilename(imgFileList, burst):
         yield file_name
 
 
-#def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None'):
-#    ''' resizes all .jpg files in image object list. '''
-#
-#    try:
-#        next(os.scandir(srcDir))
-#    except:
-#        print('Soure directory is empty')
-#        return False
-#
-#    try:
-#        os.path.isdir(outDir)
-#    except:
-#        print('Output directory is does not exist')
-#        return False
-#
-#
-#    if imgOutNm != 'None':
-#        imgScaledOutNm = imgOutNm
-#    else:
-#        imgScaledOutNm = 'xodResizeAllOut'
-#
-#        
-#    imgFileList = []
-#    imgFileList.extend(sorted(glob.glob(srcDir+'*')))
-#    imgCount = len(imgFileList)
-#    # Find num digits required to represent max index
-#    n_digits = int(ceil(np.log10(imgCount))) + 2
-#    nextInc = 0
-#    for k in range(imgCount):
-#        srcImg = Image.open(imgFileList[k])
-#        imgScaled = srcImg.resize((SzX, SzY), Image.BICUBIC)
-#        # auto increment output file name
-#        nextInc += 1
-#        zr = ''    # reset lead-zero count to zero each itr
-#        for j in range(n_digits - len(str(nextInc))):
-#            zr += '0'
-#        strInc = zr+str(nextInc)
-#        imgScaledNm = imgScaledOutNm+strInc+'.jpg'
-#
-#        imgScaledFull = outDir+imgScaledNm
-#        imio.imwrite(imgScaledFull, imgScaled)
-#
-#
-#    return
 
+# // *********************************************************************** //
+# // *********************************************************************** //
 
 def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
-    ''' resizes all .jpg files in image object list. 
+    ''' resizes all .jpg files in srcDir 
         keepAspect: 
             width = uses SzX & auto calculates Y to preserve aspect ratio
             height = uses SzY & auto calculates X '''
@@ -265,7 +224,7 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
     else:
         imgScaledOutNm = 'xodResizeAllOut'
         
-    if keepAspect == width:
+    #if keepAspect == width:
         
 
         
@@ -278,13 +237,18 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
     for k in range(imgCount):
         srcImg = Image.open(imgFileList[k])
         
-        pdb.set_trace()
+        if keepAspect == 'width':
+            scaleSzX = round(SzX)
+            scaleSzY = round(scaleSzX * srcImg.size[1]/srcImg.size[0])
+        elif keepAspect == 'height':
+            scaleSzY = round(SzY)
+            scaleSzX = round(scaleSzY * srcImg.size[0]/srcImg.size[1])
+        else:
+            scaleSzX = round(SzX)
+            scaleSzY = round(SzY)
         
-        #if keepAspect == width:
-        #    srcImg.
         
-        
-        imgScaled = srcImg.resize((SzX, SzY), Image.BICUBIC)
+        imgScaled = srcImg.resize((scaleSzX, scaleSzY), Image.BICUBIC)
         # auto increment output file name
         nextInc += 1
         zr = ''    # reset lead-zero count to zero each itr
@@ -300,45 +264,54 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
     return
 
 
-def odmkScaleAll(srcDir, SzX, SzY, outDir, outName='None', high=0):
-    ''' rescales and normalizes all .jpg files in image object list.
-        scales, zooms, & crops images to dimensions SzX, SzY
-        Assumes srcObjList of ndimage objects exists in program memory
-        Typically importAllJpg is run first. '''
+def xodCropAll(srcDir, SzX, SzY, outDir, imgOutNm='None', high=0):
+    ''' crops all .jpg files in srcDir. 
+        high: 
+            0 = crops horizontally & vertically centered
+            1 = crops from top==0, horizontally centered '''
 
+    try:
+        next(os.scandir(srcDir))
+    except:
+        print('Soure directory is empty')
+        return False
 
-    os.makedirs(outDir, exist_ok=True)
-    
-    if outName != 'None':
-        imgScaledOutNm = outName
+    try:
+        os.path.isdir(outDir)
+    except:
+        print('Output directory is does not exist')
+        return False
+
+    if imgOutNm != 'None':
+        imgCropOutNm = imgOutNm
     else:
-        imgScaledOutNm = 'odmkScaleAllOut'
-
+        imgCropOutNm = 'xodCropOut'        
         
     imgFileList = []
     imgFileList.extend(sorted(glob.glob(srcDir+'*')))
     imgCount = len(imgFileList)
     # Find num digits required to represent max index
     n_digits = int(ceil(np.log10(imgCount))) + 2
-    #nextInc = 0
-    nextInc = 1441
+    nextInc = 0
     for k in range(imgCount):
-        srcObj = imio.imread(imgFileList[k])
-        imgScaled = odmkEyeDim(srcObj, SzX, SzY, high)
+        srcImg = Image.open(imgFileList[k])
+        
+        imgCrop = xodEyeCrop(srcImg, SzX, SzY, high)
+        
+        # pdb.set_trace()
+        
         # auto increment output file name
         nextInc += 1
         zr = ''    # reset lead-zero count to zero each itr
         for j in range(n_digits - len(str(nextInc))):
             zr += '0'
         strInc = zr+str(nextInc)
-        imgScaledNm = imgScaledOutNm+strInc+'.jpg'
+        imgCropNm = imgCropOutNm+strInc+'.jpg'
 
-        imgScaledFull = outDir+imgScaledNm
-        imio.imwrite(imgScaledFull, imgScaled)
-
+        imgCropFull = outDir+imgCropNm
+        imio.imwrite(imgCropFull, imgCrop)
 
     return
-
 
 
 # // *--------------------------------------------------------------* //
@@ -419,7 +392,6 @@ def convertBMPtoJPG(srcDir, outDir, reName='None'):
 
 
 
-
 # // *--------------------------------------------------------------* //
 # // *---::ODMKEYE - repeat list of files in directory n times::---*
 # // *--------------------------------------------------------------* //
@@ -474,8 +446,6 @@ def repeatAllImg(srcDir, n, w=0, repeatDir='None', repeatName='None'):
 
     #return imgRepeatSrcList
     return
-
-
 
 
 # // *--------------------------------------------------------------* //
@@ -642,7 +612,7 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
 
 # // *********************************************************************** //    
 # // *********************************************************************** //
-# // *---::ODMK img Src Sequencing func::---*
+# // *---:: XODMK img Src Sequencing func::---*
 # // *********************************************************************** //
 # // *********************************************************************** //
 
@@ -757,30 +727,6 @@ def pulseScanRnd(dirList, numFrames, pulseLen):
 # // *********************************************************************** //
 # // *********************************************************************** //
 
-# def odmkEyePrint(self, img, title, idx):
-    # imgWidth = img.shape[1]
-    # imgHeight = img.shape[0]
-    # figx = plt.figure(num=idx, facecolor='silver', edgecolor='k')
-    # plt.imshow(img)
-    # plt.xlabel('Src Width = '+str(imgWidth))
-    # plt.ylabel('Src Height = '+str(imgHeight))
-    # plt.title(title)
-
-
-#def odmkEyeRescale(img, SzX, SzY):
-#    # Rescale Image to SzW width and SzY height:
-#    # *****misc.imresize returns img with [Y-dim, X-dim] format instead of X,Y*****    
-#    if (len(img.shape) < 3):
-#        imgRescale = misc.imresize(img, [SzY, SzX], interp='cubic')
-#    else:
-#        img_r = img[:, :, 0]
-#        img_g = img[:, :, 1]
-#        img_b = img[:, :, 2]
-#        imgRescale_r = img_r.resize((SzY, SzX))
-#        imgRescale_g = img_g.resize((SzY, SzX))
-#        imgRescale_b = img_b.resize((SzY, SzX))
-#        imgRescale = np.dstack((imgRescale_r, imgRescale_g, imgRescale_b))
-#    return imgRescale
 
 def odmkEyeRescale(img, SzX, SzY):
     # Rescale Image to SzW width and SzY height:
@@ -788,19 +734,6 @@ def odmkEyeRescale(img, SzX, SzY):
     img2 = Image.fromarray(img)
     imgRescale = img2.resize((SzX, SzY), resample=Image.BICUBIC)
     return imgRescale
-
-
-def odmkEyeZoom(img, Z):
-    # Zoom Image by factor Z:
-    img_r = img[:, :, 0]
-    img_g = img[:, :, 1]
-    img_b = img[:, :, 2]
-    imgZoom_r = ndimage.interpolation.zoom(img_r, Z)
-    imgZoom_g = ndimage.interpolation.zoom(img_g, Z)
-    imgZoom_b = ndimage.interpolation.zoom(img_b, Z)
-    imgZoom = np.dstack((imgZoom_r, imgZoom_g, imgZoom_b))
-    return imgZoom
-
 
 
 def cropZoom(img, zoom_factor, **kwargs):
@@ -860,131 +793,35 @@ def cropZoom(img, zoom_factor, **kwargs):
 
 
 
-def odmkEyeCrop(img, SzX, SzY, high):
+def xodEyeCrop(img, SzX, SzY, high):
     ''' crop img to SzX width x SzY height '''
 
-    imgWidth = img.shape[1]
-    imgHeight = img.shape[0]
+    imgWidth = img.width
+    imgHeight = img.height
 
-    img_r = img[:, :, 0]
-    img_g = img[:, :, 1]
-    img_b = img[:, :, 2]
+    if imgWidth < SzX:
+        print('ERROR: imgWidth is smaller than crop width')
+        return 1
+    elif imgWidth > SzX:
+        cropLeft = floor((imgWidth - SzX) / 2)
+    else:
+        cropLeft = 0
 
-    imgCrop_r = np.zeros((SzY, SzX))
-    imgCrop_g = np.zeros((SzY, SzX))
-    imgCrop_b = np.zeros((SzY, SzX))
+    if imgHeight < SzY:
+        print('ERROR: imgHeight is smaller than crop height')
+        return 1
+    elif imgHeight > SzY and high == 0:
+        cropTop = floor((imgHeight - SzY) / 2)
+    else:
+        cropTop = 0
 
-    wdiff_lhs = 0
-    hdiff_ths = 0
-
-    if imgWidth > SzX:
-        wdiff = floor(imgWidth - SzX)
-        if (wdiff % 2) == 1:    # wdiff is odd
-            wdiff_lhs = floor(wdiff / 2)
-            # wdiff_rhs = ceil(wdiff / 2)
-        else:
-            wdiff_lhs = wdiff / 2
-            # wdiff_rhs = wdiff / 2
-
-    if imgHeight > SzY:
-        hdiff = floor(imgHeight - SzY)
-        if (hdiff % 2) == 1:    # wdiff is odd
-            hdiff_ths = floor(hdiff / 2)
-            # hdiff_bhs = ceil(wdiff / 2)
-        else:
-            hdiff_ths = hdiff / 2
-            # hdiff_bhs = hdiff / 2
-
-    for j in range(SzY):
-        for k in range(SzX):
-            if high == 1:
-                imgCrop_r[j, k] = img_r[j, int(k + wdiff_lhs)]
-                imgCrop_g[j, k] = img_g[j, int(k + wdiff_lhs)]
-                imgCrop_b[j, k] = img_b[j, int(k + wdiff_lhs)]
-            else:
-                # pdb.set_trace()
-                imgCrop_r[j, k] = img_r[int(j + hdiff_ths), int(k + wdiff_lhs)]
-                imgCrop_g[j, k] = img_g[int(j + hdiff_ths), int(k + wdiff_lhs)]
-                imgCrop_b[j, k] = img_b[int(j + hdiff_ths), int(k + wdiff_lhs)]
-        # if j == SzY - 1:
-            # print('imgItr ++')
-    imgCrop = np.dstack((imgCrop_r, imgCrop_g, imgCrop_b))
+    # box=(left, upper, right, lower)
+    if high == 1:
+        imgCrop = img.crop((cropLeft, 0, cropLeft+SzX, SzY))
+    else:
+        imgCrop = img.crop((cropLeft, cropTop, cropLeft+SzX, cropTop+SzY))
+    
     return imgCrop
-
-
-def odmkEyeDim(img, SzX, SzY, high):
-    ''' Zoom and Crop image to match source dimensions '''
-
-    imgWidth = img.shape[1]
-    imgHeight = img.shape[0]
-
-    #pdb.set_trace()
-
-    if (imgWidth == SzX and imgHeight == SzY):
-        # no processing
-        imgScaled = img
-
-    elif (imgWidth == SzX and imgHeight > SzY):
-        # cropping only
-        imgScaled = odmkEyeCrop(img, SzX, SzY, high)
-
-    elif (imgWidth > SzX and imgHeight == SzY):
-        # cropping only
-        imgScaled = odmkEyeCrop(img, SzX, SzY, high)
-
-    elif (imgWidth > SzX and imgHeight > SzY):
-        # downscaling and cropping
-        wRatio = SzX / imgWidth
-        hRatio = SzY / imgHeight
-        if wRatio >= hRatio:
-            zoomFactor = wRatio
-        else:
-            zoomFactor = hRatio
-        imgScaled = odmkEyeZoom(img, zoomFactor)
-        imgScaled = odmkEyeCrop(imgScaled, SzX, SzY, high)
-
-    elif (imgWidth < SzX and imgHeight == SzY):
-        # upscaling and cropping
-        wdiff = SzX - imgWidth
-        zoomFactor = (imgWidth + wdiff) / imgWidth
-        imgScaled = odmkEyeZoom(img, zoomFactor)
-        imgScaled = odmkEyeCrop(imgScaled, SzX, SzY, high)
-
-    elif (imgWidth == SzX and imgHeight < SzY):
-        # upscaling and cropping
-        hdiff = SzY - imgHeight
-        zoomFactor = (imgHeight + hdiff) / imgHeight
-        imgScaled = odmkEyeZoom(img, zoomFactor)
-        imgScaled = odmkEyeCrop(imgScaled, SzX, SzY, high)
-
-    elif (imgWidth < SzX and imgHeight < SzY):
-        # upscaling and cropping (same aspect ratio -> upscaling only)
-        wRatio = SzX / imgWidth
-        hRatio = SzY / imgHeight
-        if wRatio >= hRatio:
-            zoomFactor = wRatio
-        else:
-            zoomFactor = hRatio
-        imgScaled = odmkEyeZoom(img, zoomFactor)
-        imgScaled = odmkEyeCrop(imgScaled, SzX, SzY, high)
-
-    elif (imgWidth > SzX and imgHeight < SzY):
-        # upscaling and cropping
-        # wdiff = imgWidth - SzX
-        hdiff = SzY - imgHeight
-        zoomFactor = (imgHeight + hdiff) / imgHeight
-        imgScaled = odmkEyeZoom(img, zoomFactor)
-        imgScaled = odmkEyeCrop(imgScaled, SzX, SzY, high)
-
-    elif (imgWidth < SzX and imgHeight > SzY):
-        # upscaling and cropping
-        wdiff = SzX - imgWidth
-        # hdiff = imgHeight - SzY
-        zoomFactor = (imgWidth + wdiff) / imgWidth
-        imgScaled = odmkEyeZoom(img, zoomFactor)
-        imgScaled = odmkEyeCrop(imgScaled, SzX, SzY, high)
-
-    return imgScaled
 
 
 def eyeRotate(img, ang, rotd=0):
@@ -1020,9 +857,120 @@ def eyeRotate(img, ang, rotd=0):
 
 
 
+# XOD Rotate Color Function  
+def xodColorRotate(img, rotateStep):
+    ''' rotateStep [0:1] - linear mix from 100%r -> 100%b etc. 
+        - red case:   (0%)r -> (33%)g -> (66%)b - (100%)r
+        - green case: (0%)g -> (33%)b -> (66%)r - (100%)g
+        - blue case:  (0%)b -> (33%)r -> (66%)g - (100%)b
+    '''
+    if isinstance(img, Image.Image):
+        
+        if rotateStep < 0 or rotateStep > 1.0:
+            print('ERROR: rotateStep must be in range [0:1]')
+            return 1
+
+        r,g,b = img.split()
+        
+        #pdb.set_trace()
+        
+        # case: 0% -> 33%
+        if rotateStep < 0.333:
+            mixVal = rotateStep * (1/0.333)
+            # newR = (1 - mixVal) * r + mixVal * g
+            newR = Image.blend(r, g, mixVal)
+            # newG = (1 - mixVal) * g + mixVal * b
+            newG = Image.blend(g, b, mixVal)
+            # newB = (1 - mixVal) * b + mixVal * r
+            newB = Image.blend(b, r, mixVal)
+            
+        # case: 33% -> 66%
+        elif rotateStep >= 0.333 and rotateStep < 0.666:
+            mixVal = (rotateStep - 0.333) * (2/0.666)
+            if mixVal > 1.0:
+                mixVal = 1.0
+            # newR = (1 - mixVal) * g + mixVal * b
+            newR = Image.blend(g, b, mixVal)
+            # newG = (1 - mixVal) * b + mixVal * r
+            newG = Image.blend(b, r, mixVal)
+            # newB = (1 - mixVal) * r + mixVal * g
+            newB = Image.blend(r, g, mixVal)
+
+        # case: 66% -> 100%
+        else:
+            mixVal = (rotateStep - 0.666) * (1/0.333)
+            if mixVal > 1.0:
+                mixVal = 1.0
+            # newR = (1 - mixVal) * b + mixVal * r
+            newR = Image.blend(b, r, mixVal)
+            # newG = (1 - mixVal) * r + mixVal * g
+            newG = Image.blend(r, g, mixVal)
+            # newB = (1 - mixVal) * g + mixVal * b
+            newB = Image.blend(g, b, mixVal)
+
+        return Image.merge('RGB', (newR, newG, newB))
+    else:
+        print('ERROR: source image must be PIL Image')
+        return None
+
+
 # // *********************************************************************** //    
 # // *********************************************************************** //
-# // *---::ODMK img Pixel-Banging Basic Func::---*
+# // *---:: XODMK img Image Processing Func::---*
+# // *********************************************************************** //
+# // *********************************************************************** //
+
+
+# XOD Rotate Color Function  
+#def xodFrameInterpolate(imgFileList, xfadeFrames, imgOutDir, imgOutNm='None'):
+def xodFrameInterpolate(imgFileList, xfadeFrames, effx, n_digits,
+                        imgOutDir, imgOutNm):
+    ''' Interpolate (blend) between frames in directory
+        imgFileList - image source directory
+        xfadeFrames - number of frames per xfade
+        effx: 0 = linear fade, 1 = cosine fade
+    '''
+    print('// __xodFrameInterpolate__ ')
+        
+    #if (???check for valid images in dir???):
+    #    print('ERROR: directory does not contain valid images')
+    #    return 1
+
+    numImg = len(imgFileList)
+    
+    print('// *---numImg = '+str(numImg)+'---*')
+    print('// *---xfadeFrames = '+str(xfadeFrames)+'---*')
+    
+    n_digits = int(ceil(np.log10(numImg * xfadeFrames))) + 2
+
+    alphaX = np.linspace(0.0, 1.0, xfadeFrames + 1)
+    if effx > 0:
+        alphaCosX = (-np.cos(np.pi * alphaX) + 1) / 2
+        
+    frameCnt = 0
+    for j in range(numImg - 1):
+        
+        imgPIL1 = Image.open(imgFileList[j])
+        imgPIL2 = Image.open(imgFileList[j + 1])
+
+        for i in range(xfadeFrames):
+            if effx > 0:
+                alphaB = Image.blend(imgPIL1, imgPIL2, alphaCosX[i])
+            else:
+                alphaB = Image.blend(imgPIL1, imgPIL2, alphaX[i])
+            zr = ''
+            for j in range(n_digits - len(str(frameCnt))):
+                zr += '0'
+            strInc = zr+str(frameCnt)
+            imgFrameIFull = imgOutDir + imgOutNm + strInc+'.jpg'
+            imio.imwrite(imgFrameIFull, alphaB)
+            frameCnt += 1
+    return
+
+
+# // *********************************************************************** //    
+# // *********************************************************************** //
+# // *---:: XODMK img Pixel-Banging Basic Func::---*
 # // *********************************************************************** //
 # // *********************************************************************** //
 
@@ -1090,11 +1038,9 @@ def eyeBox1(img1, img2, boxSzX, boxSzY, pxlLoc, alpha):
     if img1.size != img2.size:
         print('ERROR: img1, img2 must be same Dim')
         return        
-
    
     SzX = img1.size[0]
     SzY = img1.size[1]
-    #imgDim = [SzX, SzY]
 
     
     subDim_L = int(pxlLoc[0] - boxSzX//2)
@@ -1128,125 +1074,65 @@ def eyeBox1(img1, img2, boxSzX, boxSzY, pxlLoc, alpha):
     #print('eyeSubCC X = '+str(eyeSubCC.shape[1])+', eyeSubCC Y = '+str(eyeSubCC.shape[0])+)
     #pdb.set_trace()
 
-    # left frame
     img1.paste(eyeSubCC, boxCC)
 
-    
     return img1
 
 
-
 # // *********************************************************************** //
-# // *---::ODMK horizontal trails::---*
+# // *---:: Xod Mirror Functions ::---*
 # // *********************************************************************** //
 
 
-def horizTrails(img, SzX, SzY, nTrail, ctrl):
-    ''' reconstructs img with left & right trails
-        img - a PIL image (Image.fromarray(eye2))
-        nTrail controls number of trails
-        ctrl controls x-axis coordinates '''
-    
-    if ctrl == 0:    # linear
-        trails = np.linspace(0, SzX/2, nTrail+2)
-        trails = trails[1:len(trails)-1]
-    
-    else:    # log spaced    
-        trails = np.log(np.linspace(1,10,nTrail+2))
-        sc = 1/max(trails)
-        trails = trails[1:len(trails)-1]
-        trails = trails*sc*int(SzX/2)
-    
-    alpha = np.linspace(0, 1, nTrail)
-    
-    # coordinates = (left, lower, right, upper)
-    boxL = (0, 0, int(SzX / 2), SzY)
-    eyeSubL = img.crop(boxL)
-    
-    boxR = (int(SzX / 2), 0, SzX, SzY)
-    eyeSubR = img.crop(boxR)
-    
-    
-    alphaCnt = 0
-    for trail in trails:
-    
-        itrail = int(trail)
-    
-        boxL_itr1 = (itrail, 0, int(SzX / 2), SzY)
-        eyeSubL_itr1 = img.crop(boxL_itr1)
-        #print('\nboxL_itr1 = '+str(boxL_itr1))    
-        
-        boxR_itr1 = (int(SzX / 2), 0, SzX - itrail, SzY)
-        eyeSubR_itr1 = img.crop(boxR_itr1)
-        #print('\nboxR_itr1 = '+str(boxR_itr1))
-        # if tcnt == 2:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-        #pdb.set_trace()  
-        
-        boxL_base1 = (0, 0, int(SzX / 2) - itrail, SzY)
-        eyeSubL_base1 = img.crop(boxL_base1)
-        
-        boxR_base1 = (int((SzX / 2) + itrail), 0, SzX, SzY)
-        eyeSubR_base1 = img.crop(boxR_base1)
-        
-        eyeFadeL_itr1 = Image.blend(eyeSubL_itr1, eyeSubL_base1, alpha[alphaCnt])
-        eyeFadeR_itr1 = Image.blend(eyeSubR_itr1, eyeSubR_base1, alpha[alphaCnt])
-        
-        #pdb.set_trace()
-        
-        boxL_sb1 = (0, 0, int(SzX / 2) - itrail, SzY)
-        boxR_sb1 = (itrail, 0, int(SzX / 2), SzY)    
-       
-        
-        #eye1subL.paste(eye1subL_itr1, boxL_sb1)
-        #eye2subR.paste(eye2subR_itr1, boxR_sb1)
-        eyeSubL.paste(eyeFadeL_itr1, boxL_sb1)
-        eyeSubR.paste(eyeFadeR_itr1, boxR_sb1)    
-        
-        
-        img.paste(eyeSubL, boxL)
-        img.paste(eyeSubR, boxR)
-    
-        alphaCnt += 1    
-
-    return img
-
-
-
-def eyeMirrorHV4(img, SzX, SzY, ctrl='UL'):
-    ''' generates composite 4 frame resized images
-        SzX, SzY: output image dimentions
-        img: PIL image object
-        ctrl: { UL, UR, LL, LR} - selects base quadrant '''
+def eyeMirrorLR(img, ctrl='LL', fullscl=0):
+    ''' Selects a quadrant from source image, mirrors H & V
+        * img: PIL image object
+        * ctrl: { UL, UR, LL, LR} - selects base quadrant
+          Default output dimension = input dimension
+        * resizeX, resizeY: forces a new output image dimention 
+        * fullscl: if > 0 scales full image & repeats in 4 quadrants 
+          Default: crops image to base quadrant & repeats cropped image
+        Usage:
+        mirrorQuadTest1 = eyeutil.eyeMirrorQuad(eye5img)
+        mirrorQuadTest2 = eyeutil.eyeMirrorQuad(eye5img, ctrl='LR')
+        mirrorQuadTest5 = eyeutil.eyeMirrorQuad(eye5img, ctrl='UL', fullscl=1)
+    '''
     
     
     if not(ctrl=='UL' or ctrl=='UR' or ctrl=='LL' or ctrl=='LR'):
         print('ERROR: ctrl must be {UL, UR, LL, LR} <string>')
         return
-    
-    imgSzX = img.size[0]
-    imgSzY = img.size[1]
-    
-    imgDim = (SzX, SzY)
-    
-    if (SzX == 2*imgSzX and SzY == 2*imgSzY):
-        subDim = (imgSzX, imgSzY)
-        imgX = img
-    else:
-        subDim = (int(SzX/2), int(SzY/2))
-        imgX = img.resize(subDim)
-    
-    
-    mirrorImg = Image.new('RGB', imgDim)  # e.g. ('RGB', (640, 480))
-    
 
-    #boxUL = (0, SzY, SzX-1, 2*SzY-1)
-    boxUL = (0, subDim[1], subDim[0], imgDim[1])
-    boxUR = (subDim[0], subDim[1], imgDim[0], imgDim[1]) 
-    boxLL = (0, 0, subDim[0], subDim[1])
-    boxLR = (subDim[0], 0, imgDim[0], subDim[1])
+
+    # calculate subDim as Quater frame of source image
+    SzX = img.size[0]
+    SzY = img.size[1]
+        
+    SzXD2 = int(SzX/2)
+    SzYD2 = int(SzY/2)
+    imgDim = (SzX, SzY)
+    subDim = (SzXD2, SzYD2)
     
+    # Plus extra index max+1 (why...)
+    # box=( (left, upper) , (right, lower) )
+    boxUL = (0,0, SzXD2, SzYD2)
+    boxUR = (SzXD2, 0, SzX, SzYD2) 
+    boxLL = (0, SzYD2, SzXD2, SzY)
+    boxLR = (SzXD2, SzYD2, SzX, SzY)
+        
+    mirrorImg = Image.new('RGB', imgDim)  # e.g. ('RGB', (640, 480))
+        
 
     if ctrl == 'LL':
+        
+        if fullscl > 0:
+            # use full scaled image
+            imgX = img.resize(subDim)
+        else:
+            # use cropped quadrant image
+            # box=(left, upper, right, lower)
+            imgX = img.crop((0, SzYD2, SzXD2, SzY))
+        
         eyeSubUL = imgX
         eyeSubUR = ImageOps.mirror(imgX)
         eyeSubLL = ImageOps.flip(imgX)
@@ -1255,6 +1141,13 @@ def eyeMirrorHV4(img, SzX, SzY, ctrl='UL'):
         
         
     if ctrl == 'LR':
+        
+        if fullscl > 0:
+            imgX = img.resize(subDim)
+        else:
+            imgX = img.resize(imgDim)
+            imgX = img.crop((SzXD2, SzYD2, SzX, SzY))
+        
         eyeSubUL = ImageOps.mirror(imgX)
         eyeSubUR = imgX
         eyeSubLL = ImageOps.flip(imgX)
@@ -1263,6 +1156,13 @@ def eyeMirrorHV4(img, SzX, SzY, ctrl='UL'):
         
         
     if ctrl == 'UL':
+        
+        if fullscl > 0:
+            imgX = img.resize(subDim)
+        else:
+            imgX = img.resize(imgDim)
+            imgX = img.crop((0, 0, SzXD2, SzYD2))
+        
         eyeSubUL = ImageOps.flip(imgX)
         eyeSubUR = ImageOps.flip(imgX)
         eyeSubUR = ImageOps.mirror(eyeSubUR)
@@ -1271,115 +1171,145 @@ def eyeMirrorHV4(img, SzX, SzY, ctrl='UL'):
 
 
     if ctrl == 'UR':
+        
+        if fullscl > 0:
+            # use full scaled image
+            imgX = img.resize(subDim)
+        else:
+            imgX = img.resize(imgDim)
+            # use cropped quadrant image
+            # box=(left, upper, right, lower)
+            imgX = img.crop((SzXD2, 0, SzX, SzYD2))
+        
         eyeSubUL = ImageOps.flip(imgX)
         eyeSubUL = ImageOps.mirror(eyeSubUL)
         eyeSubUR = ImageOps.flip(imgX)
         eyeSubLL = ImageOps.mirror(imgX)
         eyeSubLR = imgX
 
-
-    #pdb.set_trace()
-
     mirrorImg.paste(eyeSubUL, boxUL)
     mirrorImg.paste(eyeSubUR, boxUR)
     mirrorImg.paste(eyeSubLL, boxLL)
     mirrorImg.paste(eyeSubLR, boxLR)
-
-    
-    #eyeOutFileName = 'eyeMirrorHV4'
-    #eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeMirrorHV4Full, mirrorImg)
     
     return mirrorImg
-    
-    
-def eyeMirrorTemporalHV4(img1, img2, img3, img4, SzX, SzY, ctrl='UL'):
-    ''' generates composite 4 frame resized images
-        Order = clockwise from ctrl setting
-        SzX, SzY: output image dimentions
-        img: PIL image object
-        ctrl: { UL, UR, LL, LR} - selects base quadrant '''
+
+
+
+def eyeMirrorQuad(img, ctrl='LL', fullscl=0):
+    ''' Selects a quadrant from source image, mirrors H & V
+        * img: PIL image object
+        * ctrl: { UL, UR, LL, LR} - selects base quadrant
+          Default output dimension = input dimension
+        * resizeX, resizeY: forces a new output image dimention 
+        * fullscl: if > 0 scales full image & repeats in 4 quadrants 
+          Default: crops image to base quadrant & repeats cropped image
+        Usage:
+        mirrorQuadTest1 = eyeutil.eyeMirrorQuad(eye5img)
+        mirrorQuadTest2 = eyeutil.eyeMirrorQuad(eye5img, ctrl='LR')
+        mirrorQuadTest5 = eyeutil.eyeMirrorQuad(eye5img, ctrl='UL', fullscl=1)
+    '''
     
     
     if not(ctrl=='UL' or ctrl=='UR' or ctrl=='LL' or ctrl=='LR'):
         print('ERROR: ctrl must be {UL, UR, LL, LR} <string>')
         return
-    
-    imgSzX = img1.size[0]
-    imgSzY = img1.size[1]
 
+
+    # calculate subDim as Quater frame of source image
+    SzX = img.size[0]
+    SzY = img.size[1]
+        
+    SzXD2 = int(SzX/2)
+    SzYD2 = int(SzY/2)
     imgDim = (SzX, SzY)
-
-
-    mirrorTemporalImg = Image.new('RGB', imgDim)  # e.g. ('RGB', (640, 480))
+    subDim = (SzXD2, SzYD2)
     
-    if (SzX == 2*imgSzX and SzY == 2*imgSzY):
-        subDim = (imgSzX, imgSzY)
-        imgX1 = img1
-        imgX2 = img2
-        imgX3 = img3
-        imgX4 = img4
-    else:
-        subDim = (int(SzX/2), int(SzY/2))
-        imgX1 = img1.resize(subDim)
-        imgX2 = img2.resize(subDim)
-        imgX3 = img3.resize(subDim)
-        imgX4 = img4.resize(subDim)
-
-
-    #boxUL = (0, SzY, SzX-1, 2*SzY-1)
-    boxUL = (0, subDim[1], subDim[0], imgDim[1])
-    boxUR = (subDim[0], subDim[1], imgDim[0], imgDim[1]) 
-    boxLL = (0, 0, subDim[0], subDim[1])
-    boxLR = (subDim[0], 0, imgDim[0], subDim[1])
-    
+    # Plus extra index max+1 (why...)
+    # box=( (left, upper) , (right, lower) )
+    boxUL = (0,0, SzXD2, SzYD2)
+    boxUR = (SzXD2, 0, SzX, SzYD2) 
+    boxLL = (0, SzYD2, SzXD2, SzY)
+    boxLR = (SzXD2, SzYD2, SzX, SzY)
+        
+    mirrorImg = Image.new('RGB', imgDim)  # e.g. ('RGB', (640, 480))
+        
 
     if ctrl == 'LL':
-        eyeSubUL = imgX1
-        eyeSubUR = ImageOps.mirror(imgX2)
-        eyeSubLL = ImageOps.flip(imgX3)
-        eyeSubLR = ImageOps.flip(imgX4)
+        
+        if fullscl > 0:
+            # use full scaled image
+            imgX = img.resize(subDim)
+        else:
+            # use cropped quadrant image
+            # box=(left, upper, right, lower)
+            imgX = img.crop((0, SzYD2, SzXD2, SzY))
+        
+        eyeSubUL = imgX
+        eyeSubUR = ImageOps.mirror(imgX)
+        eyeSubLL = ImageOps.flip(imgX)
+        eyeSubLR = ImageOps.flip(imgX)
         eyeSubLR = ImageOps.mirror(eyeSubLR)        
         
         
     if ctrl == 'LR':
-        eyeSubUL = ImageOps.mirror(imgX4)
-        eyeSubUR = imgX1
-        eyeSubLL = ImageOps.flip(imgX2)
+        
+        if fullscl > 0:
+            imgX = img.resize(subDim)
+        else:
+            imgX = img.resize(imgDim)
+            imgX = img.crop((SzXD2, SzYD2, SzX, SzY))
+        
+        eyeSubUL = ImageOps.mirror(imgX)
+        eyeSubUR = imgX
+        eyeSubLL = ImageOps.flip(imgX)
         eyeSubLL = ImageOps.mirror(eyeSubLL)
-        eyeSubLR = ImageOps.flip(imgX3)
+        eyeSubLR = ImageOps.flip(imgX)
         
         
     if ctrl == 'UL':
-        eyeSubUL = ImageOps.flip(imgX3)
-        eyeSubUR = ImageOps.flip(imgX4)
+        
+        if fullscl > 0:
+            imgX = img.resize(subDim)
+        else:
+            imgX = img.resize(imgDim)
+            imgX = img.crop((0, 0, SzXD2, SzYD2))
+        
+        eyeSubUL = ImageOps.flip(imgX)
+        eyeSubUR = ImageOps.flip(imgX)
         eyeSubUR = ImageOps.mirror(eyeSubUR)
-        eyeSubLL = imgX1
-        eyeSubLR = ImageOps.mirror(imgX2)
+        eyeSubLL = imgX
+        eyeSubLR = ImageOps.mirror(imgX)
 
 
     if ctrl == 'UR':
-        eyeSubUL = ImageOps.flip(imgX2)
+        
+        if fullscl > 0:
+            # use full scaled image
+            imgX = img.resize(subDim)
+        else:
+            imgX = img.resize(imgDim)
+            # use cropped quadrant image
+            # box=(left, upper, right, lower)
+            imgX = img.crop((SzXD2, 0, SzX, SzYD2))
+        
+        eyeSubUL = ImageOps.flip(imgX)
         eyeSubUL = ImageOps.mirror(eyeSubUL)
-        eyeSubUR = ImageOps.flip(imgX3)
-        eyeSubLL = ImageOps.mirror(imgX4)
-        eyeSubLR = imgX1
+        eyeSubUR = ImageOps.flip(imgX)
+        eyeSubLL = ImageOps.mirror(imgX)
+        eyeSubLR = imgX
 
-
-    #pdb.set_trace()
-
-    mirrorTemporalImg.paste(eyeSubUL, boxUL)
-    mirrorTemporalImg.paste(eyeSubUR, boxUR)
-    mirrorTemporalImg.paste(eyeSubLL, boxLL)
-    mirrorTemporalImg.paste(eyeSubLR, boxLR)
-
+    mirrorImg.paste(eyeSubUL, boxUL)
+    mirrorImg.paste(eyeSubUR, boxUR)
+    mirrorImg.paste(eyeSubLL, boxLL)
+    mirrorImg.paste(eyeSubLR, boxLR)
     
-    #eyeOutFileName = 'eyeMirrorHV4'
-    #eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeMirrorHV4Full, mirrorImg)
-    
-    return mirrorTemporalImg
+    return mirrorImg
 
+
+# // *********************************************************************** //
+# // *---:: Xod Mirror Functions ::---*
+# // *********************************************************************** //
 
 
 def eyePhiHorizFrame1(img1, img2, img3, ctrl=1):
@@ -1679,8 +1609,6 @@ def median_filter_rgb(im_small, window_size):
     return im_conv
 
 
-
-
 # // *********************************************************************** //
 # // *---:: ODMK Masking Functions ::---*
 # // *********************************************************************** //
@@ -1705,3 +1633,7 @@ def eyeMask2Ch(mask, img1, img2):
     eyeOut = dst.astype(np.uint8)
     
     return eyeOut
+
+
+# // *********************************************************************** //
+# // *********************************************************************** //

@@ -327,67 +327,19 @@ class xodEYEv:
         print('// *---numXfades = '+str(numXfades)+'---*')    
     
         numImg = len(imgFileList)
-        numxfadeImg = numImg * FrameCtrl
+        #numxfadeImg = numImg * FrameCtrl
     
         n_digits = int(ceil(np.log10(numFrames))) + 2
         nextInc = 0
         # example internal control signal 
-        alphaX = np.linspace(0.0, 1.0, FrameCtrl)
-        
-        
-        hop_sz = 56
+        #alphaX = np.linspace(0.0, 1.0, FrameCtrl)
     
     
         frameCnt = 0
-        xfdirection = 1    # 1 = forward; -1 = backward
+        # xfdirection = 1    # 1 = forward; -1 = backward
         for j in range(numXfades - 1):
             if frameCnt <= numFrames:    # process until end of total length
-            
-                newDimX = SzX
-                newDimY = SzY
                 
-                # example cloned img
-                imgClone1 = imgFileList[j]
-    
-                img = Image.new( 'RGB', (255,255), "black") # create a new black image
-                imgPxl = img.load() # create the pixel map
-    
-                # scroll forward -> backward -> forward... through img array
-                if (frameCnt % numxfadeImg) == 0:
-                    xfdirection = -xfdirection
-                if xfdirection == 1:
-                    imgPIL1 = Image.fromarray( imio.imread(imgFileList[j % (numImg-1)]) )
-                    imgPIL2 = Image.fromarray( imio.imread(imgFileList[(j % (numImg-1)) + 1]) )
-                else:
-                    imgPIL1 = Image.fromarray( imio.imread(imgFileList[(numImg-2) - (j % numImg) + 1]) )
-                    imgPIL2 = Image.fromarray( imio.imread(imgFileList[(numImg-2) - (j % numImg)]) )
-    
-                # process frameCtrl timed sub-routine:
-                for i in range(FrameCtrl):
-    
-                    # example usrCtrl update                
-                    if newDimX > 2:
-                        newDimX -= 2*hop_sz
-                    if newDimY > 2:
-                        newDimY -= 2*hop_sz
-                    
-                    # example algorithmic process
-                    alphaB = Image.blend(imgPIL1, imgPIL2, alphaX[i])
-    
-                    # process sub-frame
-                    for j in range(SzY):
-                        for k in range(SzX):
-                            #if ((j >= (t+1)*hop_sz) and (j < (newDimY+(SzY-newDimY)/2)) and (k >= (t+1)*hop_sz) and (k < (newDimX+(SzX-newDimX)/2))):
-                            if ((j >= hop_sz) and (j < newDimY+(hop_sz)/2) and (k >= hop_sz) and (k < newDimX+(hop_sz)/2)):
-                                #imgClone[j+(SzY-newDimY)/2, k+(SzX-newDimX)/2, :] = imgItr[j - t, k - t, :]
-                                imgClone1[j, k, :] = alphaB[j - (SzY-newDimY)/2, k - (SzX-newDimX)/2, :]
-    
-                    # ***sort out img.size vs. imgList[0].shape[1]
-                    # bit-banging
-                    for i in range(img.size[0]):    # for every pixel:
-                        for j in range(img.size[1]):
-                            imgPxl[i,j] = (i, j, 1) # set the colour accordingly
-    
     
                     # update name counter & concat with base img name    
                     nextInc += 1
@@ -398,11 +350,43 @@ class xodEYEv:
                     imgPrototypeFull = imgOutDir+imgPrototypeNm+strInc+'.jpg'
                     
                     # write img to disk
-                    imio.imwrite(imgPrototypeFull, alphaB)
+                    imio.imwrite(imgPrototypeFull, newImg)
 
                     frameCnt += 1
     
         return
+    
+    
+    # // *--------------------------------------------------------------* //
+    # // *---::XODMKEYE - Image Linear Select Algorithm::---*
+    # // *--------------------------------------------------------------* //
+    
+    def xodImgLinSel(self, imgSeqArray, xLength, framesPerSec, n_digits,
+                     imgOutDir, imgOutNm='None'):
+    
+        if imgOutNm != 'None':
+            imgLinSelNm = imgOutNm
+        else:
+            imgLinSelNm = 'imgRndSelOut'
+            
+        numFrames = int(ceil(xLength * framesPerSec))
+        
+        imgCount = numFrames
+        nextInc = 1
+        for i in range(numFrames):
+            zr = ''
+            for j in range(n_digits - len(str(nextInc))):
+                zr += '0'
+            strInc = zr+str(nextInc)
+            imgNormalizeNm = imgLinSelNm+strInc+'.jpg'
+            imgLinSelFull = imgOutDir+imgNormalizeNm
+            imgTmp = imio.imread(imgSeqArray[eyeutil.circ_idx(i, len(imgSeqArray))])
+            imio.imwrite(imgLinSelFull, imgTmp)
+
+            nextInc += 1
+            
+        return
+    
     
     
     # // *--------------------------------------------------------------* //
@@ -411,13 +395,13 @@ class xodEYEv:
     
     
     def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx, fadeInOut, fwdRev,
-                   n_digit, eyeOutDirName, eyeOutFileName):
+                   n_digit, eyeOutDir, eyeOutFileNm):
         
         ''' Tempo based linear effects
             numFrames - total video output frames
             xFrames - frames per beat
             effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                      3 = div ; 4 = sobelXY ; 5 sobelZ
+                                      3 = cRotate ; 4 = sobelXY ; 5 sobelZ
             fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
             fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
             imgOutDir - full path output directory '''
@@ -425,18 +409,18 @@ class xodEYEv:
             
         numFrames = int(ceil(xLength * framesPerSec))
     
-        xBeats = int(np.floor(numFrames/xFrames))
-        xTail = int(np.floor(numFrames - xBeats*xFrames))
+        xBeats = int(np.floor(numFrames / xFrames))
+        xTail = int(np.floor(numFrames - xBeats * xFrames))
 
 
         for i in range(xBeats):
-            offsetIdx = eyeutil.circ_idx(i*xFrames, len(imgSeqArray))
+            offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
             self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, effx, 
-                               fadeInOut, fwdRev, n_digit, eyeOutDirName, eyeOutFileName)
+                               fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm)
         
-        offsetIdx = eyeutil.circ_idx(xBeats*xFrames, len(imgSeqArray))
+        offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
         self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, effx, 
-                           fadeInOut, fwdRev, n_digit, eyeOutDirName, eyeOutFileName)
+                           fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm)
 
         return
     
@@ -449,7 +433,7 @@ class xodEYEv:
             imgFileList - list of full path file names, .jpg
             numFrames - length of output sequence written to out dir
             effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                      3 = div ; 4 = sobelXY ; 5 sobelZ
+                                      3 = cRotate ; 4 = sobelXY ; 5 sobelZ
             fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
             fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 2 = rev
             imgOutDir - full path output directory '''
@@ -502,35 +486,21 @@ class xodEYEv:
                 resImg = img1
 
             if effx == 2:
-                imgPIL1 = Image.fromarray(img1)
-                if fadeInOut == 2:
-                    solarB = ImageOps.solarize(imgPIL1, solarX[numFrames-1-i])
-                else:
-                    solarB = ImageOps.solarize(imgPIL1, solarX[i])
-                solarB = ImageOps.autocontrast(solarB, cutoff=0)
-                resImg = np.array(solarB)
+#                imgPIL1 = Image.fromarray(img1)
+#                if fadeInOut == 2:
+#                    solarB = ImageOps.solarize(imgPIL1, solarX[numFrames-1-i])
+#                else:
+#                    solarB = ImageOps.solarize(imgPIL1, solarX[i])
+#                solarB = ImageOps.autocontrast(solarB, cutoff=0)
+#                resImg = np.array(solarB)
+                resImg = img1
 
             elif effx == 3:
-                if fwdRev == 2:
-                    img2 = imio.imread(imgFileList[(numFrames-1-i) % len(imgFileList)])
-                else:
-                    img2 = imio.imread(imgFileList[(i+1) % len(imgFileList)])
-                #imgPIL2 = Image.fromarray(imgB)
-                
-                if fadeInOut == 2:
-                    # image division blend algorithm..
-                    c = img1/((img2.astype('float')+1)/(256*alphaX[i]))
-                    # saturating function - if c[m,n] > 255, set to 255:
-                    imgDIVB = c*(c < 255)+255*np.ones(np.shape(c))*(c > 255)
-                    
-                else:
-                    # image division blend algorithm..
-                    c = img1/((img2.astype('float')+1)/(256*alphaX[numFrames-1-i]))
-                    # saturating function - if c[m,n] > 255, set to 255:
-                    imgDIVB = c*(c < 255)+255*np.ones(np.shape(c))*(c > 255)
-                imgDIVpil = Image.fromarray(imgDIVB.astype(np.uint8))
-                imgAutoCon = ImageOps.autocontrast(imgDIVpil, cutoff=0)
-                resImg = np.array(imgAutoCon)
+                img3 = imio.imread(imgFileList[(i+1) % len(imgFileList)])
+                imgPIL3 = Image.fromarray(img3.astype(np.uint8))
+                # RGB rotate..
+                imgRgbRot = eyeutil.xodColorRotate(imgPIL3, alphaX[i])
+                resImg = np.array(imgRgbRot)
                 resImg = resImg.astype(np.uint8)
                 
             elif effx == 4:
@@ -1390,173 +1360,15 @@ class xodEYEv:
     
         return
   
-  
-    # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - EYE Pixel Random Replace::---*
-    # // *--------------------------------------------------------------* //
-
-    #def odmkPxlRndReplace(self, imgArray, sLength, framesPerSec, frameCtrl, imgOutDir, imgOutNm='None'):
-    def odmkPxlRndRotate(self, imgArray, sLength, framesPerSec, framesPerBeat, imgOutDir, imgOutNm='None'):
-        ''' swap n pixels per frame from consecutive images'''
-    
-        if imgOutNm != 'None':
-            pxlRndReplaceNm = imgOutNm
-        else:
-            pxlRndReplaceNm = 'pxlRndReplace'
-    
-        SzX = imgArray[0].shape[1]
-        SzY = imgArray[0].shape[0]
-    
-        numFrames = int(ceil(sLength * framesPerSec))
-
-        framesPerBeat = int(2 * framesPerBeat)
-
-        numBeats = int(ceil(numFrames / framesPerBeat))
-
-
-        print('// *---numFrames = '+str(numFrames)+'---*')
-        #print('// *---FrameCtrl = '+str(frameCtrl)+'---*')
-        #print('// *---numXfades = '+str(numXfades)+'---*')    
-    
-        numImg = len(imgArray)
-        #numxfadeImg = numImg * frameCtrl
-    
-        n_digits = int(ceil(np.log10(numFrames))) + 2
-        nextInc = 0
-
-        eyeBase1 = Image.fromarray(imgArray[eyeutil.randomIdx(numImg)])
-    
-        #zn = cyclicZn(framesPerBeat-1)    # less one, then repeat zn[0] for full 360
-        zn = eyeutil.cyclicZn(2*framesPerBeat)    # less one, then repeat zn[0] for full 360
-
-        zoomScalarXArr = np.linspace(16, SzX//3, framesPerBeat) 
-        zoomScalarYArr = np.linspace(9, SzY//3, framesPerBeat)
-            
-        alphaX = np.linspace(0.0001, 1.0, framesPerBeat)
-
-
-
-        frameCnt = 0
-        for j in range(numBeats - 1):
-            
-            imgZoom1 = Image.fromarray(imgArray[eyeutil.randomIdx(numImg)])
-            imgZoom2 = Image.fromarray(imgArray[eyeutil.randomIdx(numImg)])
-            zoomVertex1 = eyeutil.randomPxlLoc(SzX, SzY)
-            rotDirection = round(random.random())
-            
-            if frameCnt <= numFrames:
-                
-                for i in range(framesPerBeat):
-
-                    # background image base (pxlRndReplace)
-                    #----------------------------------------------------------
-                    
-                    boxSzX = round(SzX*random.random()) + 16
-                    boxSzY = round(SzY*random.random()) + 9                    
- 
-                    rndPxlLoc = eyeutil.randomPxlLoc(SzX, SzY)
-                    alpha = random.random()
-
-                    # imgPIL1 = Image.fromarray(imgArray[i % (numImg-1)])
-                    imgPIL1 = Image.fromarray(imgArray[eyeutil.randomIdx(numImg)])
-    
-                    eyeBase1 = self.eyeBox1(eyeBase1, imgPIL1, boxSzX, boxSzY, rndPxlLoc, alpha)
-
-                    #----------------------------------------------------------
-
-                    # setup crop coordinates for Zoom sub image
-                    # coordinates = (left, bottom, right, top)
-
-                    if (zoomVertex1[0] - int(zoomScalarXArr[i])) < 0:
-                        zBoxLeft = 0
-                    else:
-                        zBoxLeft = zoomVertex1[0] - int(zoomScalarXArr[i])
-
-                    if (zoomVertex1[1] - int(zoomScalarYArr[i])) < 0:
-                        zBoxBottom = 0
-                    else:
-                        zBoxBottom = zoomVertex1[1] - int(zoomScalarYArr[i])                   
-
-                    if (zoomVertex1[0] + int(zoomScalarXArr[i])) > SzX:
-                        zBoxRight = SzX
-                    else:
-                        zBoxRight = zoomVertex1[0] + int(zoomScalarXArr[i])
-
-                    if (zoomVertex1[1] + int(zoomScalarYArr[i])) > SzX:
-                        zBoxTop = SzX
-                    else:
-                        zBoxTop = zoomVertex1[1] + int(zoomScalarYArr[i])
-
-                   
-                    boxZoom = (int(zBoxLeft), int(zBoxBottom), int(zBoxRight), int(zBoxTop))
-                    
-                    subSzX = boxZoom[2] - boxZoom[0]
-                    subSzY = boxZoom[3] - boxZoom[1]
-                    
-                    
-                    subLeft = int(SzX//2 - subSzX//2)
-                    subBottom = int(SzY//2 - subSzY//2)
-                    subRight = subLeft + subSzX
-                    subTop = subBottom + subSzY
-                    
-                    subBox = (subLeft, subBottom, subRight, subTop)
-                    
-                    #pdb.set_trace()                  
-                    
-                    #eyeSub1 = imgZoom1.crop(boxZoom) 
-                    #eyeSub2 = imgZoom2.crop(boxZoom)
-                    eyeSub1 = imgZoom1.crop(subBox) 
-                    eyeSub2 = imgZoom2.crop(subBox)
-
-                    
-                    alphaB = Image.blend(eyeSub1, eyeSub2, alphaX[i])
-                    
-                    alphaB = np.array(alphaB)
-                    ang = (atan2(zn[i % (framesPerBeat-1)].imag, zn[i % (framesPerBeat-1)].real))*180/np.pi
-                    if rotDirection == 1:
-                        ang = -ang
-
-                    rotate_alphaB = ndimage.rotate(alphaB, ang, reshape=False)
-
-                    
-                    rotate_alphaZ = self.cropZoom(rotate_alphaB, 2)
-                    rotate_alphaZ = Image.fromarray(rotate_alphaZ)
-                    
-
-                    #----------------------------------------------------------
-                    
-                    eyeBase1.paste(rotate_alphaZ, boxZoom)
-
-
-                    # update name counter & concat with base img name    
-                    nextInc += 1
-                    zr = ''
-                    for j in range(n_digits - len(str(nextInc))):
-                        zr += '0'
-                    strInc = zr+str(nextInc)
-                    pxlRndReplaceFull = imgOutDir+pxlRndReplaceNm+strInc+'.jpg'
-                    
-                    # write img to disk
-                    imio.imwrite(pxlRndReplaceFull, eyeBase1)
-            
-                    frameCnt += 1
-    
-        return  
-  
-  
    
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYEV - Frame Parascope telescope video f::---*
     # // *--------------------------------------------------------------* //
     
     def xodVFrameParascope(self, imgFileList, xLength, framesPerSec, xfadeFrames, 
-                           n_digits, imgOutDir, imgOutNm='None', inOrOut=0):
+                           n_digits, imgOutDir, imgOutNm, inOrOut=0):
         ''' xodVFrameParascope function '''
-    
-        if imgOutNm != 'None':
-            imgVFrameParascopeNm = imgOutNm
-        else:
-            imgVFrameParascopeNm = 'imgVFrameParascope'
+
     
         #imgObjTemp1 = Image.open(imgFileList[eyeutil.randomIdx(numImg)])
         imgObjTemp1 = Image.open(imgFileList[0])
@@ -1686,7 +1498,7 @@ class xodEYEv:
                         for j in range(n_digits - len(str(numFrames - (nextInc)))):
                             zr += '0'
                         strInc = zr+str(numFrames - (nextInc))
-                    imgVFrameParascopeFull = imgOutDir+imgVFrameParascopeNm+strInc+'.jpg'
+                    imgVFrameParascopeFull = imgOutDir + imgOutNm+strInc + '.jpg'
                     imgBpTscOut.save(imgVFrameParascopeFull)
                     
                     frameCnt += 1
@@ -2228,13 +2040,17 @@ class xodEYEv:
         return
 
 
+
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - ODMKEYE - EYE FxSlothCultLife Glitch::---*
     # // *--------------------------------------------------------------* //
     
-    def odmkFxSlothCult(self, imgFileList, xLength, framesPerSec, xfadeFrames, imgOutDir, imgOutNm='None', inOrOut=0):
-        ''' BSlothGlitch1 function '''
+    #def odmkVideoGoreXXZ01(self, imgFileList, xLength, framesPerSec, xfadeFrames, imgOutDir, imgOutNm, inOrOut=0):
+    def xodVideoGoreXXZ01(self, imgFileList, xLength, framesPerSec, xfadeFrames,
+                          n_digits, imgOutDir, imgOutNm, inOrOut=0):
+        ''' xodVideoGoreXXZ01 function '''
 
+        #pdb.set_trace()
         imgObjTemp1 = imio.imread(imgFileList[0])  
         imgObjTemp2 = imio.imread(imgFileList[0])        
 
@@ -2246,14 +2062,7 @@ class xodEYEv:
         if imgObjTemp2.shape[1] != SzX or imgObjTemp2.shape[0] != SzY:
             print('ERROR: image arrays must be the same size')
             return 1
-    
-        if imgOutNm != 'None':
-            imgFxSlothCultNm = imgOutNm
-        else:
-            imgFxSlothCultNm = 'imgFxSlothCult'
 
-
-    
         numFrames = int(ceil(xLength * framesPerSec))
         numXfades = int(ceil(numFrames / xfadeFrames))
         numFinalXfade = int(ceil(numFrames - (floor(numFrames / xfadeFrames) * xfadeFrames)))
@@ -2264,23 +2073,19 @@ class xodEYEv:
         print('// *---numXfades = '+str(numXfades)+'---*')    
     
         numImg = len(imgFileList)        
-    
-        n_digits = int(ceil(np.log10(numFrames))) + 2
+
         nextInc = 0
         # example internal control signal 
         hop_sz = ceil(np.log(SzX/xfadeFrames))  # number of pixels to scale img each iteration
     
- 
-    
+
         frameCnt = 0
         for j in range(numXfades):
-                                # random img grap from image Array
-
                 
             # initialize output
             # ***** normally use imgClone1.copy(), but this function abuses the assignment
-            imgBpTsc1 = misc.imread(imgFileList[j*xfadeFrames % numImg])
-            imgBpTscOut = misc.imread(imgFileList[j*xfadeFrames % numImg])
+            imgBpTsc1 = Image.open(imgFileList[j*xfadeFrames % numImg])
+            imgBpTscOut = Image.open(imgFileList[j*xfadeFrames % numImg])
             
             # offset by n frames
             #imgBpTsc1 = misc.imread(imgFileList[(j*xfadeFrames+5560) % numImg])
@@ -2341,8 +2146,7 @@ class xodEYEv:
             for t in range(xFrames):
                 if frameCnt < numFrames:    # process until end of total length
                 
-                    imgBpTsc2 = misc.imread(imgFileList[frameCnt % numImg])
-                    #imgBpTsc2 = misc.imread(imgFileList[(frameCnt+5560) % numImg])
+                    imgBpTsc2 = Image.open(imgFileList[frameCnt % numImg])
 
                     if newDimX > hop_sz:
                         #newDimX -= 2*hop_sz
@@ -2352,9 +2156,13 @@ class xodEYEv:
                         newDimY -= hop_sz
                         
                     # scale image to new dimensions
-                    imgObjTemp1 = misc.imread(imgFileList[frameCnt % numImg])
-                    #imgObjTemp1 = misc.imread(imgFileList[(frameCnt+5560) % numImg])
-                    imgItr1 = self.odmkEyeRescale(imgObjTemp1, newDimX, newDimY)
+                    imgObjTemp1 = Image.open(imgFileList[frameCnt % numImg])
+                    imgObjTemp2 = Image.open(imgFileList[(numFrames-frameCnt-1) % numImg])
+                    
+                    imgItr1 = eyeutil.eyePhiFrame2(imgObjTemp1, imgObjTemp2, 'UR')    
+                    
+                    imgItr1 = imgItr1.resize((newDimX, newDimY), resample=Image.BICUBIC)
+                    
                     if rotateSubFrame1 == 1:
                         
                         ang = (atan2(zn[t % (xFrames-1)].imag, zn[t % (xFrames-1)].real))*180/np.pi
@@ -2363,7 +2171,7 @@ class xodEYEv:
                             
                         imgItr1 = ndimage.rotate(imgItr1, ang, reshape=False)
 
-                    imgItr2 = self.odmkEyeRescale(imgBpTsc1, newDimX, newDimY)
+                    imgItr2 = imgBpTsc1.resize((newDimX, newDimY), resample=Image.BICUBIC)
                     if rotateSubFrame2 == 1:
                     
                         ang = (atan2(zn[t % (xFrames-1)].imag, zn[t % (xFrames-1)].real))*180/np.pi
@@ -2376,17 +2184,25 @@ class xodEYEv:
                     # region = (left, upper, right, lower)
                     # subbox = (i + 1, i + 1, newDimX, newDimY)
 
-                    for j in range(SzY):
-                        for k in range(SzX):
-                            
-                            if ((j >= (t+1)*hop_sz) and (j < newDimY+((t+1)*hop_sz)/2) and (k >= (t+1)*hop_sz) and (k < newDimX+((t+1)*hop_sz)/2)):
-                                
-                                if (j+offsetY >= 0  and j+offsetY < SzY) and (k+offsetX >= 0  and k+offsetX < SzX):
-                                    #print('*****j = '+str(j)+'; k = '+str(k)+'; j+offsetY = '+str(j+offsetY)+'; k+offsetX = '+str(k+offsetX))
-                                    imgBpTsc1[j+offsetY, k+offsetX, :] = imgItr1[int(j - (SzY-newDimY)/2), int(k - (SzX-newDimX)/2), :]
-                                    imgBpTsc2[j+offsetY, k+offsetX, :] = imgItr2[int(j - (SzY-newDimY)/2), int(k - (SzX-newDimX)/2), :]                                
-
-                    imgBpTscOut = Image.blend(Image.fromarray(imgBpTsc1), Image.fromarray(imgBpTsc2), alphaX[t])
+#                    for j in range(SzY):
+#                        for k in range(SzX):
+#                            
+#                            if ((j >= (t+1)*hop_sz) and (j < newDimY+((t+1)*hop_sz)/2) and (k >= (t+1)*hop_sz) and (k < newDimX+((t+1)*hop_sz)/2)):
+#                                
+#                                if (j+offsetY >= 0  and j+offsetY < SzY) and (k+offsetX >= 0  and k+offsetX < SzX):
+#                                    #print('*****j = '+str(j)+'; k = '+str(k)+'; j+offsetY = '+str(j+offsetY)+'; k+offsetX = '+str(k+offsetX))
+#                                    imgBpTsc1[j+offsetY, k+offsetX, :] = imgItr1[int(j - (SzY-newDimY)/2), int(k - (SzX-newDimX)/2), :]
+#                                    imgBpTsc2[j+offsetY, k+offsetX, :] = imgItr2[int(j - (SzY-newDimY)/2), int(k - (SzX-newDimX)/2), :]
+#                    
+                    
+                    # calculate box = tuple
+                    newXYbox1 = ( -offsetX, -offsetY )
+                    newXYbox2 = ( offsetX, offsetY )
+                    
+                    imgBpTsc1.paste(imgItr1, box=newXYbox1, mask=None)
+                    imgBpTsc2.paste(imgItr2, box=newXYbox2, mask=None)
+                    
+                    imgBpTscOut = Image.blend(imgBpTsc1, imgBpTsc2, alphaX[t])
                     imgBpTscOut = ImageOps.autocontrast(imgBpTscOut, cutoff=0)
 
                     # update name counter & concat with base img name    
@@ -2402,200 +2218,7 @@ class xodEYEv:
                         for j in range(n_digits - len(str(curInc + xCnt))):
                             zr += '0'
                         strInc = zr+str(curInc + xCnt)
-                    imgFxSlothCultFull = imgOutDir+imgFxSlothCultNm+strInc+'.jpg'
-                    imio.imwrite(imgFxSlothCultFull, imgBpTscOut)
-    
-                    # optional write to internal buffers
-                    # imgDualBipolarTelescNmArray.append(imgDualBipolarTelescFull)
-                    # imgDualBipolarTelescArray.append(imgBpTsc)
-
-                    xCnt -= 1                    
-                    frameCnt += 1
-    
-        return
-        # return [imgBSlothRecursArray, imgBSlothRecursNmArray]
-
-
-
-    # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - ODMKEYE - EYE FxSlothCultLife Glitch::---*
-    # // *--------------------------------------------------------------* //
-    
-    def odmkVideoGoreXXZ01(self, imgFileList, xLength, framesPerSec, xfadeFrames, imgOutDir, imgOutNm='None', inOrOut=0):
-        ''' odmkVideoGoreXXZ01 function '''
-
-        #pdb.set_trace()
-        imgObjTemp1 = imio.imread(imgFileList[0])  
-        imgObjTemp2 = imio.imread(imgFileList[0])        
-
-        SzX = imgObjTemp1.shape[1]
-        SzY = imgObjTemp1.shape[0]
-        
-        #pdb.set_trace()
-        
-        if imgObjTemp2.shape[1] != SzX or imgObjTemp2.shape[0] != SzY:
-            print('ERROR: image arrays must be the same size')
-            return 1
-    
-        if imgOutNm != 'None':
-            imgFxSlothCultNm = imgOutNm
-        else:
-            imgFxSlothCultNm = 'imgFxSlothCult'
-
-
-    
-        numFrames = int(ceil(xLength * framesPerSec))
-        numXfades = int(ceil(numFrames / xfadeFrames))
-        numFinalXfade = int(ceil(numFrames - (floor(numFrames / xfadeFrames) * xfadeFrames)))
-    
-        print('// *---source image dimensions = '+str(SzX)+' x '+str(SzY))
-        print('// *---numFrames = '+str(numFrames)+'---*')
-        print('// *---numxfadeImg = '+str(xfadeFrames)+'---*')
-        print('// *---numXfades = '+str(numXfades)+'---*')    
-    
-        numImg = len(imgFileList)        
-    
-        n_digits = int(ceil(np.log10(numFrames))) + 2
-        nextInc = 0
-        # example internal control signal 
-        hop_sz = ceil(np.log(SzX/xfadeFrames))  # number of pixels to scale img each iteration
-    
- 
-    
-        frameCnt = 0
-        for j in range(numXfades):
-                                # random img grap from image Array
-
-                
-            # initialize output
-            # ***** normally use imgClone1.copy(), but this function abuses the assignment
-            imgBpTsc1 = imio.imread(imgFileList[j*xfadeFrames % numImg])
-            imgBpTscOut = imio.imread(imgFileList[j*xfadeFrames % numImg])
-            
-            # offset by n frames
-            #imgBpTsc1 = misc.imread(imgFileList[(j*xfadeFrames+5560) % numImg])
-            #imgBpTscOut = misc.imread(imgFileList[(j*xfadeFrames+4560) % numImg])
-
-            newDimX = SzX     # start with master img dimensions
-            newDimY = SzY
-                              
-            # calculate X-Y random focal point to launch telescope
-            focalRnd1 = eyeutil.randomPxlLoc(int(SzX/2), int(SzY))
-            if (focalRnd1[0] < SzX/2):
-                offsetX = -int(SzX/2 - focalRnd1[0])
-            else:
-                offsetX = int(focalRnd1[0] - SzX/2)
-            if (focalRnd1[1] < SzY/2):
-                offsetY = -int(SzY/2 - focalRnd1[1])
-            else:
-                offsetY = int(focalRnd1[1] - SzY/2)
-
-            #print('focalRnd1 = ['+str(focalRnd1[0])+', '+str(focalRnd1[1])+']')
-            #print('offsetX = '+str(offsetX))
-            #print('offsetY = '+str(offsetY))
-
-            # focalRnd2 = randomPxlLoc(SzX, SzY)
-
-            rotateSubFrame1 = 0             # randomly set rotation on/off
-            rotDirection1 = 0
-#            if (round(random.random())):
-#                rotateSubFrame1 = 1
-#                if (round(random.random())):
-#                    rotDirection1 = 1
-
-            rotateSubFrame2 = 0             # randomly set rotation on/off
-            rotDirection2 = 0            
-#            if (round(random.random())):
-#                rotateSubFrame2 = 1
-#                if (round(random.random())):
-#                    rotDirection2 = 1
-
-            # functionalize then call for each telescope
-#            xfadeMpy = round(3*random.random())
-#            if xfadeMpy == 0:
-#                xfadeMpy = 1
-#            xFrames = xfadeFrames*xfadeMpy    # randomly mpy xfadeFrames 1:3
-            xFrames = xfadeFrames
-            
-            
-            alphaX = np.linspace(0.0, 1.0, xFrames)   
-            zn = eyeutil.cyclicZn(xFrames-1)    # less one, then repeat zn[0] for full 360            
-
-            # handles final xfade 
-            if j == numXfades-1:
-                xCnt = numFinalXfade
-            else:
-                xCnt = xFrames
-            curInc = nextInc
-            
-            for t in range(xFrames):
-                if frameCnt < numFrames:    # process until end of total length
-                
-                    imgBpTsc2 = misc.imread(imgFileList[frameCnt % numImg])
-
-                    if newDimX > hop_sz:
-                        #newDimX -= 2*hop_sz
-                        newDimX -= hop_sz
-                    if newDimY > hop_sz:
-                        #newDimY -= 2*hop_sz
-                        newDimY -= hop_sz
-                        
-                    # scale image to new dimensions
-                    imgObjTemp1 = misc.imread(imgFileList[frameCnt % numImg])            
-                    imgObjTemp2 = misc.imread(imgFileList[(numFrames-frameCnt-1) % numImg])
-                    
-                    imgItr = self.eyePhiFrame3(imgObjTemp1, imgObjTemp2, 'UR')    
-                    
-                    imgItr = self.odmkEyeRescale(imgItr, newDimX, newDimY)
-                    
-                    if rotateSubFrame1 == 1:
-                        
-                        ang = (atan2(zn[t % (xFrames-1)].imag, zn[t % (xFrames-1)].real))*180/np.pi
-                        if rotDirection1 == 1:
-                            ang = -ang
-                            
-                        imgItr1 = ndimage.rotate(imgItr, ang, reshape=False)
-
-                    imgItr2 = self.odmkEyeRescale(imgBpTsc1, newDimX, newDimY)
-                    if rotateSubFrame2 == 1:
-                    
-                        ang = (atan2(zn[t % (xFrames-1)].imag, zn[t % (xFrames-1)].real))*180/np.pi
-                        if rotDirection2 == 1:
-                            ang = -ang
-                            
-                        imgItr2 = ndimage.rotate(imgItr2, ang, reshape=False)
-
-
-                    # region = (left, upper, right, lower)
-                    # subbox = (i + 1, i + 1, newDimX, newDimY)
-
-                    for j in range(SzY):
-                        for k in range(SzX):
-                            
-                            if ((j >= (t+1)*hop_sz) and (j < newDimY+((t+1)*hop_sz)/2) and (k >= (t+1)*hop_sz) and (k < newDimX+((t+1)*hop_sz)/2)):
-                                
-                                if (j+offsetY >= 0  and j+offsetY < SzY) and (k+offsetX >= 0  and k+offsetX < SzX):
-                                    #print('*****j = '+str(j)+'; k = '+str(k)+'; j+offsetY = '+str(j+offsetY)+'; k+offsetX = '+str(k+offsetX))
-                                    imgBpTsc1[j+offsetY, k+offsetX, :] = imgItr1[int(j - (SzY-newDimY)/2), int(k - (SzX-newDimX)/2), :]
-                                    imgBpTsc2[j+offsetY, k+offsetX, :] = imgItr2[int(j - (SzY-newDimY)/2), int(k - (SzX-newDimX)/2), :]                                
-
-                    imgBpTscOut = Image.blend(Image.fromarray(imgBpTsc1), Image.fromarray(imgBpTsc2), alphaX[t])
-                    imgBpTscOut = ImageOps.autocontrast(imgBpTscOut, cutoff=0)
-
-                    # update name counter & concat with base img name    
-                    nextInc += 1
-                    zr = ''
-    
-                    # inOrOut controls direction of parascope func
-                    if inOrOut == 1:
-                        for j in range(n_digits - len(str(nextInc))):
-                            zr += '0'
-                        strInc = zr+str(nextInc)
-                    else:
-                        for j in range(n_digits - len(str(curInc + xCnt))):
-                            zr += '0'
-                        strInc = zr+str(curInc + xCnt)
-                    imgFxSlothCultFull = imgOutDir+imgFxSlothCultNm+strInc+'.jpg'
+                    imgFxSlothCultFull = imgOutDir + imgOutNm + strInc+'.jpg'
                     imio.imwrite(imgFxSlothCultFull, imgBpTscOut)
     
                     # optional write to internal buffers
@@ -2693,7 +2316,7 @@ class xodEYEv:
     # // *--------------------------------------------------------------* //
     
     def xodMskDualV(self, imgFileList, mskFileList, xLength, framesPerSec, xfadeFrames, 
-                      n_digits, imgOutDir, imgOutNm='None', effx=0, inOrOut=0):
+                      n_digits, imgOutDir, imgOutNm, effx=0, inOrOut=0):
         ''' xodMskDualESP function 
             effx = 0 -> full frame fade
             effx = 1 -> telescope fades 
@@ -2701,12 +2324,6 @@ class xodEYEv:
             effx = 3 -> maddog telescope fades
             effx = 4 -> random switch between 0 - 3 per xFade
         '''
-    
-        if imgOutNm != 'None':
-            xodMskDualESPNm = imgOutNm
-        else:
-            xodMskDualESPNm = 'imgMskLfoParascope'
-            
 
         numImg = len(imgFileList)
         numMsk = len(mskFileList)
@@ -2764,8 +2381,6 @@ class xodEYEv:
             imgMsk2 = imgMsk2.convert("L")
 
 
-            imgClone1 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
-            imgClone2 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
             if fx == 0:
                 imgClone3 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
                 imgClone4 = imgBpTscAlt
@@ -2789,8 +2404,6 @@ class xodEYEv:
 
                 
             # initialize output 
-            imgBpTsc1 = imgClone1.copy()
-            imgBpTsc2 = imgClone2.copy()
             imgBpTsc3 = imgClone3.copy()
             imgBpTsc4 = imgClone4.copy()
             if fx > 2:
@@ -2838,6 +2451,11 @@ class xodEYEv:
             # functionalize then call for each telescope    
             for t in range(xfadeFrames):
                 if frameCnt < numFrames:    # process until end of total length
+                    
+                    imgClone1 = Image.open(imgFileList[frameCnt % numImg])
+                    imgClone2 = Image.open(imgFileList[frameCnt % numImg])
+                    imgBpTsc1 = imgClone1.copy()
+                    imgBpTsc2 = imgClone2.copy()
 
                     if newDimX > hop_sz:
                         newDimX -= hop_sz
@@ -2949,7 +2567,7 @@ class xodEYEv:
                         for j in range(n_digits - len(str(curInc + xCnt))):
                             zr += '0'
                         strInc = zr+str(curInc + xCnt)
-                    xodMskDualESPFull = imgOutDir+xodMskDualESPNm+strInc+'.jpg'
+                    xodMskDualESPFull = imgOutDir + imgOutNm + strInc+'.jpg'
                     imgBpTscOut.save(xodMskDualESPFull)
                     
                     xCnt -= 1

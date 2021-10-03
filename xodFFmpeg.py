@@ -137,15 +137,19 @@ class xodFFmpeg:
         #ffmpeg -i input -c:v libx264 -preset slow -crf 22 -c:a copy output.mkv
         #ffmpeg -i input -c:v libx265 -preset medium -crf 28 -c:a aac -b:a 128k output.mp4
         movie_cmd = ["ffmpeg",
-                     #'-r',  '%d' % frame_rate,
-                     '-r',  '30',
                      #'-i', os.path.join(eyeSrcDir, self.fmt_str),
                      '-i', src_name,
                      '-i', earSrc,
-                     '-c:v', 'libx265',
+                     '-c:v', 'libx264',
+                     #'-c:a aac',
+                     #'-b:a 3500k',
                      '-preset', 'medium',
-                     '-crf', '28',
-                     '-r', '30',
+                     '-crf', '15',
+                     '-r', '%d' % self.framesPerSec,
+                     #'-r', '30',
+                     '-shortest',
+                     '-fflags', '+shortest',
+                     #'-max_interleave_delta', '500M',
                      '-y' if self.overwrite else '-n',
                      movie_name]
         
