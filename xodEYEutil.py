@@ -33,11 +33,9 @@ from PIL import ImageOps
 #from PIL import ImageEnhance
 
 
-rootDir = '../'
+import xodEyeSetRootDir as xdir
 
-
-#sys.path.insert(0, 'C:/odmkDev/odmkCode/odmkPython/util')
-sys.path.insert(0, rootDir+'util')
+sys.path.insert(0, xdir.rootDir+'util')
 
 
 # temp python debugger - use >>>pdb.set_trace() to set break

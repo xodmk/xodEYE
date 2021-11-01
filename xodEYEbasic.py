@@ -17,6 +17,7 @@
 # *****************************************************************************
 
 import os
+import sys
 import glob, shutil
 from math import atan2, floor, ceil
 import random
@@ -37,25 +38,25 @@ from matplotlib.colors import LightSource
 
 
 
-eyeDir = './'
+runDir = 'C:/XODMK/xodmkCode/xodmkPython/eye/'
+os.chdir(runDir)
+
+import xodEyeSetRootDir as xdir
+
+sys.path.insert(0, xdir.rootDir+'eye')
+import xodEYEutil as eyeutil
+
 
 eyeBasicDirName = 'eyeBasicTestDir/'
-testDir = eyeDir+eyeBasicDirName
+testDir = xdir.eyeDir+eyeBasicDirName
 
 jpgSrcDir = testDir+'src/'
 imgOutDir = testDir
 os.makedirs(imgOutDir, exist_ok=True)
 
 
-#sys.path.insert(0, rootDir+'util')
-#import xodPlotUtil as xodplt
-
-
-
 # temp python debugger - use >>>pdb.set_trace() to set break
 import pdb
-
-
 
 # // *---------------------------------------------------------------------* //
 plt.close('all')
@@ -630,67 +631,6 @@ def odmkScaleAll(srcImgList, SzX, SzY, w=0, high=0, outDir='None', outName='None
 
 
 
-#def odmkScaleAll(srcObjList, SzX, SzY, w=0, high=0, outDir='None', outName='None'):
-#    ''' rescales and normalizes all .jpg files in image object list.
-#        scales, zooms, & crops images to dimensions SzX, SzY
-#        Assumes srcObjList of ndimage objects exists in program memory
-#        Typically importAllJpg is run first.
-#        if w == 1, write processed images to output directory'''
-#
-#    # check write condition, if w=0 ignore outDir
-#    if w == 0 and outDir != 'None':
-#        print('Warning: write = 0, outDir ignored')
-#    if w == 1:
-#        if outDir == 'None':
-#            print('Error: outDir must be specified; processed img will not be saved')
-#            w = 0
-#        else:
-#            # If Dir does not exist, makedir:
-#            os.makedirs(outDir, exist_ok=True)
-#    if outName != 'None':
-#        imgScaledOutNm = outName
-#    else:
-#        imgScaledOutNm = 'odmkScaleAllOut'
-#
-#    imgScaledNmArray = []
-#    imgScaledArray = []
-#
-#    imgCount = len(srcObjList)
-#    # Find num digits required to represent max index
-#    n_digits = int(ceil(np.log10(imgCount))) + 2
-#    nextInc = 0
-#    for k in range(imgCount):
-#        imgScaled = odmkEyeDim(srcObjList[k], SzX, SzY, high)
-#        # auto increment output file name
-#        nextInc += 1
-#        zr = ''    # reset lead-zero count to zero each itr
-#        for j in range(n_digits - len(str(nextInc))):
-#            zr += '0'
-#        strInc = zr+str(nextInc)
-#        imgScaledNm = imgScaledOutNm+strInc+'.jpg'
-#        if w == 1:
-#            imgScaledFull = outDir+imgScaledNm
-#            misc.imsave(imgScaledFull, imgScaled)
-#        imgScaledNmArray.append(imgScaledNm)
-#        imgScaledArray.append(imgScaled)
-#
-#    if w == 1:    
-#        print('Saved Scaled images to the following location:')
-#        print(imgScaledFull)
-#
-#    print('\nScaled all images in the source directory\n')
-#    print('Renamed files: "processScaled00X.jpg"')
-#
-#    print('\nCreated numpy arrays:')
-#    print('<<imgScaledArray>> (img data objects)')
-#    print('<<imgScaledNmArray>> (img names)\n')
-#
-#    print('\n')
-#
-#    print('// *--------------------------------------------------------------* //')
-#
-#    return [imgScaledArray, imgScaledNmArray]
-
 
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -721,58 +661,8 @@ SzX = 1280
 SzY = 720
 
 
-
-
-# eyeOutFileName = 'microscopic'
-# eyeBasicDirName = 'microscopicDir/'
-
-
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-## Load input image:
-#gorgulan11 = misc.imread(srcDir+'keiLHC.jpeg')
-#
-#numImg = 33
-#
-#hRotVal = np.linspace(0, 6*np.pi, numImg)
-#hRotVal = np.sin(hRotVal)
-#
-#
-##green_hue = (180-78)/360.0
-##red_hue = (180-180)/360.0
-##rot_hue = (50)/360.0
-#
-#
-#
-##gorgulanRed = shift_hue(gorgulan11, rot_hue)
-#
-##eyeHueFull = outDir+'eyeHue.jpg'
-##misc.imsave(eyeHueFull, gorgulanRed)
-#
-#
-#n_digits = int(ceil(np.log10(numImg))) + 2
-#nextInc = 0
-#for i in range(numImg):
-#    
-#    gorgulanShift = shift_hue(gorgulan11, hRotVal[i])    
-#    
-#    nextInc += 1
-#    zr = ''
-#    for j in range(n_digits - len(str(nextInc))):
-#        zr += '0'
-#    strInc = zr+str(nextInc)
-#    eyeHueIdxNm = eyeHueNm+strInc+'.jpg'
-#    eyeHueFull = outDir+eyeHueIdxNm
-#    misc.imsave(eyeHueFull, gorgulanShift)
-
-
-
-# // *********************************************************************** //
-# // *********************************************************************** //
-# // *********************************************************************** //
-
 
 def eyeRotate(img, ang, rotd=0):
     ''' example rotate image
@@ -805,50 +695,6 @@ def eyeRotate(img, ang, rotd=0):
         
     return imgRot
         
-    
-#    #SzX = img1.size[0]
-#    #SzY = img1.size[1]
-#    
-#    
-#    # cZn[k] = np.cos(((k)*2*np.pi)/n) + np.sin(((k)*2*np.pi)/n)*1j   # Euler's identity
-#    #cZn = cyclicZn(n)
-#    
-#    imgBlend = img1
-#            
-#    for k in range(1,n):
-#        
-#        
-#        if k%2==1:
-#            imgx = img2
-#        else:
-#            imgx = img1
-#            
-#        
-#        alphaX = 0.23    #???
-#        
-#        ang = (atan2(cZn[k].imag, cZn[k].real))*360/np.pi
-#        if rotd == 1:
-#            ang = -ang
-#
-#
-#        imgRot1 = ndimage.rotate(imgx, ang, reshape=False)
-#        imgRot1 = cropZoom(imgRot1, 2)
-#        
-#        #pdb.set_trace()
-#
-#        #img = Image.fromarray(array)
-#        imgBlend = Image.blend(imgBlend, Image.fromarray(imgRot1), alphaX) 
-#        
-#    imgBlend = ImageOps.autocontrast(imgBlend, cutoff=0)
-#
-#
-#    eyeOut = imgBlend
-#    
-#    #eyeOutFileName = 'eyeMirrorHV4'
-#    #eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
-#    #misc.imsave(eyeMirrorHV4Full, mirrorImg)
-#    
-#    return eyeOut
 
 
 if (0):
@@ -886,10 +732,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-
-
 
 # ***** EYE horizontal / vertical / diagonal scroll tests *****
 
@@ -935,111 +777,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-
-
-def horizTrails(img, SzX, SzY, nTrail, ctrl):
-    ''' reconstructs img with left & right trails
-        nTrail controls number of trails
-        ctrl controls x-axis coordinates '''
-    
-    if ctrl == 0:    # linear
-        trails = np.linspace(0, SzX/2, nTrail+2)
-        trails = trails[1:len(trails)-1]
-    
-    else:    # log spaced    
-        trails = np.log(np.linspace(1,10,nTrail+2))
-        sc = 1/max(trails)
-        trails = trails[1:len(trails)-1]
-        trails = trails*sc*int(SzX/2)
-    
-    alpha = np.linspace(0, 1, nTrail)
-    
-    # coordinates = (left, lower, right, upper)
-    boxL = (0, 0, int(SzX / 2), SzY)
-    eyeSubL = img.crop(boxL)
-    
-    boxR = (int(SzX / 2), 0, SzX, SzY)
-    eyeSubR = img.crop(boxR)
-    
-    
-    alphaCnt = 0
-    for trail in trails:
-    
-        itrail = int(trail)
-    
-        boxL_itr1 = (itrail, 0, int(SzX / 2), SzY)
-        eyeSubL_itr1 = img.crop(boxL_itr1)
-        #print('\nboxL_itr1 = '+str(boxL_itr1))    
-        
-        boxR_itr1 = (int(SzX / 2), 0, SzX - itrail, SzY)
-        eyeSubR_itr1 = img.crop(boxR_itr1)
-        #print('\nboxR_itr1 = '+str(boxR_itr1))
-        # if tcnt == 2:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
-        #pdb.set_trace()  
-        
-        boxL_base1 = (0, 0, int(SzX / 2) - itrail, SzY)
-        eyeSubL_base1 = img.crop(boxL_base1)
-        
-        boxR_base1 = (int((SzX / 2) + itrail), 0, SzX, SzY)
-        eyeSubR_base1 = img.crop(boxR_base1)
-        
-        eyeFadeL_itr1 = Image.blend(eyeSubL_itr1, eyeSubL_base1, alpha[alphaCnt])
-        eyeFadeR_itr1 = Image.blend(eyeSubR_itr1, eyeSubR_base1, alpha[alphaCnt])
-        
-        #pdb.set_trace()
-        
-        boxL_sb1 = (0, 0, int(SzX / 2) - itrail, SzY)
-        boxR_sb1 = (itrail, 0, int(SzX / 2), SzY)    
-       
-        
-        #eye1subL.paste(eye1subL_itr1, boxL_sb1)
-        #eye2subR.paste(eye2subR_itr1, boxR_sb1)
-        eyeSubL.paste(eyeFadeL_itr1, boxL_sb1)
-        eyeSubR.paste(eyeFadeR_itr1, boxR_sb1)    
-        
-        
-        img.paste(eyeSubL, boxL)
-        img.paste(eyeSubR, boxR)
-    
-        alphaCnt += 1
-
-    eyeOutFileName = 'eyeBoxExp'
-    eyeBoxFull = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeBoxFull, eye1imgCpy)
-    misc.imsave(eyeBoxFull, img)
-
-    return
-    
-
-if (0):
-
-    eyeMirExp4 = jpgSrcDir+'bananasloth0036.jpg'
-
-    #eye1 = misc.imread(eyeIn1)
-    eye2 = misc.imread(eyeMirExp4)
-    #eye1img = Image.fromarray(eye1)
-    eye2img = Image.fromarray(eye2)
-    
-    #eye1imgCpy = eye2img.copy()
-    eyeImgCpy = eye2img.copy()
-
-    
-    ctrl = 1
-    nTrail = 3
-    
-    img = eyeImgCpy
-    
-    horizTrails(img, SzX, SzY, nTrail, ctrl)
-
-
-
-# // *********************************************************************** //
-# // *********************************************************************** //
-# // *********************************************************************** //
-
-
 
 def eyeRndFour(img1, img2, img3, img4, SzX, SzY, pxlLoc):
     ''' generates composite 4 frame resized images
@@ -1119,9 +856,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-
 
 def eyeBlendFour(img1, img2, img3, img4, SzX, SzY, pxlLoc):
     ''' generates composite 4 frame resized images
@@ -1230,286 +964,60 @@ if (0):
     #misc.imsave(eyeBoxFull, eye1imgCpy)
     imio.imwrite(eyeB4ImgFull, eyeB4Img)
 
-# // *********************************************************************** //
-# // *********************************************************************** //
-# // *********************************************************************** //
-
-
-
-#def eyeMirrorHV4(img):
-#    ''' generates composite 4 frame resized images
-#        sub dimensions defined by pxlLoc [x, y]
-#        img1 - img4 PIL images
-#        pxlLoc: tuple of x and y coordinates '''
-#    
-#    
-#    SzX = img.size[0]
-#    SzY = img.size[1]  
-#    
-#    #alpha = np.linspace(0, 1, nTrail)
-#    
-#    # coordinates = (left, lower, right, upper)
-#    imgDim = (2*SzX, 2*SzY)
-#    
-#    newImg = Image.new('RGB', imgDim)  # e.g. ('RGB', (640, 480))
-#    
-#
-#    #boxUL = (0, SzY, SzX-1, 2*SzY-1)
-#    boxUL = (0, SzY, SzX, 2*SzY)
-#    boxUR = (SzX, SzY, 2*SzX, 2*SzY) 
-#    boxLL = (0, 0, SzX, SzY)
-#    boxLR = (SzX, 0, 2*SzX, SzY)
-#    
-#
-#    eyeSubUL = ImageOps.flip(img)
-#    eyeSubUL = ImageOps.mirror(eyeSubUL)
-#    eyeSubUR = ImageOps.flip(img)
-#    eyeSubLL = ImageOps.mirror(img)
-#
-#
-#    #pdb.set_trace()
-#
-#    newImg.paste(eyeSubUL, boxUL)
-#    newImg.paste(eyeSubUR, boxUR)
-#    newImg.paste(eyeSubLL, boxLL)
-#    newImg.paste(img, boxLR)
-#
-#    
-#    eyeOutFileName = 'eyeMirrorHV4'
-#    eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
-#    #misc.imsave(eyeBoxFull, eye1imgCpy)
-#    misc.imsave(eyeMirrorHV4Full, newImg)
-#    
-#    return
-#
-#
-#
-#eyeExp1 = jpgSrcDir+'bananasloth0036.jpg'
-#eyeExp2 = jpgSrcDir+'bananasloth0039.jpg'
-#eyeExp3 = jpgSrcDir+'microscopic00652.jpg'
-#eyeExp4 = jpgSrcDir+'microscopic00640.jpg'
-#
-#
-#eye1 = misc.imread(eyeExp1)
-#
-##eye1img = Image.fromarray(eye1)
-#eye1img = Image.fromarray(eye1)
-#
-#
-##ctrl = 1
-#
-#eyeMirrorHV4(eye1img)
-
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
 
-
-
-def eyeMirrorHV4(img, SzX, SzY, ctrl='UL'):
-    ''' generates composite 4 frame resized images
-        SzX, SzY: output image dimentions
-        img: PIL image object
-        ctrl: { UL, UR, LL, LR} - selects base quadrant '''
+if (1):
     
-    
-    if not(ctrl=='UL' or ctrl=='UR' or ctrl=='LL' or ctrl=='LR'):
-        print('ERROR: ctrl must be {UL, UR, LL, LR} <string>')
-        return
-    
-    imgSzX = img.size[0]
-    imgSzY = img.size[1]
-    
-    imgDim = (SzX, SzY)
-    
-    if (SzX == 2*imgSzX and SzY == 2*imgSzY):
-        subDim = (imgSzX, imgSzY)
-        imgX = img
-    else:
-        subDim = (int(SzX/2), int(SzY/2))
-        imgX = img.resize(subDim)
-    
-    
-    mirrorImg = Image.new('RGB', imgDim)  # e.g. ('RGB', (640, 480))
-    
-
-    #boxUL = (0, SzY, SzX-1, 2*SzY-1)
-    boxUL = (0, subDim[1], subDim[0], imgDim[1])
-    boxUR = (subDim[0], subDim[1], imgDim[0], imgDim[1]) 
-    boxLL = (0, 0, subDim[0], subDim[1])
-    boxLR = (subDim[0], 0, imgDim[0], subDim[1])
-    
-
-    if ctrl == 'LL':
-        eyeSubUL = imgX
-        eyeSubUR = ImageOps.mirror(imgX)
-        eyeSubLL = ImageOps.flip(imgX)
-        eyeSubLR = ImageOps.flip(imgX)
-        eyeSubLR = ImageOps.mirror(eyeSubLR)        
+    ''' Test eyeutil.eyeMirrorQuad function::
         
-        
-    if ctrl == 'LR':
-        eyeSubUL = ImageOps.mirror(imgX)
-        eyeSubUR = imgX
-        eyeSubLL = ImageOps.flip(imgX)
-        eyeSubLL = ImageOps.mirror(eyeSubLL)
-        eyeSubLR = ImageOps.flip(imgX)
-        
-        
-    if ctrl == 'UL':
-        eyeSubUL = ImageOps.flip(imgX)
-        eyeSubUR = ImageOps.flip(imgX)
-        eyeSubUR = ImageOps.mirror(eyeSubUR)
-        eyeSubLL = imgX
-        eyeSubLR = ImageOps.mirror(imgX)
+        # def eyeMirrorQuad(img, ctrl='UL', fullscl='0', resizeX='0', resizeY='0'):
+    
+        Selects a quadrant from source image, mirrors H & V
+        * img: PIL image object
+        * ctrl: { UL, UR, LL, LR} - selects base quadrant
+          Default output dimension = input dimension
+        * resizeX, resizeY: forces a new output image dimention 
+        * fullscl: if > 0 scales full image & repeats in 4 quadrants 
+          Default: crops image to base quadrant & repeats cropped image '''
 
 
-    if ctrl == 'UR':
-        eyeSubUL = ImageOps.flip(imgX)
-        eyeSubUL = ImageOps.mirror(eyeSubUL)
-        eyeSubUR = ImageOps.flip(imgX)
-        eyeSubLL = ImageOps.mirror(imgX)
-        eyeSubLR = imgX
-
-
-    #pdb.set_trace()
-
-    mirrorImg.paste(eyeSubUL, boxUL)
-    mirrorImg.paste(eyeSubUR, boxUR)
-    mirrorImg.paste(eyeSubLL, boxLL)
-    mirrorImg.paste(eyeSubLR, boxLR)
+    eyeExp1 = jpgSrcDir+'odmkSeijinMask_1080xx01.jpg'
+    eye1 = imio.imread(eyeExp1)
+    eye5img = Image.fromarray(eye1)
 
     
-    #eyeOutFileName = 'eyeMirrorHV4'
-    #eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeMirrorHV4Full, mirrorImg)
+    mirrorQuadTest1 = eyeutil.eyeMirrorQuad(eye5img)
+    mirrorQuadTest2 = eyeutil.eyeMirrorQuad(eye5img, ctrl='LR')
+    mirrorQuadTest3 = eyeutil.eyeMirrorQuad(eye5img, ctrl='LL')
+    mirrorQuadTest4 = eyeutil.eyeMirrorQuad(eye5img, ctrl='UR')
+    mirrorQuadTest5 = eyeutil.eyeMirrorQuad(eye5img, ctrl='UL', fullscl=1)
     
-    return mirrorImg
+    
+    eyeOutFileName = 'mirrorQuadTest1img'
+    mirrorQuadTest1Full = imgOutDir+eyeOutFileName+'.jpg'
+    imio.imsave(mirrorQuadTest1Full, mirrorQuadTest1)
+    
+    eyeOutFileName = 'mirrorQuadTest2img'
+    mirrorQuadTest2Full = imgOutDir+eyeOutFileName+'.jpg'
+    imio.imsave(mirrorQuadTest2Full, mirrorQuadTest2)
+    
+    eyeOutFileName = 'mirrorQuadTest3img'
+    mirrorQuadTest3Full = imgOutDir+eyeOutFileName+'.jpg'
+    imio.imsave(mirrorQuadTest3Full, mirrorQuadTest3)
 
-
-if (0):
-
-    eyeExp1 = jpgSrcDir+'bananasloth0036.jpg'
-    eyeExp2 = jpgSrcDir+'bananasloth0039.jpg'
-    eyeExp3 = jpgSrcDir+'microscopic00652.jpg'
-    eyeExp4 = jpgSrcDir+'microscopic00640.jpg'
-    eyeExp5 = jpgSrcDir+'microscopic0042.jpg'
+    eyeOutFileName = 'mirrorQuadTest4img'
+    mirrorQuadTest4Full = imgOutDir+eyeOutFileName+'.jpg'
+    imio.imsave(mirrorQuadTest4Full, mirrorQuadTest4)
     
-    eye1 = misc.imread(eyeExp2)
-    eye5 = misc.imread(eyeExp5)
-    
-    
-    #eye1img = Image.fromarray(eye1)
-    eye1img = Image.fromarray(eye1)
-    eye5img = Image.fromarray(eye5)
-    
-    #ctrl = 1
-    
-    mirrorHV4reScl = eyeMirrorHV4(eye5img, SzX, SzY, ctrl='LR')
-    mirrorHV4noScl = eyeMirrorHV4(eye5img, 2*SzX, 2*SzY, ctrl='LL')
-    
-    
-    eyeOutFileName = 'eye1img'
-    eye1imgFull = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeBoxFull, eye1imgCpy)
-    misc.imsave(eye1imgFull, eye1img)
-    
-    eyeOutFileName = 'mirrorHV4reSclTest'
-    mirrorHV4reSclFull = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeBoxFull, eye1imgCpy)
-    misc.imsave(mirrorHV4reSclFull, mirrorHV4reScl)
-    
-    eyeOutFileName = 'mirrorHV4noSclTest'
-    mirrorHV4noSclFull = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeBoxFull, eye1imgCpy)
-    imio.imwrite(mirrorHV4noSclFull, mirrorHV4noScl)
+    eyeOutFileName = 'mirrorQuadTest5img'
+    mirrorQuadTest5Full = imgOutDir+eyeOutFileName+'.jpg'
+    imio.imsave(mirrorQuadTest5Full, mirrorQuadTest5)
 
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-
-
-#def eyeRollFour(img1, SzX, SzY, ctrl):
-#    ''' generates composite 4 frame resized images
-#        sub dimensions defined by pxlLoc [x, y]
-#        img1 - img4 PIL images
-#        pxlLoc: tuple of x and y coordinates '''
-#    
-#    
-#    #alpha = np.linspace(0, 1, nTrail)
-#    
-#    # coordinates = (left, lower, right, upper)
-#    boxUL = (0, int(SzY/2), int(SzX/2), SzY)
-#    newSize = [int(pxlLoc[0]), int(SzY - pxlLoc[1])]
-#    eyeSubUL = img1.resize(newSize)
-#    
-#    #pdb.set_trace()    
-#    
-#    boxUR = (int(SzX/2), int(SzY/2), SzX, SzY)
-#    newSize = [int(SzX - pxlLoc[0]), int(SzY - pxlLoc[1])]
-#    eyeSubUR = img2.resize(newSize)
-#    
-#     # coordinates = (left, lower, right, upper)
-#    boxLL = (0, 0, int(SzX/2), int(SzY/2))
-#    newSize = [int(pxlLoc[0]), int(pxlLoc[1])]
-#    eyeSubLL = img3.resize(newSize)
-#    
-#    boxLR = (int(SzX/2), 0, SzX, int(SzY/2))
-#    newSize = [int(SzX - pxlLoc[0]), int(pxlLoc[1])]
-#    eyeSubLR = img4.resize(newSize)
-#    
-#
-#    img1.paste(eyeSubUL, boxUL)
-#    img1.paste(eyeSubUR, boxUR)
-#    img1.paste(eyeSubLL, boxLL)
-#    img1.paste(eyeSubLR, boxLR)
-#
-#    
-#    
-#    eyeOutFileName = 'rndEyeFourExp'
-#    rndEyeFourFull = imgOutDir+eyeOutFileName+'.jpg'
-#    #misc.imsave(eyeBoxFull, eye1imgCpy)
-#    misc.imsave(rndEyeFourFull, img1)
-#    
-#    return
-#
-#
-#
-#eyeExp1 = jpgSrcDir+'bananasloth0036.jpg'
-#eyeExp2 = jpgSrcDir+'bananasloth0039.jpg'
-#eyeExp3 = jpgSrcDir+'microscopic00652.jpg'
-#eyeExp4 = jpgSrcDir+'microscopic00640.jpg'
-#
-#
-#eye1 = misc.imread(eyeExp1)
-#eye2 = misc.imread(eyeExp2)
-#eye3 = misc.imread(eyeExp3)
-#eye4 = misc.imread(eyeExp4)
-##eye1img = Image.fromarray(eye1)
-#eye1img = Image.fromarray(eye1)
-#eye2img = Image.fromarray(eye2)
-#eye3img = Image.fromarray(eye3)
-#eye4img = Image.fromarray(eye4)
-#
-##eye1imgCpy = eye2img.copy()
-##eyeImgCpy = eye2img.copy()
-#
-#
-#
-#ctrl = 100
-#
-#
-#eyeRollFour(eye1img, SzX, SzY, ctrl)
-
-
-# // *********************************************************************** //
-# // *********************************************************************** //
-# // *********************************************************************** //
-
-
 
 def eyeBox1(img1, img2, boxSzX, boxSzY, pxlLoc, alpha):
     ''' alpha blends random box from img2 onto img1
@@ -1605,9 +1113,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-
 
 def eyePhiHorizFrame1(img1, img2, img3, ctrl=1):
     ''' generates composite 4 frame resized images
@@ -1715,9 +1220,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-
 
 def eyePhiFrame1(img1, img2, ctrl=1):
     ''' generates composite 4 frame resized images
@@ -1853,9 +1355,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-
 
 def eyePhiFrame2(img1, img2, ctrl='UL'):
     ''' generates subframes increasing by fibonacci sequence
@@ -1974,9 +1473,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
-
 
 def eyePhiFrame3(img1, img2, ctrl='UL'):
     ''' generates subframes increasing by fibonacci sequence
@@ -2106,8 +1602,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
 
 def eyePolyXFade(img1, img2, n, rotd):
     ''' generates composite image with n alternating rotations-blends
@@ -2188,8 +1682,6 @@ if (0):
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
 
 def get_quad(cntPxl, curPxl):
     ''' determine quadrant
@@ -2303,12 +1795,9 @@ if (0):
     #misc.imsave(eyeBoxFull, eye1imgCpy)
     imio.imwrite(eye1imgFull, RadialEXP1)    
     
-    
-    
-# // *********************************************************************** //
-# // *********************************************************************** //
-# // *********************************************************************** //
 
+# // *********************************************************************** //
+# // *********************************************************************** //
 
 def eyeFmask(mask1, img1):
     ''' mask an image '''
@@ -2443,11 +1932,8 @@ if (0):
     imio.imwrite(eyeImgFull, eyeFmaskEXP4)
     
     
-
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
 
 if (0):
     
@@ -2502,9 +1988,6 @@ if (0):
     print('// *--------------------------------------------------------------* //')
 
 
-
-
-# // *********************************************************************** //
 # // *********************************************************************** //
 # // *********************************************************************** //
 

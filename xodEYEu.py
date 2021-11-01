@@ -31,12 +31,12 @@ from PIL import ImageOps
 from PIL import ImageEnhance
 
 
-rootDir = 'C:/XODMK/xodmkCode/xodmkPython/'
+import xodEyeSetRootDir as xdir
 
-sys.path.insert(0, rootDir+'eye')
+sys.path.insert(0, xdir.rootDir+'eye')
 import xodEYEutil as eyeutil
 
-sys.path.insert(1, rootDir+'DSP')
+sys.path.insert(1, xdir.rootDir+'DSP')
 import xodClocks as clks
 
 # temp python debugger - use >>>pdb.set_trace() to set break
@@ -81,8 +81,8 @@ class xodEYEu:
         # // *-------------------------------------------------------------* //
         # // *---::Set Default Directories::---* //
         
-        self.eyeDir = rootDir+'eye/'
-        self.maskDir = rootDir+'eye/mask'
+        self.eyeDir = xdir.eyeDir
+        self.maskDir = xdir.eyeDir+'mask/'
         os.makedirs(self.maskDir, exist_ok=True) 
         
         

@@ -31,14 +31,12 @@ from PIL import ImageOps
 from PIL import ImageEnhance
 
 
-rootDir = '../'
+import xodEyeSetRootDir as xdir
 
-
-sys.path.insert(0, rootDir+'eye')
+sys.path.insert(0, xdir.rootDir+'eye')
 import xodEYEutil as eyeutil
 
-#sys.path.insert(1, 'C:/odmkDev/odmkCode/odmkPython/DSP')
-sys.path.insert(1, rootDir+'DSP')
+sys.path.insert(1, xdir.rootDir+'DSP')
 
 
 # temp python debugger - use >>>pdb.set_trace() to set break
@@ -83,16 +81,12 @@ class xodEYEv:
         self.xLength = xLength
         self.fs = fs
         self.bWidth = 24         # audio sample bit width
-        # ub313 bpm = 178 , 267
-        self.bpm = bpm    #glamourGoat14 = 93        
+        self.bpm = bpm     
         self.timeSig = timeSig         # time signature: 4 = 4/4; 3 = 3/4
         
         self.imgFormat = imgFormat    # imgFormat => { fbmp, fjpg }
 
         self.framesPerSec = framesPerSec
-
-        #self.eyeDir = rootDir+'eye/eyeSrc/'
-        #os.makedirs(self.eyeDir, exist_ok=True)
 
         # // *-------------------------------------------------------------* //
         # // *---::Set Master Dimensions::---* //
@@ -505,7 +499,8 @@ class xodEYEv:
                 
             elif effx == 4:
                 imgPIL1 = Image.fromarray(img1)
-                sobelXY = eyeutil.eyeSobelXY(img1)
+                imgSmooth = eyeutil.median_filter_rgb(img1, 8)
+                sobelXY = eyeutil.eyeSobelXY(imgSmooth)
                 imgPIL2 = Image.fromarray(sobelXY)
                 
                 if fadeInOut == 2:
