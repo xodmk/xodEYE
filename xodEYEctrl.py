@@ -28,6 +28,7 @@ import imageio as imio
 #from scipy import misc
 #from scipy import ndimage
 import soundfile as sf
+import matplotlib.pyplot as plt
 
 # temp python debugger - use >>> pdb.set_trace() to set break
 import pdb
@@ -74,10 +75,13 @@ import xodmaAudioTools as xodaudio
 cntrlOnsetDet = 1
 
 if cntrlOnsetDet==1:
-    from xodmaAudioTools import load_wav
-    from xodmaOnset import detectOnset
-
-
+    from xodmaAudioTools import load_wav, samples_to_time, time_to_samples, fix_length
+    from xodmaOnset import get_peak_regions, onset_strength, detectOnset
+    from xodmaSpectralTools import amplitude_to_db, stft, istft, peak_pick
+    from xodmaSpectralTools import magphase
+    #from xodmaVocoder import pvTimeStretch, pvPitchShift
+    from xodmaSpectralUtil import frames_to_time
+    from xodmaSpectralPlot import specshow
 
 
 print('// //////////////////////////////////////////////////////////////// //')
@@ -515,7 +519,73 @@ if cntrlOnsetDet==1:
     NFFT = 2048
     pkctrl = 256
     plots = 1
-    yOnsets = detectOnset(wavSrc_ch1, NFFT, fs, pkctrl, plots)
+    # yOnsets = detectOnset(wavSrc_ch1, NFFT, fs, pkctrl, plots)
+
+    
+    onset_env_ch1 = onset_strength(wavSrc_ch1, fs, hop_length=int(NFFT/4), aggregate=np.median)
+    onset_env_ch2 = onset_strength(wavSrc_ch2, fs, hop_length=int(NFFT/4), aggregate=np.median)
+
+    
+    peaks_ch1 = peak_pick(onset_env_ch1, pkctrl, pkctrl, pkctrl, pkctrl, 0.5, pkctrl)
+    peaks_ch2 = peak_pick(onset_env_ch2, pkctrl, pkctrl, pkctrl, pkctrl, 0.5, pkctrl)
+    
+
+    
+    #peak_onsets_ch1 = np.array(onset_env_Ach1)[peaks_Ach1]
+    #peak_onsets_ch2 = np.array(onset_env_Ach2)[peaks_Ach2]
+
+
+    # // *-----------------------------------------------------------------* //
+    # // *--- Calculate Peak Regions (# frames of peak regions) ---*    
+
+    
+    peak_regions_ch1 = get_peak_regions(peaks_ch1, len(onset_env_ch1))
+    peak_regions_ch2 = get_peak_regions(peaks_ch2, len(onset_env_ch2))
+    
+    
+    numPeaks = [len(peaks_ch1), len(peaks_ch2)]
+
+    
+    print('numPeaks = ' + str(numPeaks[1]))
+    
+    
+        # // *-----------------------------------------------------------------* //
+    # // *--- Plot Peak-Picking results vs. Spectrogram ---*
+    
+    if plots > 0:
+        
+        # // *-----------------------------------------------------------------* //
+        # // *--- Perform the STFT ---*
+    
+        ySTFT = stft(wavSrc_ch1, NFFT)    
+        assert (ySTFT.shape[1] == len(onset_env_ch1)), "Number of STFT frames != len onset_env"
+
+        #times_ch1 = frames_to_time(np.arange(len(onset_env_ch1)), fs, hop_length=512)
+        # currently uses fixed hop_length
+        times = frames_to_time(np.arange(len(onset_env_ch1)), fs, NFFT/4)
+        
+        plt.figure(facecolor='silver', edgecolor='k', figsize=(12, 8))
+        ax = plt.subplot(2, 1, 1)
+        specshow(amplitude_to_db(magphase(ySTFT)[0], ref=np.max), y_axis='log', x_axis='time', cmap=plt.cm.viridis)
+        plt.title('CH1: Spectrogram (STFT)')
+        
+        plt.subplot(2, 1, 2, sharex=ax)
+        plt.plot(times, onset_env_ch1, alpha=0.66, label='Onset strength')
+        plt.vlines(times[peaks_ch1], 0, onset_env_ch1.max(), color='r', alpha=0.8,
+                                                       label='Selected peaks')
+        plt.legend(frameon=True, framealpha=0.66)
+        plt.axis('tight')
+        plt.tight_layout()
+        
+        plt.xlabel('time')
+        plt.ylabel('Amplitude')
+        plt.title('Onset Strength detection & Peak Selection')
+    
+    
+    plt.show()
+    
+    
+    
     
     pdb.set_trace()
 
