@@ -76,7 +76,7 @@ cntrlOnsetDet = 1
 
 if cntrlOnsetDet==1:
     from xodmaAudioTools import load_wav, samples_to_time, time_to_samples, fix_length
-    from xodmaOnset import get_peak_regions, onset_strength, detectOnset
+    from xodmaOnset import detectOnset, getOnsetSampleSegments, getOnsetTimeSegments
     from xodmaSpectralTools import amplitude_to_db, stft, istft, peak_pick
     from xodmaSpectralTools import magphase
     #from xodmaVocoder import pvTimeStretch, pvPitchShift
@@ -185,12 +185,14 @@ xodEYEv_dict = {
 preProcess = 0
 srcSequence = 0                     # 0: imgSeqArray (single dir), > 0 sequence
 #cntrlEYE = xodEYEutil_dict["eyeutil01"]
-#cntrlEYE = xodEYEv_dict["eyev02"]
-cntrlEYE = 0
+cntrlEYE = xodEYEutil_dict["eyeutil05"]
+#cntrlEYE = xodEYEv_dict["eyev01"]
+#cntrlEYE = 0
 effxSel = 0
-ctrlSel = 0
+ctrlSel = 5
+cntrlOnsetDet = 0
 postProcess = 0
-cntrlRender = 1
+cntrlRender = 0
 
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -204,9 +206,10 @@ cntrlRender = 1
 #earSrcNm = 'gorgulans_beatx01.wav'         # ~7  sec = 220 frames
 #earSrcNm = 'antimatterbk06.wav'            # ~14 sec = 434 frames
 #earSrcNm = 'dmttv-axon23.wav'              # ~23
+#earSrcNm = 'machinekoenji_beat02.wav'       # ~31
 #earSrcNm = 'cabalisk_abstract.wav'         # ~53
-#earSrcNm = 'cabalisk_spaced.wav'           # ~1.49
-earSrcNm = 'TOTWb01_gorgulans_anthem.wav'   # ~2.52
+earSrcNm = 'cabalisk_spaced.wav'           # ~1.49
+#earSrcNm = 'The_Amen_Break_48K.wav'         # 
 
 
 earSrc = xdir.audioSrcDir+earSrcNm
@@ -228,17 +231,17 @@ xodEyeDir = xdir.eyeSrcDir
 
 # MOV SRC RAW
 #sourceDir = ['xodmkMvSrc/asatoLifeBallX2/']
-#sourceDir = ['xodmkMvSrc/wizardOvMirror/wizardOvMirror_xodLolthDemonI/']
+#sourceDir = ['xodmkMvSrc/redSamuraiESP_I/redSamurai_metasphynxKoi/']
 
 
 # MOV GEN
 #sourceDir = ['1920x1080/asatoLifeBallX2/']
 #sourceDir = ['1920x1080/hardNeuralDragon1080/']
 #sourceDir = ['1920x1080/mizuguanaCn16_II/mzgnaCII_xodLolthDemonIIIx1080/']
-#sourceDir = ['1920x1080/wizardOvMirror/wizardOvMirror_xodLolthDemonIxLin3/']
+sourceDir = ['1920x1080/redSamuraiESP_I/redSamurai_metasphynxKoi1080/']
 
 
-sourceDir = ['testout/vexpTestWizardOvMirrorsI/', 'testout/vexpTestWizardOvMirrorsII/']
+#sourceDir = ['testout/vexpTestWizardOvMirrorsI/', 'testout/vexpTestWizardOvMirrorsII/']
 #             'testout/skullOffering_x2x/', 'testout/skullOffering_x3x/',
 #             'testout/skullOffering_x4x/', 'testout/skullOffering_x5_1x/',
 #             'testout/skullOffering_x5_2x/', 'testout/skullOffering_x5_3x/',
@@ -246,11 +249,11 @@ sourceDir = ['testout/vexpTestWizardOvMirrorsI/', 'testout/vexpTestWizardOvMirro
     
 
 #outDir = 'testout/cgbwCryptWitch8018/'
-#outDir = '1920x1080/wizardOvMirror/wizardOvMirror_xodLolthDemonIxLin3/'
-outDir = 'testout/vexpTest/'
+outDir = '1920x1080/redSamuraiESP_I/redSamurai_metasphynxKoiLin5/'
+#outDir = 'testout/vexpTest/'
 
 
-outBaseName = 'wizardOvMirrors_'
+outBaseName = 'redSamurai_metasphynxKoiLin5_'
   
 
 # *---------------------------------------------------------------------------*
@@ -511,83 +514,31 @@ period = 1.0 / fs
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     
+
+# // *-----------------------------------------------------------------* //
+# // *--- Calculate Peak Regions (# frames of peak regions) ---*
+
 if cntrlOnsetDet==1:
-    
-    
-    print('\n// *---:: detectOnset test ::---*')
-    
-    NFFT = 2048
-    pkctrl = 256
+
+
+    peakThresh = 0.07
+    peakWait = 0.33 
+
     plots = 1
-    # yOnsets = detectOnset(wavSrc_ch1, NFFT, fs, pkctrl, plots)
 
-    
-    onset_env_ch1 = onset_strength(wavSrc_ch1, fs, hop_length=int(NFFT/4), aggregate=np.median)
-    onset_env_ch2 = onset_strength(wavSrc_ch2, fs, hop_length=int(NFFT/4), aggregate=np.median)
+    onsetSamplesCH1, onsetTimeCH1 = detectOnset(wavSrc_ch1, peakThresh, peakWait)
+    #onsetSamplesCH2, onsetTimeCH2 = detectOnset(wavSrc_ch2, peakThresh, peakWait)
 
-    
-    peaks_ch1 = peak_pick(onset_env_ch1, pkctrl, pkctrl, pkctrl, pkctrl, 0.5, pkctrl)
-    peaks_ch2 = peak_pick(onset_env_ch2, pkctrl, pkctrl, pkctrl, pkctrl, 0.5, pkctrl)
-    
+    wavSegmentSamplesCH1 = getOnsetSampleSegments(onsetSamplesCH1, xSamples)
+    wavSegmentTimesCH1 = getOnsetTimeSegments(onsetTimeCH1, xLength)
 
-    
-    #peak_onsets_ch1 = np.array(onset_env_Ach1)[peaks_Ach1]
-    #peak_onsets_ch2 = np.array(onset_env_Ach2)[peaks_Ach2]
+    numOnsets = len(onsetSamplesCH1)
+    print('\nNumber of Onsets Detected: ' + str(numOnsets))
+    #print('\nonsetSamplesCH1: ' + str(onsetSamplesCH1))
+    print('\nonsetTimeCH1: ' + str(onsetTimeCH1))
 
-
-    # // *-----------------------------------------------------------------* //
-    # // *--- Calculate Peak Regions (# frames of peak regions) ---*    
-
-    
-    peak_regions_ch1 = get_peak_regions(peaks_ch1, len(onset_env_ch1))
-    peak_regions_ch2 = get_peak_regions(peaks_ch2, len(onset_env_ch2))
-    
-    
-    numPeaks = [len(peaks_ch1), len(peaks_ch2)]
-
-    
-    print('numPeaks = ' + str(numPeaks[1]))
-    
-    
-        # // *-----------------------------------------------------------------* //
-    # // *--- Plot Peak-Picking results vs. Spectrogram ---*
-    
-    if plots > 0:
-        
-        # // *-----------------------------------------------------------------* //
-        # // *--- Perform the STFT ---*
-    
-        ySTFT = stft(wavSrc_ch1, NFFT)    
-        assert (ySTFT.shape[1] == len(onset_env_ch1)), "Number of STFT frames != len onset_env"
-
-        #times_ch1 = frames_to_time(np.arange(len(onset_env_ch1)), fs, hop_length=512)
-        # currently uses fixed hop_length
-        times = frames_to_time(np.arange(len(onset_env_ch1)), fs, NFFT/4)
-        
-        plt.figure(facecolor='silver', edgecolor='k', figsize=(12, 8))
-        ax = plt.subplot(2, 1, 1)
-        specshow(amplitude_to_db(magphase(ySTFT)[0], ref=np.max), y_axis='log', x_axis='time', cmap=plt.cm.viridis)
-        plt.title('CH1: Spectrogram (STFT)')
-        
-        plt.subplot(2, 1, 2, sharex=ax)
-        plt.plot(times, onset_env_ch1, alpha=0.66, label='Onset strength')
-        plt.vlines(times[peaks_ch1], 0, onset_env_ch1.max(), color='r', alpha=0.8,
-                                                       label='Selected peaks')
-        plt.legend(frameon=True, framealpha=0.66)
-        plt.axis('tight')
-        plt.tight_layout()
-        
-        plt.xlabel('time')
-        plt.ylabel('Amplitude')
-        plt.title('Onset Strength detection & Peak Selection')
-    
-    
-    plt.show()
-    
-    
-    
-    
-    pdb.set_trace()
+    #print('\nwavSegmentSamplesCH1: ' + str(wavSegmentSamplesCH1))
+    #print('\nwavSegmentTimesCH1: ' + str(wavSegmentTimesCH1))
 
 
     

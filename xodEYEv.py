@@ -352,6 +352,39 @@ class xodEYEv:
     
     
     # // *--------------------------------------------------------------* //
+    # // *---::XODMKEYE - Video Auto Sequencer MKI::---*
+    # // *--------------------------------------------------------------* //
+    
+    
+    def xodAutoSeq(self, imgSrcArray, autoSeqArray, effxDict, framesPerSec,
+                   n_digit, eyeOutDir, eyeOutFileNm):
+        
+        ''' Tempo based auto sequencer
+            imgSrcArray - Array of video Source img folders
+            autoSeqArray - Array of video segments lengths (# ov frames)
+            effxDict - Dictionary of video effect algorithms
+            n_digit - Number of digits for output naming (video generation)
+            imgOutDir - Full path output directory '''
+            
+            
+        numFrames = sum(autoSeqArray)
+    
+        for i in range(len(autoSeqArray)):
+            
+            
+            offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
+            self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, effx, 
+                               fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm)
+        
+        offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
+        self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, effx, 
+                           fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm)
+
+        return    
+
+    
+    
+    # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Image Linear Select Algorithm::---*
     # // *--------------------------------------------------------------* //
     
