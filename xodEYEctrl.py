@@ -21,7 +21,7 @@ import os, sys
 from math import ceil
 import glob
 #import shutil
-#import random
+import random
 import numpy as np
 #import scipy as sp
 import imageio as imio
@@ -174,6 +174,14 @@ xodEYEv_dict = {
         }
 
 
+xodLinSQFX_dict = {
+            "SQFX01": 'xodLinSQFX_rev',
+            "SQFX02": 'xodLinSQFX_crot',
+            "SQFX03": 'xodLinSQFX_sobelxy',
+            "SQFX04": 'xodLinSQFX_sobelz'
+        }
+
+
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -189,7 +197,7 @@ cntrlEYE = xodEYEutil_dict["eyeutil05"]
 #cntrlEYE = xodEYEv_dict["eyev01"]
 #cntrlEYE = 0
 effxSel = 0
-ctrlSel = 5
+ctrlSel = 0
 cntrlOnsetDet = 0
 postProcess = 0
 cntrlRender = 0
@@ -643,7 +651,49 @@ if preProcess == 4:
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     
+
+# // *--------------------------------------------------------------* //
+# // *---::XODMKEYE - Video Auto Sequencer MKI::---*
+# // *--------------------------------------------------------------* //
+
+
+def xodAutoSeq(imgSrcArray, autoSeqArray, effxDict, framesPerSec,
+               n_digit, eyeOutDir, eyeOutFileNm):
     
+    ''' Tempo based auto sequencer
+        imgSrcArray - Array of video Source img folders
+        autoSeqArray - Array of video segments lengths (# ov frames)
+        effxDict - Dictionary of video effect algorithms
+        n_digit - Number of digits for output naming (video generation)
+        imgOutDir - Full path output directory '''
+        
+        
+    # numFrames = sum(autoSeqArray)
+    n_offset = 0
+
+    for i in range(len(autoSeqArray)):
+        
+        cntrlEYE = random.choice(list(effxDict.values()))
+        xFrames = autoSeqArray[i]
+
+        imgSeqArray = random.choice(imgSrcArray)
+        
+        
+        eyev.xodEyeGen(cntrlEYE, imgSeqArray, xFrames, n_offset,
+                       n_digits, eyeOutDir, eyeOutFileName)
+        
+        n_offset += xFrames
+        
+    print('\nProcessed images output to the following directory:')
+    print(eyeOutDir)
+
+
+    print('// *--------------------------------------------------------------* //')
+
+
+    return
+
+
 
 maskArray = sorted(glob.glob(maskDir+'*'))
 

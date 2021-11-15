@@ -350,40 +350,23 @@ class xodEYEv:
     
         return
     
-    
+  
     # // *--------------------------------------------------------------* //
-    # // *---::XODMKEYE - Video Auto Sequencer MKI::---*
+    # // *---::XODMKEYE - Generate Image sequence Algorithm::---*
     # // *--------------------------------------------------------------* //
     
     
-    def xodAutoSeq(self, imgSrcArray, autoSeqArray, effxDict, framesPerSec,
-                   n_digit, eyeOutDir, eyeOutFileNm):
+    def xodEyeGen(self, cntrlEYE, imgSeqArray, xFrames, n_offset,
+                  n_digits, eyeOutDir, eyeOutFileName):
         
-        ''' Tempo based auto sequencer
-            imgSrcArray - Array of video Source img folders
-            autoSeqArray - Array of video segments lengths (# ov frames)
-            effxDict - Dictionary of video effect algorithms
-            n_digit - Number of digits for output naming (video generation)
-            imgOutDir - Full path output directory '''
-            
-            
-        numFrames = sum(autoSeqArray)
-    
-        for i in range(len(autoSeqArray)):
-            
-            
-            offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
-            self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, effx, 
-                               fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm)
         
-        offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
-        self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, effx, 
-                           fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm)
-
-        return    
-
+        getattr(self, cntrlEYE)(imgSeqArray, xFrames, n_offset, n_digits,
+                                eyeOutDir, eyeOutFileName)
+        
+        return
     
-    
+
+
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Image Linear Select Algorithm::---*
     # // *--------------------------------------------------------------* //
@@ -417,8 +400,96 @@ class xodEYEv:
     
     
     # // *--------------------------------------------------------------* //
-    # // *---::XODMKEYE - Image Linear EFFX Algorithm::---*
+    # // *---::XODMKEYE - Image Sequence Linear EFFX Algorithm::---*
     # // *--------------------------------------------------------------* //
+    
+    
+    xodLinSQFX_rev
+    xodLinSQFX_crot
+    xodLinSQFX_sobelxy
+    xodLinSQFX_sobelz
+    
+    
+    def xodLinSQFX_rev(self, imgSeqArray, xFrames, n_offset, n_digits,
+                       eyeOutDir, eyeOutFileNm):
+        
+        effx = 1
+        fadeInOut = 1
+        fwdRev = 0
+
+        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+                           n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+    
+        return
+
+    
+    def xodLinSQFX_crot(self, imgSeqArray, xFrames, n_offset, n_digits,
+                        eyeOutDir, eyeOutFileNm):
+        
+        effx = 3
+        fadeInOut = 1
+        fwdRev = 1
+
+        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+                           n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+        
+        return
+    
+    
+    def xodLinSQFX_sobelxy(self, imgSeqArray, xFrames, n_offset, n_digits,
+                        eyeOutDir, eyeOutFileNm):
+        
+        effx = 4
+        fadeInOut = 1
+        fwdRev = 1
+
+        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+                           n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+        
+        return
+
+
+    def xodLinSQFX_sobelz(self, imgSeqArray, xFrames, n_offset, n_digits,
+                        eyeOutDir, eyeOutFileNm):
+        
+        effx = 5
+        fadeInOut = 1
+        fwdRev = 1
+
+        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+                           n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+        
+        return
+
+    
+    
+    def xodLinSQFX(self, imgSeqArray, xFrames, n_offset, n_digits,
+                   eyeOutDir, eyeOutFileNm):
+        
+        ''' Sequenced Audio Segment synched linear effects
+            imgSeqArray - array of sequential images
+            xFrames     - number of frames for segment
+            n_offset    - offset for output frame index
+            n_digits    - number of digits for frame index
+            imgOutDir   - full path output directory '''
+            
+            
+        # effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+        #                           3 = cRotate ; 4 = sobelXY ; 5 sobelZ
+        # fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+        # fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
+    
+        effx = 1
+        fadeInOut = 1
+        fwdRev = 0
+
+        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+                           n_digit, eyeOutDir, eyeOutFileNm)
+        
+
+        return
+    
+    
     
     
     def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx, fadeInOut, fwdRev,
@@ -435,6 +506,7 @@ class xodEYEv:
             
             
         numFrames = int(ceil(xLength * framesPerSec))
+        n_offset = 0
     
         xBeats = int(np.floor(numFrames / xFrames))
         xTail = int(np.floor(numFrames - xBeats * xFrames))
@@ -443,18 +515,18 @@ class xodEYEv:
         for i in range(xBeats):
             offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
             self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, effx, 
-                               fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm)
+                               fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
         
         offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
         self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, effx, 
-                           fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm)
+                           fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
 
         return
     
     
     
     def xodImgLinEFFX(self, imgFileList, numFrames, effx, fadeInOut, fwdRev, 
-                      n_digits, imgOutDir, imgOutNm='None'):
+                      n_offset, n_digits, imgOutDir, imgOutNm='None'):
     
         ''' x-fades from clean <-> effx over numFrames
             imgFileList - list of full path file names, .jpg
@@ -477,11 +549,12 @@ class xodEYEv:
             
             
         #pdb.set_trace()
-            
-        f_idx = eyeutil.getLatestIdx(imgOutDir, imgLinEFFXNm)
-
-            
-        nextInc = 1 + f_idx
+        
+        if n_offset != 0:
+            nextInc = n_offset
+        else:
+            f_idx = eyeutil.getLatestIdx(imgOutDir, imgLinEFFXNm)
+            nextInc = 1 + f_idx
 
         
         if effx == 0:
