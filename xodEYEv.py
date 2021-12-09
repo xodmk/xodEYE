@@ -350,6 +350,90 @@ class xodEYEv:
     
         return
     
+    
+# // *--------------------------------------------------------------* //
+# // *---::XODMKEYE - Video Auto Sequencer MKI::---*
+# // *--------------------------------------------------------------* //
+
+
+    def xodAutoSeq(self, imgSrcArray, autoSeqArray, effxDict, framesPerSec,
+                   n_digits, eyeOutDir, eyeOutFileNm):
+        
+        ''' Tempo based auto sequencer
+            imgSrcArray - Array of video Source img folders
+            autoSeqArray - Array of video segments lengths (# ov audio samples)
+            effxDict - Dictionary of video effect algorithms
+            n_digit - Number of digits for output naming (video generation)
+            imgOutDir - Full path output directory '''
+            
+            
+        # numFrames = sum(autoSeqArray)
+        n_offset = 0
+    
+        for i in range(len(autoSeqArray)):
+            
+            cntrlEYE = random.choice(list(effxDict.values()))
+            xFrames = eyeutil.samples2frames(autoSeqArray[i], self.fs, self.framesPerSec)
+    
+            imgSeqArray = random.choice(imgSrcArray)
+            
+            #pdb.set_trace()
+            
+            self.xodEyeGen(cntrlEYE, imgSeqArray, xFrames, n_offset,
+                           n_digits, eyeOutDir, eyeOutFileNm)
+            
+            n_offset += xFrames
+            
+        print('\nProcessed images output to the following directory:')
+        print(eyeOutDir)
+    
+    
+        print('// *--------------------------------------------------------------* //')
+    
+    
+        return
+    
+
+# // *--------------------------------------------------------------* //
+# // *---::XODMKEYE - Video Chain Sequencer MKI::---*
+# // *--------------------------------------------------------------* //
+
+
+    def xodChainSeq(self, imgSrcArray, autoTimeArray, effxArray, framesPerSec,
+                   n_digits, eyeOutDir, eyeOutFileNm):
+        
+        ''' Tempo based Chain sequencer
+            imgSrcArray - Array of video Source img folders
+            autoSeqArray - Array of video segments lengths (# ov frames)
+            effxDict - Dictionary of video effect algorithms
+            n_digit - Number of digits for output naming (video generation)
+            imgOutDir - Full path output directory '''
+            
+            
+        # numFrames = sum(autoSeqArray)
+        n_offset = 0
+    
+        for i in range(len(autoTimeArray)):
+            
+            cntrlEYE = effxArray[i]
+            xFrames = int(autoTimeArray[i] * self.framesPerSec)
+    
+            imgSeqArray = imgSrcArray[i]
+            
+            self.xodEyeGen(cntrlEYE, imgSeqArray, xFrames, n_offset,
+                           n_digits, eyeOutDir, eyeOutFileNm)
+            
+            n_offset += xFrames
+            
+        print('\nProcessed images output to the following directory:')
+        print(eyeOutDir)
+    
+    
+        print('// *--------------------------------------------------------------* //')
+    
+    
+        return
+    
   
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Generate Image sequence Algorithm::---*
@@ -364,50 +448,24 @@ class xodEYEv:
                                 eyeOutDir, eyeOutFileName)
         
         return
-    
 
 
-    # // *--------------------------------------------------------------* //
-    # // *---::XODMKEYE - Image Linear Select Algorithm::---*
-    # // *--------------------------------------------------------------* //
-    
-    def xodImgLinSel(self, imgSeqArray, xLength, framesPerSec, n_digits,
-                     imgOutDir, imgOutNm='None'):
-    
-        if imgOutNm != 'None':
-            imgLinSelNm = imgOutNm
-        else:
-            imgLinSelNm = 'imgRndSelOut'
-            
-        numFrames = int(ceil(xLength * framesPerSec))
-        
-        imgCount = numFrames
-        nextInc = 1
-        for i in range(numFrames):
-            zr = ''
-            for j in range(n_digits - len(str(nextInc))):
-                zr += '0'
-            strInc = zr+str(nextInc)
-            imgNormalizeNm = imgLinSelNm+strInc+'.jpg'
-            imgLinSelFull = imgOutDir+imgNormalizeNm
-            imgTmp = imio.imread(imgSeqArray[eyeutil.circ_idx(i, len(imgSeqArray))])
-            imio.imwrite(imgLinSelFull, imgTmp)
-
-            nextInc += 1
-            
-        return
-    
-    
-    
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Image Sequence Linear EFFX Algorithm::---*
     # // *--------------------------------------------------------------* //
     
     
-    xodLinSQFX_rev
-    xodLinSQFX_crot
-    xodLinSQFX_sobelxy
-    xodLinSQFX_sobelz
+    def xodLinSQFX_fwd(self, imgSeqArray, xFrames, n_offset, n_digits,
+                       eyeOutDir, eyeOutFileNm):
+        
+        effx = 1
+        fadeInOut = 1
+        fwdRev = 1
+
+        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+                           n_offset, n_digits, eyeOutDir, eyeOutFileNm)
+    
+        return
     
     
     def xodLinSQFX_rev(self, imgSeqArray, xFrames, n_offset, n_digits,
@@ -418,7 +476,7 @@ class xodEYEv:
         fwdRev = 0
 
         self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
-                           n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+                           n_offset, n_digits, eyeOutDir, eyeOutFileNm)
     
         return
 
@@ -431,7 +489,7 @@ class xodEYEv:
         fwdRev = 1
 
         self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
-                           n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+                           n_offset, n_digits, eyeOutDir, eyeOutFileNm)
         
         return
     
@@ -444,7 +502,7 @@ class xodEYEv:
         fwdRev = 1
 
         self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
-                           n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+                           n_offset, n_digits, eyeOutDir, eyeOutFileNm)
         
         return
 
@@ -457,7 +515,7 @@ class xodEYEv:
         fwdRev = 1
 
         self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
-                           n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+                           n_offset, n_digits, eyeOutDir, eyeOutFileNm)
         
         return
 
@@ -484,12 +542,44 @@ class xodEYEv:
         fwdRev = 0
 
         self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
-                           n_digit, eyeOutDir, eyeOutFileNm)
+                           n_digits, eyeOutDir, eyeOutFileNm)
         
 
         return
+
+
+    # // *--------------------------------------------------------------* //
+    # // *---::XODMKEYE - Image Linear Select Algorithm::---*
+    # // *--------------------------------------------------------------* //
     
+    def xodImgLinSel(self, imgSeqArray, xLength, framesPerSec, ctrl, n_digits,
+                     imgOutDir, imgOutNm='None'):
     
+        if imgOutNm != 'None':
+            imgLinSelNm = imgOutNm
+        else:
+            imgLinSelNm = 'imgRndSelOut'
+            
+        if ctrl == 1:
+            offset = round((len(imgSeqArray)-1)*random.random())+1
+        else:
+            offset = 0
+            
+        numFrames = int(ceil(xLength * framesPerSec))
+        nextInc = 1
+        for i in range(numFrames):
+            zr = ''
+            for j in range(n_digits - len(str(nextInc))):
+                zr += '0'
+            strInc = zr+str(nextInc)
+            imgNormalizeNm = imgLinSelNm+strInc+'.jpg'
+            imgLinSelFull = imgOutDir+imgNormalizeNm
+            imgTmp = imio.imread(imgSeqArray[eyeutil.circ_idx(i + offset, len(imgSeqArray))])
+            imio.imwrite(imgLinSelFull, imgTmp)
+
+            nextInc += 1
+            
+        return    
     
     
     def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx, fadeInOut, fwdRev,

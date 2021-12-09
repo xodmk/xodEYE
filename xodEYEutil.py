@@ -194,6 +194,19 @@ def genRandBurstFilename(imgFileList, burst):
         yield file_name
 
 
+def circ_idx(idx, arrayLen):
+    if idx >= arrayLen:
+        circIdx = idx % arrayLen
+    else:
+        circIdx = idx
+    return circIdx
+
+
+def samples2frames(numSamples, sr, framesPerSec):
+    return int((numSamples/sr) * framesPerSec)
+
+
+
 
 # // *********************************************************************** //
 # // *********************************************************************** //
@@ -615,12 +628,21 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
 # // *********************************************************************** //
 
 
-def circ_idx(idx, arrayLen):
-    if idx >= arrayLen:
-        circIdx = idx % arrayLen
-    else:
-        circIdx = idx
-    return circIdx
+def createSrcArray(eyeRootDir, sourceDir):
+    
+    srcDir = []
+    imgSrcArray = []
+    for d in range(len(sourceDir)):
+        imgSeqArray = []
+        sDirTmp = eyeRootDir+sourceDir[d]
+        srcDir.append(sDirTmp)
+        sortedDir = sorted(glob.glob(sDirTmp+'*'))
+        for s in sortedDir:
+            imgSeqArray.append(s.replace('\\', '/'))
+        imgSrcArray.append(imgSeqArray)
+        
+    return imgSrcArray, srcDir
+
 
 
 def scanImagDir(dirList, numFrames, xCtrl):

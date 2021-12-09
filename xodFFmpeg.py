@@ -138,6 +138,8 @@ class xodFFmpeg:
         #ffmpeg -i input -c:v libx265 -preset medium -crf 28 -c:a aac -b:a 128k output.mp4
         movie_cmd = ["ffmpeg",
                      #'-i', os.path.join(eyeSrcDir, self.fmt_str),
+                     '-framerate', '%d' % self.framesPerSec,
+                     #'-framerate', 30
                      '-i', src_name,
                      '-i', earSrc,
                      '-c:v', 'libx264',
@@ -147,8 +149,8 @@ class xodFFmpeg:
                      '-crf', '15',
                      '-r', '%d' % self.framesPerSec,
                      #'-r', '30',
-                     '-shortest',
-                     '-fflags', '+shortest',
+                     #'-shortest',
+                     #'-fflags', '+shortest',
                      #'-max_interleave_delta', '500M',
                      '-y' if self.overwrite else '-n',
                      movie_name]
@@ -162,18 +164,11 @@ class xodFFmpeg:
 
 
 
-
         # /////////////////////////////////////////////////////////////////////
         # #####################################################################
         # end : eye generator - ffmpeg function calls
         # #####################################################################
         # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-
-        print('\n')
-        print('// *------------------------------------------------------* //')
-        print('// *---::done::---*')
-        print('// *------------------------------------------------------* //')
         
         
 

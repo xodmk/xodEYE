@@ -72,6 +72,8 @@ import xodPlotUtil as xodplt
 sys.path.insert(3, xdir.rootDir+'audio/xodma')
 import xodmaAudioTools as xodaudio
 
+
+# Audio Detect Onset & Wav segmentation
 cntrlOnsetDet = 1
 
 if cntrlOnsetDet==1:
@@ -117,18 +119,20 @@ print('// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ //')
 # 'imgInterLaceBpmDir'   =>  EYE BPM synched interlace two directories
 
 xodEYEutil_dict = {
-            "eyeutil01": 'xodResizeAll',
-            "eyeutil02": 'xodCropAll',
-            "eyeutil03": 'concatAllDir',
-            "eyeutil04": 'xodFrameIntpLin',
-            "eyeutil05": 'xodFrameIntpCos',
-            "eyeutil06": 'xodMirrorLR',
-            "eyeutil07": 'xodImgRndSel',
-            "eyeutil08": 'xodImgRotateSeq',
-            "eyeutil09": 'xodXfadeTelescopeI',
-            "eyeutil10": 'xodXfadeTelescopeII',
-            "eyeutil11": 'imgInterlaceDir',
-            "eyeutil12": 'imgInterLaceBpmDir'
+            "ResizeAll"         : 'xodResizeAll',
+            "CropAll"           : 'xodCropAll',
+            "ConcatAllDir"      : 'xodConcatAllDir',
+            "FrameIntpLin"      : 'xodFrameIntpLin',
+            "FrameIntpCos"      : 'xodFrameIntpCos',
+            "MirrorLR"          : 'xodMirrorLR',
+            "ImgRndSel"         : 'xodImgRndSel',
+            "ImgRotateSeq"      : 'xodImgRotateSeq',
+            "XfadeTelescopeI"   : 'xodXfadeTelescopeI',
+            "XfadeTelescopeII"  : 'xodXfadeTelescopeII',
+            "InterlaceDir"      : 'imgInterlaceDir',
+            "InterLaceBpmDir"   : 'imgInterLaceBpmDir',
+            "JPGtoBMP"          : 'convJPGtoBMP',
+            "BMPtoJPG"          : 'convBMPtoJPG',
         }
 
 # __xodEYEu__
@@ -140,16 +144,16 @@ xodEYEutil_dict = {
 # 'xodMskDualESP'        =>  Dual Channel Mask Telescope [effx: 0, 1, 2, 3, 4]
 
 xodEYEu_dict = {
-            "eyeu01": 'xodFxSlothCult',
-            "eyeu02": 'xodFxSlothCultII',
-            "eyeu03": 'xodLfoParascope',
-            "eyeu04": 'xodPxlRndRotate',
-            "eyeu05": 'xodMskLfoParascope',
-            "eyeu06": 'xodMskDualESP'
+            "FxSlothCult"       : 'xodFxSlothCult',
+            "FxSlothCultII"     : 'xodFxSlothCultII',
+            "LfoParascope"      : 'xodLfoParascope',
+            "PxlRndRotate"      : 'xodPxlRndRotate',
+            "MskLfoParascope"   : 'xodMskLfoParascope',
+            "MskDualESP"        : 'xodMskDualESP'
         }
 
 # __xodEYEv__
-# 'xodImgLinSel'         =>  EYE Image Linear EFFX Algorithm
+# 'xodImgLinSel'         =>  EYE Image Linear EFFX Algorithm {ctrl: 0 = start [0], 1 = rand offset}
 # 'xodLinEFFX'           =>  EYE Image Linear EFFX Algorithm {ctrlSel: xbeat /  effx: algo (0=rand)}
 # 'xodImgXfade'          =>  EYE Image Xfade img1 -> img2
 # 'xodBSlothGlitch'      =>  FIXIT
@@ -162,15 +166,17 @@ xodEYEu_dict = {
 # cntrlRender = 0 / 1    => 0: no video, 1: generate video 
 
 xodEYEv_dict = {
-            "eyev01": 'xodImgLinSel',
-            "eyev02": 'xodLinEFFX',
-            "eyev03": 'xodImgXfade',
-            "eyev04": 'xodBSlothGlitch',
-            "eyev05": 'xodBSlothSwitch',
-            "eyev06": 'xodVFrameParascope',
-            "eyev07": 'xodVLfoParascope',
-            "eyev08": 'xodVideoGoreXXZ01',
-            "eyev09": 'xodMskDualV'
+            "ImgLinSel"         : 'xodImgLinSel',
+            "LinEFFX"           : 'xodLinEFFX',
+            "AutoSeq"           : 'xodAutoSeq',
+            "ChainSeq"          : 'xodChainSeq',
+            "ImgXfade"          : 'xodImgXfade',
+            "BSlothGlitch"      : 'xodBSlothGlitch',
+            "BSlothSwitch"      : 'xodBSlothSwitch',
+            "VFrameParascope"   : 'xodVFrameParascope',
+            "VLfoParascope"     : 'xodVLfoParascope',
+            "VideoGoreXXZ01"    : 'xodVideoGoreXXZ01',
+            "MskDualV"          : 'xodMskDualV'
         }
 
 
@@ -182,109 +188,45 @@ xodLinSQFX_dict = {
         }
 
 
+xodExpFX_dict = {
+            "SQFX01": 'xodLinSQFX_fwd',
+            "SQFX02": 'xodLinSQFX_fwd',
+            "SQFX03": 'xodLinSQFX_fwd',
+            "SQFX04": 'xodLinSQFX_fwd'
+        }
+
+
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 # // *--------------------------------------------------------------* //
-# // *---:: Set processing directories ::---*
+# // *---:: CryptResonator USR CNTRL ::---*
 # // *--------------------------------------------------------------* //
 
 
-preProcess = 0
-srcSequence = 0                     # 0: imgSeqArray (single dir), > 0 sequence
-#cntrlEYE = xodEYEutil_dict["eyeutil01"]
-cntrlEYE = xodEYEutil_dict["eyeutil05"]
-#cntrlEYE = xodEYEv_dict["eyev01"]
+#cntrlEYE = xodEYEutil_dict["ResizeAll"]
+#cntrlEYE = xodEYEutil_dict["FrameIntpLin"]
+cntrlEYE = xodEYEv_dict["ImgLinSel"]
+#cntrlEYE = xodEYEv_dict["AutoSeq"]
+#cntrlEYE = xodEYEv_dict["ChainSeq"]
 #cntrlEYE = 0
-effxSel = 0
+
+srcSequence = 0
 ctrlSel = 0
+effxSel = 0
 cntrlOnsetDet = 0
 postProcess = 0
-cntrlRender = 0
-
-
-# /////////////////////////////////////////////////////////////////////////////
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-
-# // *--------------------------------------------------------------* //
-# // *---:: Set wav file source ::---*
-# // *--------------------------------------------------------------* //
-
-#earSrcNm = 'gorgulans_beatx01.wav'         # ~7  sec = 220 frames
-#earSrcNm = 'antimatterbk06.wav'            # ~14 sec = 434 frames
-#earSrcNm = 'dmttv-axon23.wav'              # ~23
-#earSrcNm = 'machinekoenji_beat02.wav'       # ~31
-#earSrcNm = 'cabalisk_abstract.wav'         # ~53
-earSrcNm = 'cabalisk_spaced.wav'           # ~1.49
-#earSrcNm = 'The_Amen_Break_48K.wav'         # 
-
-
-earSrc = xdir.audioSrcDir+earSrcNm
+cntrlRender = 1
 
 
 
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+
 # // *--------------------------------------------------------------* //
-# // *---:: Set processing directories ::---*
+# // *---:: CryptResonator USR PARAM ::---*
 # // *--------------------------------------------------------------* //
-
-
-xodEyeDir = xdir.eyeSrcDir
-
-# GFX
-#sourceDir = ['8018x/xodsolomon8018x/']
-
-# MOV SRC RAW
-#sourceDir = ['xodmkMvSrc/asatoLifeBallX2/']
-#sourceDir = ['xodmkMvSrc/redSamuraiESP_I/redSamurai_metasphynxKoi/']
-
-
-# MOV GEN
-#sourceDir = ['1920x1080/asatoLifeBallX2/']
-#sourceDir = ['1920x1080/hardNeuralDragon1080/']
-#sourceDir = ['1920x1080/mizuguanaCn16_II/mzgnaCII_xodLolthDemonIIIx1080/']
-sourceDir = ['1920x1080/redSamuraiESP_I/redSamurai_metasphynxKoi1080/']
-
-
-#sourceDir = ['testout/vexpTestWizardOvMirrorsI/', 'testout/vexpTestWizardOvMirrorsII/']
-#             'testout/skullOffering_x2x/', 'testout/skullOffering_x3x/',
-#             'testout/skullOffering_x4x/', 'testout/skullOffering_x5_1x/',
-#             'testout/skullOffering_x5_2x/', 'testout/skullOffering_x5_3x/',
-#             'testout/skullOffering_x6x/']
-    
-
-#outDir = 'testout/cgbwCryptWitch8018/'
-outDir = '1920x1080/redSamuraiESP_I/redSamurai_metasphynxKoiLin5/'
-#outDir = 'testout/vexpTest/'
-
-
-outBaseName = 'redSamurai_metasphynxKoiLin5_'
-  
-
-# *---------------------------------------------------------------------------*
-    
-#maskDir = xdir.eyeDir + '1560x/mask1560/'
-maskDir = xodEyeDir + '8018x/mask8018x/'
-    
-# *---------------------------------------------------------------------------*
-    
-if cntrlRender==1:
-    
-    mvDir = 'testout/vexpTestx_mv/'    # output movie directory
-    
-    eyeOutMvDir = xodEyeDir+mvDir
-    
-    # number of digits before image file extension, required by ffmpeg..
-    # numDigits: 0 = Auto (n_digits from length of .wav -> numFrames)
-    # numDigits: # = explixit #
-    numDigits = 0
-
-
-# /////////////////////////////////////////////////////////////////////////////
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
 # *-- wavlength: processing length (seconds) ---------------------*
@@ -320,14 +262,6 @@ SzY = 1080
 #SzX = 4299
 #SzY = 3035
 
-#SzX = 3508
-#SzY = 3508
-
-#SzX = 1560
-#SzY = 1560
-
-#SzX = 1080
-#SzY = 1080
 
 #SzX = 8018
 #SzY = 8018
@@ -347,7 +281,123 @@ SzY = 1080
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
-eyeOutFileName = outBaseName
+# // *--------------------------------------------------------------* //
+# // *---:: Set wav file source ::---*
+# // *--------------------------------------------------------------* //
+
+#earSrcNm = 'gorgulans_beatx01.wav'         # ~7  sec = 220 frames
+#earSrcNm = 'antimatterbk06.wav'            # ~14 sec = 434 frames
+#earSrcNm = 'dmttv-axon23.wav'              # ~23
+#earSrcNm = 'ebolaCallibriscian_uCCrhythm.wav'       # ~28
+#earSrcNm = 'cabalisk_abstract.wav'         # ~53
+#earSrcNm = 'cabalisk_spaced.wav'           # ~1.49
+#earSrcNm = 'The_Amen_Break_48K.wav'         # 
+earSrcNm = 'tomahawk_seg02.wav'
+
+
+earSrc = xdir.audioSrcDir+earSrcNm
+
+
+
+# /////////////////////////////////////////////////////////////////////////////
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+# // *--------------------------------------------------------------* //
+# // *---:: Set processing directories ::---*
+# // *--------------------------------------------------------------* //
+
+
+xodEyeDir = xdir.eyeSrcDir
+
+# GFX
+#sourceDir = ['8018x/xodsolomon8018x/']
+
+# MOV SRC RAW
+#sourceDir = ['xodmkMvSrc/asatoLifeBallX2/']
+#sourceDir = ['xodmkMvSrc/suspiriaEsp_I/suspiriaExp_mescalEater/']
+
+
+# MOV GEN
+#sourceDir = ['1920x1080/asatoLifeBallX2/']
+#sourceDir = ['1920x1080/hardNeuralDragon1080/']
+sourceDir = ['1920x1080/suspiriaEsp/suspiriaExp_hardNeuralDemonLin3/']
+
+
+
+#sourceDir = ['1920x1080/mizuguanaCn16_II/mzgnaCII_astralCryptMeatIIx1080/',
+#             '1920x1080/mizuguanaCn16_II/mzgnaCII_xodLolthTankIIIx1080/',
+#             '1920x1080/enterTheeDragon/enterTheeDragon_hardNeuralDemon1080/',
+#             '1920x1080/enterTheeDragon/enterTheeDragon_neurohedral1080/',
+#             '1920x1080/hardNeuralMizuguanaMx/']
+
+
+#sourceDir = ['testout/vexpTestWizardOvMirrorsI/',
+#             'testout/vexpTestWizardOvMirrorsIII/',
+#             '1920x1080/wizardOvMirror/wizardOvMirror_xodLolthTankIIILin7/',
+#             '1920x1080/wizardOvMirror/wizardOvMirror_cthulhuDeathRayLin5/']
+
+# *** must have / at end of variable ***
+#outDir = 'testout/cgbwCryptWitch8018/'
+#outDir = '1920x1080/suspiriaEsp/suspiriaExp_medicineManLin3/'
+outDir = 'testout/vexpTest/'
+
+# *** FIXIT - check if outDir is Empty - halt ***
+# currently errors with: OverflowError: cannot convert float infinity to integer
+
+
+
+eyeOutFileName = 'tomahawk_suspiriaExp_hardNeuralDemonLin3_'
+
+
+# *---------------------------------------------------------------------------*
+
+# set Effects Dictionary
+
+#effxDict = xodLinSQFX_dict
+effxDict = xodExpFX_dict 
+
+
+
+# *---------------------------------------------------------------------------*
+
+# Auxilliary 
+
+if cntrlEYE == 'xodChainSeq':
+    autoTimeArray = [56.059, 28.025, 28.036, 84.081]
+    
+    effxArray = ['xodLinSQFX_fwd', 'xodLinSQFX_fwd', 'xodLinSQFX_fwd', 'xodLinSQFX_fwd']
+
+
+#65?
+  
+
+# *---------------------------------------------------------------------------*
+    
+#maskDir = xdir.eyeDir + '1560x/mask1560/'
+maskDir = xodEyeDir + '8018x/mask8018x/'
+
+#maskArray = sorted(glob.glob(maskDir+'*'))
+    
+# *---------------------------------------------------------------------------*
+    
+if cntrlRender==1:
+    
+    mvDir = 'testout/vexpTestx_mv/'    # output movie directory
+    
+    eyeOutMvDir = xodEyeDir+mvDir
+    
+    # number of digits before image file extension, required by ffmpeg..
+    # numDigits: 0 = Auto (n_digits from length of .wav -> numFrames)
+    # numDigits: # = explixit #
+    numDigits = 0
+    
+    os.makedirs(eyeOutMvDir, exist_ok=True)  # If Dir does not exist, makedir
+
+
+# *---------------------------------------------------------------------------*
+# *---------------------------------------------------------------------------*
+
+
 eyeOutDir = xodEyeDir+outDir
 os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
@@ -361,7 +411,6 @@ print('// *---:: User Parameters ::---*')
 print('// *--------------------------------------------------------------* //')
 
 
-print('\nCTRL Pre-Process = '+str(preProcess))
 print('CTRL Src-Sequence  = '+str(srcSequence))
 print('CTRL Eye-Algorithm = '+str(cntrlEYE))
 print('CTRL Post-Process  = '+str(postProcess))
@@ -473,9 +522,6 @@ print('XodEYE Img Dimensions [X, Y]: --------- '+str(SzX)+' x '+str(SzY))
 # *---------------------------------------------------------------------------*
 # 0  => Bypass
 # 1  => renameAll                                   ::renameAll::
-# 2  => scale all img in dir                        ::odmkScaleAll::
-# 3  => convert .jpg img to .bmp                    ::convertJPGtoBMP::
-# 4  => convert .bmp img to .jpg                    ::convertToJPG::
 # 5  => Concatenate all img in directory list       ::concatAllDir::
 # 6  => 4-quadrant img mirror                       ::mirrorHV4AllImg::
 # 7  => 4-quadrant temporal dly img mirror          ::mirrorTemporalHV4AllImg::
@@ -489,7 +535,7 @@ print('XodEYE Img Dimensions [X, Y]: --------- '+str(SzX)+' x '+str(SzY))
 
 
 print('\n// *--------------------------------------------------------------* //')
-print('// *---:: Load .wav file ::---*')
+print('// *---:: Audio - Load .wav file ::---*')
 print('// *--------------------------------------------------------------* //')
 
 
@@ -523,14 +569,16 @@ period = 1.0 / fs
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
     
 
-# // *-----------------------------------------------------------------* //
-# // *--- Calculate Peak Regions (# frames of peak regions) ---*
+print('\n// *--------------------------------------------------------------* //')
+print('// *---:: Audio - Detect Onset Events & Wav Segmentation ::---*')
+print('// *--------------------------------------------------------------* //')
+
 
 if cntrlOnsetDet==1:
 
 
-    peakThresh = 0.07
-    peakWait = 0.33 
+    peakThresh = 8.7
+    peakWait = 1.33 
 
     plots = 1
 
@@ -548,7 +596,7 @@ if cntrlOnsetDet==1:
     #print('\nwavSegmentSamplesCH1: ' + str(wavSegmentSamplesCH1))
     #print('\nwavSegmentTimesCH1: ' + str(wavSegmentTimesCH1))
 
-
+    autoSeqArray = wavSegmentSamplesCH1
     
 # // *********************************************************************** //
 # // *********************************************************************** //
@@ -600,7 +648,7 @@ print('Total Output Frames: ---------------- '+str(numFrames))
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
-if preProcess == 3:
+if cntrlEYE == 'convJPGtoBMP':
 
     print('\n// *--------------------------------------------------------------* //')
     print('// *---::Convert All images in SRC Directory to bmp::---*')
@@ -609,7 +657,7 @@ if preProcess == 3:
 
     # define output directory for scaled img
     # Dir path must end with backslash /
-    os.makedirs(eyeOutDir, exist_ok=True)  
+    os.makedirs(eyeOutDir, exist_ok=True)
     
     eyeutil.convertJPGtoBMP(sourceDir, eyeOutDir, reName=eyeOutFileName)
 
@@ -619,18 +667,15 @@ if preProcess == 3:
     print('\n')
 
 
-if preProcess == 4:
+if cntrlEYE == 'convBMPtoJPG':
 
     print('\n// *--------------------------------------------------------------* //')
     print('// *---::Convert All images in SRC Directory to jpg::---*')
     print('// *--------------------------------------------------------------* //')
     
-
-    # define output directory for scaled img
-    # Dir path must end with backslash /
-    os.makedirs(eyeOutDir, exist_ok=True)  
+ 
     
-    eyeutil.convertBMPtoJPG(srcDir, eyeOutDir, reName=eyeOutFileName)
+    eyeutil.convertBMPtoJPG(sourceDir, eyeOutDir, reName=eyeOutFileName)
 
 
     print('Saved converted images to the following location:')
@@ -650,67 +695,48 @@ if preProcess == 4:
 # begin : img Src Sequencing
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+        
     
-
-# // *--------------------------------------------------------------* //
-# // *---::XODMKEYE - Video Auto Sequencer MKI::---*
-# // *--------------------------------------------------------------* //
-
-
-def xodAutoSeq(imgSrcArray, autoSeqArray, effxDict, framesPerSec,
-               n_digit, eyeOutDir, eyeOutFileNm):
-    
-    ''' Tempo based auto sequencer
-        imgSrcArray - Array of video Source img folders
-        autoSeqArray - Array of video segments lengths (# ov frames)
-        effxDict - Dictionary of video effect algorithms
-        n_digit - Number of digits for output naming (video generation)
-        imgOutDir - Full path output directory '''
-        
-        
-    # numFrames = sum(autoSeqArray)
-    n_offset = 0
-
-    for i in range(len(autoSeqArray)):
-        
-        cntrlEYE = random.choice(list(effxDict.values()))
-        xFrames = autoSeqArray[i]
-
-        imgSeqArray = random.choice(imgSrcArray)
-        
-        
-        eyev.xodEyeGen(cntrlEYE, imgSeqArray, xFrames, n_offset,
-                       n_digits, eyeOutDir, eyeOutFileName)
-        
-        n_offset += xFrames
-        
-    print('\nProcessed images output to the following directory:')
-    print(eyeOutDir)
-
-
-    print('// *--------------------------------------------------------------* //')
-
-
-    return
-
-
-
-maskArray = sorted(glob.glob(maskDir+'*'))
-
+print('\n// *--------------------------------------------------------------* //')
+print('// *---:: Create Source Image Array ::---*')
+print('// *--------------------------------------------------------------* //')
     
 if srcSequence == 0:
-
-    #imgSeqArray = sorted(glob.glob(srcDir+'*'))   
-    srcDir = []
-    imgSeqArray = []
-    for d in range(len(sourceDir)):
-        sDirTmp = xodEyeDir+sourceDir[d]
-        srcDir.append(sDirTmp)
-        sortedDir = sorted(glob.glob(sDirTmp+'*'))
-        for s in sortedDir:
-            imgSeqArray.append(s.replace('\\', '/'))
-
+        
+    imgSrcArray, imgSrcDir = eyeutil.createSrcArray(xodEyeDir, sourceDir)
     
+    print('\nCreated *imgSrcArray* - Array of directories of sequenced .jpg file paths:\n')
+    
+    for p in range(len(imgSrcDir)):
+        print(imgSrcDir[p])
+        print("# of images in directory: " + str(len(imgSrcArray[p])))
+             
+              
+# Auxilliary Chained Sequence:
+
+if cntrlEYE == 'xodChainSeq':              
+
+    print("__xodChainSeq__ - autoNFrameArray: ")
+    for i in range(len(autoTimeArray)):            
+        print(str(int(autoTimeArray[i] * framesPerSec)))
+              
+    
+    print('\n// *--------------------------------------------------------------* //')
+
+
+#if srcSequence == 0:
+#
+#    #imgSeqArray = sorted(glob.glob(srcDir+'*'))   
+#    srcDir = []
+#    imgSeqArray = []
+#    for d in range(len(sourceDir)):
+#        sDirTmp = xodEyeDir+sourceDir[d]
+#        srcDir.append(sDirTmp)
+#        sortedDir = sorted(glob.glob(sDirTmp+'*'))
+#        for s in sortedDir:
+#            imgSeqArray.append(s.replace('\\', '/'))
+
+
 if srcSequence == 1:
     
     print('\n// *--------------------------------------------------------------* //')
@@ -814,11 +840,6 @@ if cntrlEYE == 'xodResizeAll':
         print('sourceDir contains more than one directory')
     else:
         srcDir = xodEyeDir + sourceDir[0]
-    
-    resizeNm = eyeOutFileName
-    # output dir where processed img files are stored:
-    # eyeOutDir = 'myOutputDirName'    # defined above
-    resizedir = eyeOutDir
 
     reSzX = SzX
     reSzY = SzY
@@ -831,7 +852,8 @@ if cntrlEYE == 'xodResizeAll':
         aspectCtrl='None'
     
     
-    eyeutil.xodResizeAll(srcDir, reSzX, reSzY, resizedir, imgOutNm=resizeNm, keepAspect=aspectCtrl)
+    eyeutil.xodResizeAll(srcDir, reSzX, reSzY, eyeOutDir,
+                         imgOutNm=eyeOutFileName, keepAspect=aspectCtrl)
 
     
     print('Saved Rezized images to the following location:')
@@ -875,7 +897,7 @@ if cntrlEYE == 'xodCropAll':
 # // *********************************************************************** //
 # // *********************************************************************** //
     
-if cntrlEYE == 'concatAllDir':
+if cntrlEYE == 'xodConcatAllDir':
 
 
     concatOutDir = eyeOutDir
@@ -917,7 +939,7 @@ if cntrlEYE == 'xodFrameIntpLin':
     xfadeFrames = ctrlSel
     effx = 0
 
-    eyeutil.xodFrameInterpolate(imgSeqArray, xfadeFrames, effx, n_digits,
+    eyeutil.xodFrameInterpolate(imgSrcArray[0], xfadeFrames, effx, n_digits,
                                 xodFrameIdir, xodFrameINm)
 
     print('\nOutput all images to: ' + xodFrameIdir)
@@ -1101,6 +1123,43 @@ if cntrlEYE == 'xodXfadeTelescopeII':
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+
+if cntrlEYE == 'xodAutoSeq':
+    
+    print('\n')
+    print('// *--------------------------------------------------------------* //')
+    print('// *---:: XODMKEYE - EYE XOD Auto Sequence::---*')
+    print('// *--------------------------------------------------------------* //')
+
+
+    eyev.xodAutoSeq(imgSrcArray, autoSeqArray, effxDict, framesPerSec,
+                    n_digits, eyeOutDir, eyeOutFileName)
+
+    print('\nProcessed images output to the following directory:')
+    print(eyeOutDir)
+
+    print('// *--------------------------------------------------------------* //')
+    
+    
+# // *********************************************************************** //    
+    
+    
+if cntrlEYE == 'xodChainSeq':
+    
+    print('\n')
+    print('// *--------------------------------------------------------------* //')
+    print('// *---:: XODMKEYE - EYE XOD Chain Sequence::---*')
+    print('// *--------------------------------------------------------------* //')
+
+
+    eyev.xodChainSeq(imgSrcArray, autoTimeArray, effxArray, framesPerSec,
+                    n_digits, eyeOutDir, eyeOutFileName)
+
+    print('\nProcessed images output to the following directory:')
+    print(eyeOutDir)
+
+    print('// *--------------------------------------------------------------* //')
+    
 
 # // *********************************************************************** //
 # // *********************************************************************** //
@@ -1395,8 +1454,15 @@ elif cntrlEYE == 'xodImgLinSel':
 
     os.makedirs(eyeOutDir, exist_ok=True)
     
+    if len(imgSrcArray) > 1:
+        print("WARNING: Multiple Directory Array - using only first entry")
+        
+    #pdb.set_trace()
+    
+    imgSeqArray = imgSrcArray[0]
 
-    eyev.xodImgLinSel(imgSeqArray, xLength, framesPerSec, n_digits, eyeOutDir, eyeOutFileName)
+    eyev.xodImgLinSel(imgSeqArray, xLength, framesPerSec, ctrlSel,
+                      n_digits, eyeOutDir, eyeOutFileName)
     
     print('\nProcessed images output to the following directory:')
     print(eyeOutDir)
@@ -1850,17 +1916,11 @@ elif cntrlEYE == 5:
     imgRotateAltDir = xodEyeDir+eyeOutDir
     os.makedirs(imgRotateAltDir, exist_ok=True)
 
-    #xfadeFrames = int(np.ceil(eyeClks.framesPerBeat / 3)) #2 images for 2 frames
-    #xfadeFrames = int(np.ceil(eyeClks.framesPerBeat)) #2 images for 2 frames
     xfadeFrames = framesPerBeat
     #xfadeFrames = xLength
 
     sLength = xLength
-    
-    #pdb.set_trace()
 
-    imgSrcArray = []
-    imgSrcArray.extend(sorted(glob.glob(imgSeqArray+'*')))
 
     eyeu.odmkImgRotateAlt(imgSrcArray, sLength, framesPerSec, xfadeFrames, imgRotateAltDir, imgOutNm=imgRotateAltNm)
 
@@ -2575,78 +2635,6 @@ if cntrlEYE == 627:
     # print(xodEyeDir+'eyeXfadeRepeat')
 
     print('// *--------------------------------------------------------------* //')
-
-
-
-
-
-
-
-# /////////////////////////////////////////////////////////////////////////////
-# #############################################################################
-# begin : img pre-processing
-# #############################################################################
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-
-if preProcess == 2:
-
-    print('\n')
-    print('// *--------------------------------------------------------------* //')
-    print('// *---::Scale All images in SRC Directory::---*')
-    print('// *--------------------------------------------------------------* //')
-
-    ctrl = high
-
-    imgSrcArray = xodEyeDir+scaleSrcDir
-    
-    sclSzX = SzX
-    sclSzY = SzY
-    
-    # define output directory for scaled img
-    # Dir path must end with backslash /
-    processScaleDir = xodEyeDir+scaleOutDirName
-    os.makedirs(processScaleDir, exist_ok=True)
-    
-    # individual file root name
-    outNameRoot = scaleFileName    
-    
-
-    eyeutil.odmkScaleAll(imgSrcArray, sclSzX, sclSzY, processScaleDir, high=ctrl, outName=outNameRoot)
-
-
-    print('Saved Scaled images to the following location:')
-    print(processScaleDir)
-    print('\n')
-
-
-
-elif preProcess == 3:
-
-    print('\n')
-    print('// *--------------------------------------------------------------* //')
-    print('// *---::Convert All images in SRC Directory to bmp::---*')
-    print('// *--------------------------------------------------------------* //')
-
-
-    #imgSrcDir = xodEyeDir+jpgSrcDir
-    
-    
-    # define output directory for scaled img
-    # Dir path must end with backslash /
-    imgOutDir = xodEyeDir+bmpOutDirName
-    os.makedirs(imgOutDir, exist_ok=True)
-    
-    # individual file root name
-    outNameRoot = bmpOutFileName    
-    
-
-    eyeutil.convertJPGtoBMP(imgSrcDir, imgOutDir, reName=outNameRoot)
-
-
-    print('Saved converted images to the following location:')
-    print(imgOutDir)
-    print('\n')
 
 
 
