@@ -357,7 +357,7 @@ class xodEYEv:
 
 
     def xodAutoSeq(self, imgSrcArray, autoSeqArray, effxDict, framesPerSec,
-                   n_digits, eyeOutDir, eyeOutFileNm):
+                   ctrl, n_digits, eyeOutDir, eyeOutFileNm):
         
         ''' Tempo based auto sequencer
             imgSrcArray - Array of video Source img folders
@@ -379,7 +379,7 @@ class xodEYEv:
             
             #pdb.set_trace()
             
-            self.xodEyeGen(cntrlEYE, imgSeqArray, xFrames, n_offset,
+            self.xodEyeGen(cntrlEYE, imgSeqArray, xFrames, ctrl, n_offset,
                            n_digits, eyeOutDir, eyeOutFileNm)
             
             n_offset += xFrames
@@ -440,11 +440,11 @@ class xodEYEv:
     # // *--------------------------------------------------------------* //
     
     
-    def xodEyeGen(self, cntrlEYE, imgSeqArray, xFrames, n_offset,
+    def xodEyeGen(self, cntrlEYE, imgSeqArray, xFrames, ctrl, n_offset,
                   n_digits, eyeOutDir, eyeOutFileName):
         
         
-        getattr(self, cntrlEYE)(imgSeqArray, xFrames, n_offset, n_digits,
+        getattr(self, cntrlEYE)(imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                                 eyeOutDir, eyeOutFileName)
         
         return
@@ -454,79 +454,79 @@ class xodEYEv:
     # // *---::XODMKEYE - Image Sequence Linear EFFX Algorithm::---*
     # // *--------------------------------------------------------------* //
     
-    
-    def xodLinSQFX_fwd(self, imgSeqArray, xFrames, n_offset, n_digits,
+    def xodLinSQFX_fwd(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                        eyeOutDir, eyeOutFileNm):
         
         effx = 1
         fadeInOut = 1
         fwdRev = 1
 
-        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+        self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
     
         return
     
     
-    def xodLinSQFX_rev(self, imgSeqArray, xFrames, n_offset, n_digits,
+    def xodLinSQFX_rev(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                        eyeOutDir, eyeOutFileNm):
         
         effx = 1
         fadeInOut = 1
         fwdRev = 0
 
-        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+        self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
     
         return
 
     
-    def xodLinSQFX_crot(self, imgSeqArray, xFrames, n_offset, n_digits,
+    def xodLinSQFX_crot(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                         eyeOutDir, eyeOutFileNm):
         
         effx = 3
         fadeInOut = 1
         fwdRev = 1
 
-        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+        self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
         
         return
     
     
-    def xodLinSQFX_sobelxy(self, imgSeqArray, xFrames, n_offset, n_digits,
+    def xodLinSQFX_sobelxy(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                         eyeOutDir, eyeOutFileNm):
         
         effx = 4
         fadeInOut = 1
         fwdRev = 1
 
-        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+        self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
         
         return
 
 
-    def xodLinSQFX_sobelz(self, imgSeqArray, xFrames, n_offset, n_digits,
-                        eyeOutDir, eyeOutFileNm):
+    def xodLinSQFX_sobelz(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
+                          eyeOutDir, eyeOutFileNm):
         
         effx = 5
         fadeInOut = 1
         fwdRev = 1
 
-        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+        self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
         
         return
 
     
     
-    def xodLinSQFX(self, imgSeqArray, xFrames, n_offset, n_digits,
+    def xodLinSQFX(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                    eyeOutDir, eyeOutFileNm):
         
         ''' Sequenced Audio Segment synched linear effects
             imgSeqArray - array of sequential images
             xFrames     - number of frames for segment
+            ctrl        - 0 = no index offset, 1 = randomize index offset
             n_offset    - offset for output frame index
             n_digits    - number of digits for frame index
             imgOutDir   - full path output directory '''
@@ -541,7 +541,7 @@ class xodEYEv:
         fadeInOut = 1
         fwdRev = 0
 
-        self.xodImgLinEFFX(imgSeqArray, xFrames, effx, fadeInOut, fwdRev,
+        self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_digits, eyeOutDir, eyeOutFileNm)
         
 
@@ -560,6 +560,7 @@ class xodEYEv:
         else:
             imgLinSelNm = 'imgRndSelOut'
             
+  
         if ctrl == 1:
             offset = round((len(imgSeqArray)-1)*random.random())+1
         else:
@@ -582,8 +583,8 @@ class xodEYEv:
         return    
     
     
-    def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx, fadeInOut, fwdRev,
-                   n_digit, eyeOutDir, eyeOutFileNm):
+    def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx,
+                   fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm):
         
         ''' Tempo based linear effects
             numFrames - total video output frames
@@ -593,29 +594,31 @@ class xodEYEv:
             fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
             fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
             imgOutDir - full path output directory '''
-            
+
             
         numFrames = int(ceil(xLength * framesPerSec))
         n_offset = 0
     
         xBeats = int(np.floor(numFrames / xFrames))
         xTail = int(np.floor(numFrames - xBeats * xFrames))
+        
+        ctrl = 0    # linearly progress through src images
 
 
         for i in range(xBeats):
             offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
-            self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, effx, 
+            self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, ctrl, effx, 
                                fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
         
         offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
-        self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, effx, 
+        self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, ctrl, effx, 
                            fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
 
         return
     
     
     
-    def xodImgLinEFFX(self, imgFileList, numFrames, effx, fadeInOut, fwdRev, 
+    def xodImgLinEFFX(self, imgFileList, numFrames, ctrl, effx, fadeInOut, fwdRev, 
                       n_offset, n_digits, imgOutDir, imgOutNm='None'):
     
         ''' x-fades from clean <-> effx over numFrames
@@ -636,17 +639,18 @@ class xodEYEv:
             imgLinEFFXNm = imgOutNm
         else:
             imgLinEFFXNm = 'imgLinEFFX'
-            
-            
-        #pdb.set_trace()
         
         if n_offset != 0:
             nextInc = n_offset
         else:
             f_idx = eyeutil.getLatestIdx(imgOutDir, imgLinEFFXNm)
             nextInc = 1 + f_idx
+            
+        if ctrl == 1:
+            offset = round((len(imgFileList)-1)*random.random())+1
+        else:
+            offset = 0
 
-        
         if effx == 0:
             effx = round((numEffx-1)*random.random())+1
         
@@ -663,13 +667,14 @@ class xodEYEv:
             fwdRev = round(random.random())+1
 
 
-        
         for i in range(numFrames):
             
             if fwdRev == 2:
-                img1 = imio.imread(imgFileList[(numFrames-1-i) % len(imgFileList)])
+                #img1 = imio.imread(imgFileList[(numFrames-1-i) % len(imgFileList)])
+                img1 = imio.imread(imgFileList[eyeutil.circ_idx((numFrames-1-i) + offset, len(imgFileList))])
             else:
-                img1 = imio.imread(imgFileList[i % len(imgFileList)])
+                #img1 = imio.imread(imgFileList[i % len(imgFileList)])
+                img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
             
             # linear select (no-effx) fwd <-> back
             if effx == 1:
@@ -686,10 +691,10 @@ class xodEYEv:
                 resImg = img1
 
             elif effx == 3:
-                img3 = imio.imread(imgFileList[(i+1) % len(imgFileList)])
-                imgPIL3 = Image.fromarray(img3.astype(np.uint8))
+                #img3 = imio.imread(imgFileList[(i+1) % len(imgFileList)])
+                imgPIL = Image.fromarray(img1.astype(np.uint8))
                 # RGB rotate..
-                imgRgbRot = eyeutil.xodColorRotate(imgPIL3, alphaX[i])
+                imgRgbRot = eyeutil.xodColorRotate(imgPIL, alphaX[i])
                 resImg = np.array(imgRgbRot)
                 resImg = resImg.astype(np.uint8)
                 
@@ -729,54 +734,6 @@ class xodEYEv:
 
             nextInc += 1
             
-        return
-
-
-    # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - Image Linear F<->B Select Algorithm::---*
-    # // *--------------------------------------------------------------* //
-    
-    def odmkImgRotLinSel(self, imgList, numFrames, imgOutDir, imgOutNm='None'):
-    
-        if imgOutNm != 'None':
-            imgRndSelNm = imgOutNm
-        else:
-            imgRndSelNm = 'imgRndSelOut'
-    
-    
-        zn = eyeutil.cyclicZn(numFrames-1)    # less one, then repeat zn[0] for full 360
-        
-        idx = 0
-        
-        imgCount = numFrames
-        n_digits = int(ceil(np.log10(imgCount))) + 2
-        nextInc = 1
-        xfdirection = 1
-        for i in range(numFrames):
-            
-            raw_gz1 = imgList[idx]
-            ang = (atan2(zn[i % (numFrames-1)].imag, zn[i % (numFrames-1)].real))*180/np.pi
-            rotate_gz1 = ndimage.rotate(raw_gz1, ang, reshape=False)            
-            rotate_gz1 = self.cropZoom(rotate_gz1, 2)
-
-            zr = ''
-            for j in range(n_digits - len(str(nextInc))):
-                zr += '0'
-            strInc = zr+str(nextInc)
-            imgNormalizeNm = imgRndSelNm+strInc+'.jpg'
-            imgRndSelFull = imgOutDir+imgNormalizeNm
-            imio.imwrite(imgRndSelFull, rotate_gz1)
-
-            if (nextInc % len(imgList)-1) == 0:
-                xfdirection = -xfdirection
-            if xfdirection == 1:
-                idx += 1                
-            else:
-                idx -= 1
-           
-            nextInc += 1
-            
-        #return [imgRndSelArray, imgRndSelNmArray]
         return
 
 
@@ -1071,9 +1028,7 @@ class xodEYEv:
     
         return      
       
-      
-      
-    
+
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - Image Telescope Sequence Algorithm::---*
     # // *--------------------------------------------------------------* //
@@ -1212,79 +1167,6 @@ class xodEYEv:
                     strInc = zr+str(imgCount - (nextInc))
                 imgTelescFull = imgOutDir+imgTelescNm+strInc+'.jpg'
                 imio.imwrite(imgTelescFull, imgClone1)
-                
-        return
-                
-    # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - Img DivXfade Telescope Sequence Algorithm::---*
-    # // *--------------------------------------------------------------* //
-    
-    def odmkImgDivXfadeTelescope(self, imgList, framesPerBeat, imgOutDir, inOut=0, imgOutNm='None'):
-        ''' outputs a sequence of telescoping images (zoom in or zoom out)
-            The period of telescoping sequence synched to framesPerBeat
-            assumes images in imgList are normalized (scaled/cropped) numpy arrays '''
-    
-        if imgOutNm != 'None':
-            imgTelescNm = imgOutNm
-        else:
-            imgTelescNm = 'imgTelescope'
-    
-        # find number of source images in src dir
-        numSrcImg = len(imgList)
-        # initialize SzX, SzY to dimensions of src img
-        SzX = imgList[0].shape[1]
-        SzY = imgList[0].shape[0]
-    
-        numFrames = numSrcImg * framesPerBeat
-    
-        alphaX = np.linspace(0.0001, 1.0, framesPerBeat)               
-    
-        hop_sz = ceil(np.log(SzX/framesPerBeat))  # number of pixels to scale img each iteration
-    
-        #imgTelescopeNmArray = []
-        #imgTelescopeArray = []
-    
-        imgCount = numFrames    # counter to increment output name
-        n_digits = int(ceil(np.log10(imgCount))) + 2
-        nextInc = 0
-        for i in range(numSrcImg):
-            imgClone1 = imgList[i]
-            imgClone2 = imgList[(i + 1) % numSrcImg]  # final img+1 -> first img
-            
-            newDimX = SzX
-            newDimY = SzY
-            for t in range(framesPerBeat):
-                if newDimX > 2:
-                    newDimX -= 2*hop_sz
-                if newDimY > 2:
-                    newDimY -= 2*hop_sz
-                # scale image to new dimensions
-                imgItr1 = self.odmkEyeRescale(imgClone1, newDimX, newDimY)
-                imgItr2 = self.odmkEyeRescale(imgClone2, newDimX, newDimY)
-                # image division blend algorithm..
-                c = imgItr1/((imgItr2.astype('float')+1)/(256*alphaX[t]))
-                # saturating function - if c[m,n] > 255, set to 255:
-                imgDIVB = c*(c < 255)+255*np.ones(np.shape(c))*(c > 255)
-                # region = (left, upper, right, lower)
-                # subbox = (i + 1, i + 1, newDimX, newDimY)
-                for j in range(SzY):
-                    for k in range(SzX):
-                        #if ((j >= (t+1)*hop_sz) and (j < (newDimY+(SzY-newDimY)/2)) and (k >= (t+1)*hop_sz) and (k < (newDimX+(SzX-newDimX)/2))):
-                        if ((j >= (t+1)*hop_sz) and (j < newDimY+((t+1)*hop_sz)/2) and (k >= (t+1)*hop_sz) and (k < newDimX+((t+1)*hop_sz)/2)):
-                            #imgClone[j+(SzY-newDimY)/2, k+(SzX-newDimX)/2, :] = imgItr[j - t, k - t, :]
-                            imgClone1[j, k, :] = imgDIVB[j - (SzY-newDimY)/2, k - (SzX-newDimX)/2, :]
-                nextInc += 1
-                zr = ''
-                if inOut == 1:
-                    for j in range(n_digits - len(str(nextInc))):
-                        zr += '0'
-                    strInc = zr+str(nextInc)
-                else:
-                    for j in range(n_digits - len(str(imgCount - (nextInc)))):
-                        zr += '0'
-                    strInc = zr+str(imgCount - (nextInc))
-                imgTelescFull = imgOutDir+imgTelescNm+strInc+'.jpg'
-                imio.imwrite(imgTelescFull, imgClone1) 
                 
         return
    

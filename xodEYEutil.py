@@ -941,9 +941,11 @@ def xodColorRotate(img, rotateStep):
 # // *********************************************************************** //
 
 
-# XOD Rotate Color Function  
-#def xodFrameInterpolate(imgFileList, xfadeFrames, imgOutDir, imgOutNm='None'):
-def xodFrameInterpolate(imgFileList, xfadeFrames, effx, n_digits,
+# // *--------------------------------------------------------------* //
+# // *---::XODMKEYE - Linear interpolate between frames::---*
+# // *--------------------------------------------------------------* //
+
+def xodFrameInterpolate(imgFileList, xfadeFrames, ctrl, n_digits,
                         imgOutDir, imgOutNm):
     ''' Interpolate (blend) between frames in directory
         imgFileList - image source directory
@@ -964,7 +966,7 @@ def xodFrameInterpolate(imgFileList, xfadeFrames, effx, n_digits,
     n_digits = int(ceil(np.log10(numImg * xfadeFrames))) + 2
 
     alphaX = np.linspace(0.0, 1.0, xfadeFrames + 1)
-    if effx > 0:
+    if ctrl > 0:
         alphaCosX = (-np.cos(np.pi * alphaX) + 1) / 2
         
     frameCnt = 0
@@ -974,7 +976,7 @@ def xodFrameInterpolate(imgFileList, xfadeFrames, effx, n_digits,
         imgPIL2 = Image.open(imgFileList[j + 1])
 
         for i in range(xfadeFrames):
-            if effx > 0:
+            if ctrl > 0:
                 alphaB = Image.blend(imgPIL1, imgPIL2, alphaCosX[i])
             else:
                 alphaB = Image.blend(imgPIL1, imgPIL2, alphaX[i])
@@ -985,6 +987,63 @@ def xodFrameInterpolate(imgFileList, xfadeFrames, effx, n_digits,
             imgFrameIFull = imgOutDir + imgOutNm + strInc+'.jpg'
             imio.imwrite(imgFrameIFull, alphaB)
             frameCnt += 1
+    return
+
+
+# // *--------------------------------------------------------------* //
+# // *---::XODMKEYE - Stride interpolate between frames::---*
+# // *--------------------------------------------------------------* //
+    
+def xodStrideInterpolate(imgFileList, xfadeFrames, effx, n_digits,
+                        imgOutDir, imgOutNm):
+    ''' Interpolate (blend) between Strided frames in directory
+        (stride - skips n frames each step)
+        imgFileList - image source directory
+        xfadeFrames - number of frames per xfade
+        effx=>Stride: 2 or greater - use every stride frames
+    '''
+    print('// __xodFrameInterpolate__ ')
+        
+    #if (???check for valid images in dir???):
+    #    print('ERROR: directory does not contain valid images')
+    #    return 1
+
+    if effx < 2:
+        print('ERROR - stride must be 2 or greater')
+        return
+
+    numImg = len(imgFileList)
+    
+    print('// *---numImg = '+str(numImg)+'---*')
+    print('// *---xfadeFrames = '+str(xfadeFrames)+'---*')
+    
+    n_digits = int(ceil(np.log10(numImg * xfadeFrames))) + 2
+
+    alphaX = np.linspace(0.0, 1.0, xfadeFrames + 1)
+    alphaCosX = (-np.cos(np.pi * alphaX) + 1) / 2
+    stride = effx
+        
+    frameCnt = 0
+    idx = 0
+    for j in range(numImg - 1):
+        
+        
+        imgPIL1 = Image.open(imgFileList[circ_idx(idx, numImg)])
+        imgPIL2 = Image.open(imgFileList[circ_idx(idx + stride, numImg)])
+
+        for i in range(xfadeFrames):
+            alphaB = Image.blend(imgPIL1, imgPIL2, alphaCosX[i])
+            alphaB = ImageOps.autocontrast(alphaB, cutoff=0)
+            zr = ''
+            for j in range(n_digits - len(str(frameCnt))):
+                zr += '0'
+            strInc = zr+str(frameCnt)
+            imgFrameIFull = imgOutDir + imgOutNm + strInc+'.jpg'
+            imio.imwrite(imgFrameIFull, alphaB)
+            frameCnt += 1
+            
+        idx = (idx + stride) % numImg
+        
     return
 
 
