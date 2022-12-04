@@ -47,12 +47,30 @@ import pdb
 # audioTestDir = '../audio/testout/'
 
 
-runDir = 'C:/XODMK/xodmkCode/xodmkPython/eye/'
-os.chdir(runDir)
+# // *---------------------------------------------------------------------* //
+# // *---------------------------------------------------------------------* //
 
-import xodEyeSetRootDir as xdir
+# transfer from alt pc
+# runDir = 'C:/XODMK/xodmkCode/xodmkPython/eye/'
+# os.chdir(runDir)
+# import xodEyeSetRootDir as xdir
+# sys.path.insert(1, xdir.rootDir+'DSP/')
 
-sys.path.insert(0, xdir.rootDir+'eye/')
+# assumes python projects are located in xodPython
+
+currentDir = os.getcwd()
+rootDir = os.path.dirname(currentDir)
+
+eyeSrcDir = currentDir + "/eye/src"
+
+audioSrcDir = rootDir + "/audio/wavsrc"
+audioOutDir = rootDir + "/audio/wavout"
+
+print("currentDir: " + currentDir)
+print("rootDir: " + rootDir)
+
+
+sys.path.insert(0, rootDir+'xodEYE/')
 import xodEYEutil as eyeutil
 import xodEYEu as xodeyeu
 import xodEYEv as xodeyev
@@ -60,16 +78,16 @@ import xodFFmpeg as xodffm
 # import xodEYEx as xodeyex
 
 
-sys.path.insert(1, xdir.rootDir+'DSP/')
+sys.path.insert(1, rootDir+'/git/xodDSP/')
 import xodClocks as clks
 import xodWavGen as wavGen
 
 
-sys.path.insert(2, xdir.rootDir+'util')
-import xodPlotUtil as xodplt
+sys.path.insert(2, rootDir+'/xodUtil/')
+# import xodPlotUtil as xodplt
 
 
-sys.path.insert(3, xdir.rootDir+'audio/xodma')
+sys.path.insert(3, rootDir+'/xodma/')
 import xodmaAudioTools as xodaudio
 
 
@@ -211,7 +229,7 @@ xodExpFX_dict = {
 #cntrlEYE = xodEYEv_dict["LinEFFX"]
 #cntrlEYE = xodEYEv_dict["AutoSeq"]
 #cntrlEYE = xodEYEv_dict["ChainSeq"]
-cntrlEYE = 0
+cntrlEYE = xodEYEu_dict["MskDualESP"]
 
 srcSequence = 0
 xfadeSel = 0
@@ -219,7 +237,7 @@ ctrlSel = 0
 effxSel = 0
 cntrlOnsetDet = 0
 postProcess = 0
-cntrlRender = 1
+cntrlRender = 0
 
 
 
@@ -255,8 +273,8 @@ imgFormat = 'fjpg'
 
 # HD Standard video aspect ratio
 
-SzX = 1920
-SzY = 1080
+#SzX = 1920
+#SzY = 1080
 
 #SzX = 1920
 #SzY = 1280
@@ -266,8 +284,8 @@ SzY = 1080
 #SzY = 3035
 
 
-#SzX = 8018
-#SzY = 8018
+SzX = 8018
+SzY = 8018
 
 # Golden ratio frames:
 #mstrSzX = 1076
@@ -288,18 +306,16 @@ SzY = 1080
 # // *---:: Set wav file source ::---*
 # // *--------------------------------------------------------------* //
 
-#earSrcNm = 'gorgulans_beatx01.wav'         # ~7  sec = 220 frames
-#earSrcNm = 'antimatterbk06.wav'            # ~14 sec = 434 frames
-#earSrcNm = 'dmttv-axon23.wav'              # ~23
+#earSrcNm = 'gorgulans_beatx01.wav'                 # ~7  sec = 220 frames
+earSrcNm = 'antimatterbk06.wav'                    # ~14 sec = 434 frames
+#earSrcNm = 'dmttv-axon23.wav'                      # ~23
 #earSrcNm = 'ebolaCallibriscian_uCCrhythm.wav'       # ~28
-#earSrcNm = 'cabalisk_abstract.wav'         # ~53
-#earSrcNm = 'cabalisk_spaced.wav'           # ~1.49
-earSrcNm = 'The_Amen_Break_48K.wav'
+#earSrcNm = 'cabalisk_abstract.wav'                 # ~53
+#earSrcNm = 'cabalisk_spaced.wav'                   # ~1.49
+#earSrcNm = 'The_Amen_Break_48K.wav'
 
 
-earSrc = xdir.audioSrcDir+earSrcNm
-
-
+earSrc = audioSrcDir + '/' + earSrcNm
 
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -308,15 +324,14 @@ earSrc = xdir.audioSrcDir+earSrcNm
 # // *---:: Set processing directories ::---*
 # // *--------------------------------------------------------------* //
 
-
-xodEyeDir = xdir.eyeSrcDir
+xodEyeDir = currentDir + "/eye/"    # ** extra / for this path
 
 # GFX
-#sourceDir = ['8018x/xodsolomon8018x/']
+sourceDir = ['src/8018x/xodMetalSphynxEye8018x/']
 
 # MOV SRC RAW
 #sourceDir = ['xodmkMvSrc/enterTheeDragon/enterTheeDragon_makerOvWorldsI/']
-sourceDir = ['testout/tomahawk_xodjmk/']
+#sourceDir = ['testout/tomahawk_xodjmk/']
 
 
 #sourceDir = ['1920x1080/wizardOvMirror/wizardOvMirror_xodLolthTankIIILin7/',
@@ -372,20 +387,16 @@ sourceDir = ['testout/tomahawk_xodjmk/']
 #             '1920x1080/suspiriaEsp/suspiriaExp_mescalEaterLin3/',
 #             '1920x1080/suspiriaEsp/suspiriaExp_mescalEaterLin5/',
 #             '1920x1080/suspiriaEsp/suspiriaExp_neurohedralLin3/']
-             
-             
-
 
 # *** must have / at end of variable ***
 #outDir = 'testout/cgbwCryptWitch8018/'
-outDir = 'testout/vexpTest/'
+outDir = 'eyeRes/'
 
 # *** FIXIT - check if outDir is Empty - halt ***
 # currently errors with: OverflowError: cannot convert float infinity to integer
 
-
 #eyeOutFileName = 'humanEyeESP_pinealResonator1080_'
-eyeOutFileName = 'tomahawk_xodjmk_'
+eyeOutFileName = 'chromeSphynxExp2_'
 
 
 # *---------------------------------------------------------------------------*
@@ -393,8 +404,7 @@ eyeOutFileName = 'tomahawk_xodjmk_'
 # set Effects Dictionary
 
 effxDict = xodLinSQFX_dict
-#effxDict = xodExpFX_dict 
-
+# effxDict = xodExpFX_dict
 
 
 # *---------------------------------------------------------------------------*
@@ -406,20 +416,17 @@ if cntrlEYE == 'xodChainSeq':
     
     effxArray = ['xodLinSQFX_fwd', 'xodLinSQFX_fwd', 'xodLinSQFX_fwd', 'xodLinSQFX_fwd']
 
+# *---------------------------------------------------------------------------*
 
-#65?
-  
+maskDir = xodEyeDir + 'src/8018x/mask8018x/'
+
+maskArray = sorted(glob.glob(maskDir+'*'))
+
+#pdb.set_trace()
 
 # *---------------------------------------------------------------------------*
     
-#maskDir = xdir.eyeDir + '1560x/mask1560/'
-maskDir = xodEyeDir + '8018x/mask8018x/'
-
-#maskArray = sorted(glob.glob(maskDir+'*'))
-    
-# *---------------------------------------------------------------------------*
-    
-if cntrlRender==1:
+if cntrlRender == 1:
     
     mvDir = 'testout/vexpTestx_mv/'    # output movie directory
     
@@ -436,14 +443,12 @@ if cntrlRender==1:
 # *---------------------------------------------------------------------------*
 # *---------------------------------------------------------------------------*
 
-
 eyeOutDir = xodEyeDir+outDir
-os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
+os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 
 print('\n// *--------------------------------------------------------------* //')
 print('// *---:: User Parameters ::---*')
@@ -554,8 +559,6 @@ print('XodEYE Img Dimensions [X, Y]: --------- '+str(SzX)+' x '+str(SzY))
 # 628 => EYE Video 
 # *--------------------------...
 
-
-
 # <<< Pre/Post Processing Function Select >>>
 # *---------------------------------------------------------------------------*
 # 0  => Bypass
@@ -564,8 +567,6 @@ print('XodEYE Img Dimensions [X, Y]: --------- '+str(SzX)+' x '+str(SzY))
 # 6  => 4-quadrant img mirror                       ::mirrorHV4AllImg::
 # 7  => 4-quadrant temporal dly img mirror          ::mirrorTemporalHV4AllImg::
 # 8  => interlace 2 directories
-    
-    
 
 # // *********************************************************************** //
 # // *********************************************************************** //
@@ -576,12 +577,8 @@ print('\n// *--------------------------------------------------------------* //'
 print('// *---:: Audio - Load .wav file ::---*')
 print('// *--------------------------------------------------------------* //')
 
-
-    
 [wavSrc, numChannels, fs, xLength, xSamples] = xodaudio.load_wav(earSrc, wavlength)
 print('\nLoaded .wav file [ '+earSrc+' ]\n')
-
-
 
 if numChannels == 2:
     wavSrc_ch1 = wavSrc[:,0];
@@ -589,7 +586,6 @@ if numChannels == 2:
 else:
     wavSrc_ch1 = wavSrc;
     wavSrc_ch2 = 0;
-
 
 
 # length of input signal - '0' => length of input .wav file
@@ -612,8 +608,7 @@ print('// *---:: Audio - Detect Onset Events & Wav Segmentation ::---*')
 print('// *--------------------------------------------------------------* //')
 
 
-if cntrlOnsetDet==1:
-
+if cntrlOnsetDet == 1:
 
     peakThresh = 7.7
     peakWait = 0.93 
@@ -621,22 +616,22 @@ if cntrlOnsetDet==1:
     plots = 1
 
     onsetSamplesCH1, onsetTimeCH1 = detectOnset(wavSrc_ch1, peakThresh, peakWait)
-    #onsetSamplesCH2, onsetTimeCH2 = detectOnset(wavSrc_ch2, peakThresh, peakWait)
+    # onsetSamplesCH2, onsetTimeCH2 = detectOnset(wavSrc_ch2, peakThresh, peakWait)
 
     wavSegmentSamplesCH1 = getOnsetSampleSegments(onsetSamplesCH1, xSamples)
     wavSegmentTimesCH1 = getOnsetTimeSegments(onsetTimeCH1, xLength)
 
     numOnsets = len(onsetSamplesCH1)
     print('\nNumber of Onsets Detected: ' + str(numOnsets))
-    #print('\nonsetSamplesCH1: ' + str(onsetSamplesCH1))
+    # print('\nonsetSamplesCH1: ' + str(onsetSamplesCH1))
     print('\nonsetTimeCH1: ' + str(onsetTimeCH1))
 
-    #print('\nwavSegmentSamplesCH1: ' + str(wavSegmentSamplesCH1))
-    #print('\nwavSegmentTimesCH1: ' + str(wavSegmentTimesCH1))
+    # print('\nwavSegmentSamplesCH1: ' + str(wavSegmentSamplesCH1))
+    # print('\nwavSegmentTimesCH1: ' + str(wavSegmentTimesCH1))
 
     autoSeqArray = wavSegmentSamplesCH1
     
-    #pdb.set_trace()
+    # pdb.set_trace()
     
 # // *********************************************************************** //
 # // *********************************************************************** //
@@ -647,8 +642,7 @@ print('\n// *--------------------------------------------------------------* //'
 print('// *---::Instantiate objects::---*')
 print('// *--------------------------------------------------------------* //')
 
-
-eyeClks = clks.xodClocks(xLength, fs, bpm, framesPerSec)
+eyeClks = clks.XodClocks(xLength, fs, bpm, framesPerSec)
 print('\nCreated a xodClocks object')
 
 numFrames = int(ceil(xLength * framesPerSec))
@@ -656,8 +650,6 @@ numFrames = int(ceil(xLength * framesPerSec))
 framesPerBeat = int(np.ceil(eyeClks.framesPerBeat))
 
 n_digits = int(ceil(np.log10(numFrames))) + 3
-
-
 
 eyeu = xodeyeu.xodEYEu(xLength, bpm, timeSig, SzX, SzY, imgFormat, 
                        framesPerSec=framesPerSec, fs=fs)
@@ -693,14 +685,12 @@ if cntrlEYE == 'convJPGtoBMP':
     print('\n// *--------------------------------------------------------------* //')
     print('// *---::Convert All images in SRC Directory to bmp::---*')
     print('// *--------------------------------------------------------------* //')
-    
 
     # define output directory for scaled img
     # Dir path must end with backslash /
     os.makedirs(eyeOutDir, exist_ok=True)
     
     eyeutil.convertJPGtoBMP(sourceDir, eyeOutDir, reName=eyeOutFileName)
-
 
     print('Saved converted images to the following location:')
     print(eyeOutDir)
@@ -713,10 +703,7 @@ if cntrlEYE == 'convBMPtoJPG':
     print('// *---::Convert All images in SRC Directory to jpg::---*')
     print('// *--------------------------------------------------------------* //')
     
- 
-    
     eyeutil.convertBMPtoJPG(sourceDir, eyeOutDir, reName=eyeOutFileName)
-
 
     print('Saved converted images to the following location:')
     print(eyeOutDir)
@@ -742,14 +729,14 @@ print('// *---:: Create Source Image Array ::---*')
 print('// *--------------------------------------------------------------* //')
     
 if srcSequence == 0:
-        
-    imgSrcArray, imgSrcDir = eyeutil.createSrcArray(xodEyeDir, sourceDir)
-    
+
+    imgSeqArray, imgSrcDir = eyeutil.createSrcArray(xodEyeDir, sourceDir)
+
     print('\nCreated *imgSrcArray* - Array of directories of sequenced .jpg file paths:\n')
     
     for p in range(len(imgSrcDir)):
         print(imgSrcDir[p])
-        print("# of images in directory: " + str(len(imgSrcArray[p])))
+        print("# of images in directory: " + str(len(imgSeqArray[p])))
              
               
 # Auxilliary Chained Sequence:
@@ -759,8 +746,7 @@ if cntrlEYE == 'xodChainSeq':
     print("__xodChainSeq__ - autoNFrameArray: ")
     for i in range(len(autoTimeArray)):            
         print(str(int(autoTimeArray[i] * framesPerSec)))
-              
-    
+
     print('\n// *--------------------------------------------------------------* //')
 
 
@@ -1012,9 +998,7 @@ if cntrlEYE == 'xodFrameIntpCos':
     print('\nOutput all images to: ' + eyeOutDir)
     
     print('// *--------------------------------------------------------------* //')
-    
-    
-    
+
 if cntrlEYE == 'xodStrideIntp':    
     
     print('\n')
@@ -1472,19 +1456,17 @@ if cntrlEYE == 'xodMskDualESP':
     xodMskDualESPNm = eyeOutFileName
     #eyeOutDir = 'myOutputDirName'    # defined above
     xodMskDualESPDir = eyeOutDir
+
     os.makedirs(xodMskDualESPDir, exist_ok=True)
 
     #xfadeFrames = int(np.ceil(eyeClks.framesPerBeat / 3)) #2 images for 2 frames
     #xfadeFrames = int(np.ceil(eyeClks.framesPerBeat)) #2 images for 2 frames
-    xfadeFrames = framesPerBeat
+    xfadeFrames = int(framesPerBeat / 3)
     #xfadeFrames = xLength
     
     inOut = 2       # 0: telescope out, 1: telescope in, 2: random per xfade
 
     sLength = xLength
-    
-    #pdb.set_trace()
-
 
     eyeu.xodMskDualESP(imgSeqArray, maskArray, sLength, framesPerSec, xfadeFrames,
                        n_digits, xodMskDualESPDir, imgOutNm=xodMskDualESPNm,

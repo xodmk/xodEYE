@@ -627,22 +627,22 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
 # // *********************************************************************** //
 # // *********************************************************************** //
 
-
 def createSrcArray(eyeRootDir, sourceDir):
-    
     srcDir = []
     imgSrcArray = []
+
     for d in range(len(sourceDir)):
+
         imgSeqArray = []
-        sDirTmp = eyeRootDir+sourceDir[d]
+        sDirTmp = eyeRootDir + sourceDir[d]
         srcDir.append(sDirTmp)
-        sortedDir = sorted(glob.glob(sDirTmp+'*'))
+        sortedDir = sorted(glob.glob(sDirTmp + '*'))
         for s in sortedDir:
             imgSeqArray.append(s.replace('\\', '/'))
-        imgSrcArray.append(imgSeqArray)
-        
-    return imgSrcArray, srcDir
+        # imgSrcArray.append(imgSeqArray)
+        imgSrcArray.extend(imgSeqArray)
 
+    return imgSrcArray, srcDir
 
 
 def scanImagDir(dirList, numFrames, xCtrl):

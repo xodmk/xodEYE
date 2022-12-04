@@ -17,11 +17,17 @@
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # *****************************************************************************
 
-import os, sys
+import os
+import sys
+import numpy as np
+import matplotlib
+# matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+
+
 import glob, shutil
 from math import atan2, floor, ceil
 import random
-import numpy as np
 #import scipy as sp
 #from scipy.signal import convolve2d
 import imageio as imio
@@ -31,13 +37,25 @@ from PIL import ImageOps
 from PIL import ImageEnhance
 
 
-import xodEyeSetRootDir as xdir
+# import xodEyeSetRootDir as xdir
 
-sys.path.insert(0, xdir.rootDir+'eye')
+currentDir = os.getcwd()
+rootDir = os.path.dirname(currentDir)
+
+eyeDir = currentDir + "/xodEYE/"
+eyeSrcDir = currentDir + "/eye/src/"
+
+audioSrcDir = rootDir + "/audio/wavsrc/"
+audioOutDir = rootDir + "/audio/wavout/"
+
+print("currentDir: " + currentDir)
+print("rootDir: " + rootDir)
+
+sys.path.insert(0, rootDir+'xodEYE/')
 import xodEYEutil as eyeutil
 
-sys.path.insert(1, xdir.rootDir+'DSP')
-import xodClocks as clks
+sys.path.insert(2, rootDir+'git/xodDSP')
+# import xodClocks as clks
 
 # temp python debugger - use >>>pdb.set_trace() to set break
 import pdb
@@ -81,8 +99,8 @@ class xodEYEu:
         # // *-------------------------------------------------------------* //
         # // *---::Set Default Directories::---* //
         
-        self.eyeDir = xdir.eyeDir
-        self.maskDir = xdir.eyeDir+'mask/'
+        self.eyeDir = eyeDir
+        self.maskDir = eyeDir+'/eye/src/8018x/mask8018x/'
         os.makedirs(self.maskDir, exist_ok=True) 
         
         
@@ -98,7 +116,7 @@ class xodEYEu:
         # // *-------------------------------------------------------------* //
         # // Instantiate clocking/sequencing object::-*')
         
-        self.eyeClks = clks.xodClocks(self.xLength, self.fs, self.bpm, self.framesPerSec)
+        # self.eyeClks = clks.xodClocks(self.xLength, self.fs, self.bpm, self.framesPerSec)
         
         #print('\n*****odmkEYEuObj: An odmkEYEu object has been instanced with:')
         #print('xLength = '+str(self.xLength)+', bpm = '+str(self.bpm)+
@@ -3189,8 +3207,6 @@ class xodEYEu:
                     frameCnt += 1
     
         return
-    
-
 
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYEu - Dual Channel Masked Telescope img f::---*
@@ -3214,9 +3230,14 @@ class xodEYEu:
 
         numImg = len(imgFileList)
         numMsk = len(mskFileList)
+
+        #pdb.set_trace()
             
         imgBpTscOut = Image.open(imgFileList[round(numImg*random.random()) % numImg])
-        imgBpTscAlt = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+        #imgBpTscAlt = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+        imgBpTscAlt = Image.open(mskFileList[round(numImg * random.random()) % numMsk])
+
+
         if effx > 2:
             imgBpTscX   = Image.open(imgFileList[round(numImg*random.random()) % numImg])
         
@@ -3260,13 +3281,11 @@ class xodEYEu:
                 fx = round(3*random.random())
             else:
                 fx = effx
-                
 
             imgMsk1 = Image.open(mskFileList[round(numMsk*random.random()) % numMsk])
             imgMsk1 = imgMsk1.convert("L")
             imgMsk2 = Image.open(mskFileList[round(numMsk*random.random()) % numMsk])
             imgMsk2 = imgMsk2.convert("L")
-
 
             imgClone1 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
             imgClone2 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
@@ -3289,7 +3308,6 @@ class xodEYEu:
                 imgMsk3 = imgMsk3.convert("L")
                 imgMsk4 = Image.open(mskFileList[round(numMsk*random.random()) % numMsk])
                 imgMsk4 = imgMsk4.convert("L")
-
 
             # initialize output 
             imgBpTsc1 = imgClone1.copy()
