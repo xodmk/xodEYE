@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # *****************************************************************************
 # /////////////////////////////////////////////////////////////////////////////
-# header begin-----------------------------------------------------------------
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # *****************************************************************************
 #
@@ -13,7 +12,6 @@
 #
 # *****************************************************************************
 # /////////////////////////////////////////////////////////////////////////////
-# header end-------------------------------------------------------------------
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # *****************************************************************************
 
@@ -31,11 +29,6 @@ from scipy import ndimage
 from PIL import Image
 from PIL import ImageOps
 #from PIL import ImageEnhance
-
-
-import xodEyeSetRootDir as xdir
-
-sys.path.insert(0, xdir.rootDir+'util')
 
 
 # temp python debugger - use >>>pdb.set_trace() to set break
@@ -206,7 +199,32 @@ def samples2frames(numSamples, sr, framesPerSec):
     return int((numSamples/sr) * framesPerSec)
 
 
+def xodRenameAll(srcDir, n_digits, dstName):
 
+    try:
+        next(os.scandir(srcDir))
+    except:
+        print('Soure directory is empty')
+        return False
+
+    nextInc = 0
+    for count, filename in enumerate(os.listdir(srcDir)):
+
+        nextInc += 1
+        zr = ''  # reset lead-zero count to zero each itr
+        for j in range(n_digits - len(str(nextInc))):
+            zr += '0'
+        strInc = zr + str(nextInc)
+        newNm = dstName + '_' + strInc + '.jpg'
+
+        src = f"{srcDir}/{filename}"  # foldername/filename, if .py file is outside folder
+        dst = f"{srcDir}/{newNm}"
+
+        # rename() function will
+        # rename all the files
+        os.rename(src, dst)
+
+    return
 
 # // *********************************************************************** //
 # // *********************************************************************** //
@@ -270,7 +288,6 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
 
         imgScaledFull = outDir+imgScaledNm
         imio.imwrite(imgScaledFull, imgScaled)
-
 
     return
 
@@ -639,7 +656,6 @@ def createSrcArray(eyeRootDir, sourceDir):
         sortedDir = sorted(glob.glob(sDirTmp + '*'))
         for s in sortedDir:
             imgSeqArray.append(s.replace('\\', '/'))
-        # imgSrcArray.append(imgSeqArray)
         imgSrcArray.extend(imgSeqArray)
 
     return imgSrcArray, srcDir

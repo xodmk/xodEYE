@@ -37,8 +37,6 @@ from PIL import ImageOps
 from PIL import ImageEnhance
 
 
-# import xodEyeSetRootDir as xdir
-
 currentDir = os.getcwd()
 rootDir = os.path.dirname(currentDir)
 

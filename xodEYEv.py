@@ -598,7 +598,7 @@ class xodEYEv:
             
         numFrames = int(ceil(xLength * framesPerSec))
         n_offset = 0
-    
+
         xBeats = int(np.floor(numFrames / xFrames))
         xTail = int(np.floor(numFrames - xBeats * xFrames))
         
