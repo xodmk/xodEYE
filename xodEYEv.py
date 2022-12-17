@@ -433,22 +433,18 @@ class xodEYEv:
     
     
         return
-    
-  
+
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Generate Image sequence Algorithm::---*
     # // *--------------------------------------------------------------* //
-    
-    
+
     def xodEyeGen(self, cntrlEYE, imgSeqArray, xFrames, ctrl, n_offset,
                   n_digits, eyeOutDir, eyeOutFileName):
-        
-        
+
         getattr(self, cntrlEYE)(imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                                 eyeOutDir, eyeOutFileName)
         
         return
-
 
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Image Sequence Linear EFFX Algorithm::---*

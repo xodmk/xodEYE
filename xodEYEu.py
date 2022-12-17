@@ -40,7 +40,7 @@ from PIL import ImageEnhance
 currentDir = os.getcwd()
 rootDir = os.path.dirname(currentDir)
 
-eyeDir = currentDir + "/xodEYE/"
+eyeDir = currentDir + "/eye/"
 eyeSrcDir = currentDir + "/eye/src/"
 
 audioSrcDir = rootDir + "/audio/wavsrc/"
@@ -92,20 +92,16 @@ class xodEYEu:
         self.imgFormat = imgFormat    # imgFormat => { fbmp, fjpg }
 
         self.framesPerSec = framesPerSec
-        
-        
+
         # // *-------------------------------------------------------------* //
         # // *---::Set Default Directories::---* //
         
-        self.eyeDir = eyeDir
-        self.maskDir = eyeDir+'/eye/src/8018x/mask8018x/'
-        os.makedirs(self.maskDir, exist_ok=True) 
-        
-        
+        # self.eyeDir = eyeDir
+        # self.maskDir = eyeDir+'/eye/src/8018x/mask8018x/'
+
         self.goldratio = 1.6180339887
         self.goldratioinv = 0.618033988768953
 
-        
         # // *-------------------------------------------------------------* //
         # // *---::Set Master Dimensions::---* //
         self.mstrSzX = SzX
