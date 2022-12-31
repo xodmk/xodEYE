@@ -112,8 +112,8 @@ print('// //////////////////////////////////////////////////////////////// //')
 # cntrlEYE = eyedata.xodEYEv_dict["LinEFFX"]
 # cntrlEYE = eyedata.xodEYEv_dict["AutoSeq"]
 # cntrlEYE = eyedata.xodEYEv_dict["ChainSeq"]
-# cntrlEYE = eyedata.xodEYEu_dict["MskDualESP"]
-cntrlEYE = 0
+cntrlEYE = eyedata.xodEYEu_dict["MskDualESP"]
+# cntrlEYE = 0
 
 srcSequence = 0
 xfadeSel = 0
@@ -121,7 +121,7 @@ ctrlSel = 0
 effxSel = 0
 cntrlOnsetDet = 0
 postProcess = 0
-cntrlRender = 1
+cntrlRender = 0
 
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -152,9 +152,9 @@ imgFormat = 'fjpg'
 
 # HD Standard video aspect ratio
 
-SzX = 1920
+#SzX = 1920
 #SzY = 1080
-SzY = 1920
+#SzY = 1920
 
 #SzX = 1920
 #SzY = 1280
@@ -164,8 +164,8 @@ SzY = 1920
 #SzY = 3035
 
 
-#SzX = 8018
-#SzY = 8018
+SzX = 8018
+SzY = 8018
 
 # Golden ratio frames:
 #mstrSzX = 1076
@@ -189,8 +189,8 @@ SzY = 1920
 #earSrcNm = 'gorgulans_beatx01.wav'                 # ~7  sec = 220 frames
 #earSrcNm = 'antimatterbk06.wav'                    # ~14 sec = 434 frames
 #earSrcNm = 'dmttv-axon23.wav'                      # ~23
-earSrcNm = 'ebolaCallibriscian_uCCrhythm.wav'       # ~28
-#earSrcNm = 'cabalisk_abstract.wav'                 # ~53
+#earSrcNm = 'ebolaCallibriscian_uCCrhythm.wav'       # ~28
+earSrcNm = 'cabalisk_abstract.wav'                 # ~53
 #earSrcNm = 'cabalisk_spaced.wav'                   # ~1.49
 #earSrcNm = 'The_Amen_Break_48K.wav'
 
@@ -207,11 +207,11 @@ earSrc = audioSrcDir + '/' + earSrcNm
 xodEyeDir = currentDir + "/eye/"    # ** extra / for this path
 
 # Set Image Source Directory
-#sourceDir = ['src/8018x/xodMetalSphynxEye8018x/']
+sourceDir = ['src/8018x/xodMetalSphynxEye8018x/']
 #sourceDir = ['src/eyeRes_EXP05_1920x/']
 
-sourceDir = ['src/eyeRes_EXP01_1920x/',
-             'src/eyeRes_EXP05_1920x/']
+#sourceDir = ['src/eyeRes_EXP01_1920x/',
+#             'src/eyeRes_EXP05_1920x/']
 
 
 # *** must have / at end of variable ***
@@ -222,7 +222,7 @@ outDir = 'eyeRes/'
 # currently errors with: OverflowError: cannot convert float infinity to integer
 
 #eyeOutFileName = 'humanEyeESP_pinealResonator1080_'
-eyeOutFileName = 'chrSphyxExp5_1920x'
+eyeOutFileName = 'eyeRes_EXP06_'
 
 
 # *---------------------------------------------------------------------------*
@@ -1194,11 +1194,10 @@ if cntrlEYE == 'xodMskDualESP':
 
     os.makedirs(xodMskDualESPDir, exist_ok=True)
 
-    #xfadeFrames = int(np.ceil(eyeClks.framesPerBeat / 3)) #2 images for 2 frames
-    #xfadeFrames = int(np.ceil(eyeClks.framesPerBeat)) #2 images for 2 frames
-    #xfadeFrames = int(framesPerBeat / 3)
-    xfadeFrames = int(framesPerBeat * 4)
-    #xfadeFrames = xLength
+    # xfadeFrames = xLength
+    xfadeFrames = int(framesPerBeat / 2)
+    # xfadeFrames = int(framesPerBeat / 3)
+    # xfadeFrames = int(framesPerBeat * 4)
     
     inOut = 2       # 0: telescope out, 1: telescope in, 2: random per xfade
 

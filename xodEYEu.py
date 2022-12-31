@@ -3228,8 +3228,8 @@ class xodEYEu:
         #pdb.set_trace()
             
         imgBpTscOut = Image.open(imgFileList[round(numImg*random.random()) % numImg])
-        #imgBpTscAlt = Image.open(imgFileList[round(numImg*random.random()) % numImg])
-        imgBpTscAlt = Image.open(mskFileList[round(numImg * random.random()) % numMsk])
+        imgBpTscAlt = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+        #imgBpTscAlt = Image.open(mskFileList[round(numImg * random.random()) % numMsk])
 
 
         if effx > 2:
