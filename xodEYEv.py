@@ -40,8 +40,8 @@ eyeSrcDir = currentDir + "/eye/src"
 audioSrcDir = rootDir + "/audio/wavsrc"
 audioOutDir = rootDir + "/audio/wavout"
 
-print("currentDir: " + currentDir)
-print("rootDir: " + rootDir)
+# print("currentDir: " + currentDir)
+# print("rootDir: " + rootDir)
 
 sys.path.insert(0, rootDir+'/xodEYE')
 import xodEYEutil as eyeutil

@@ -47,27 +47,44 @@ import pdb
 # // *---------------------------------------------------------------------* //
 # // *---------------------------------------------------------------------* //
 
-# transfer from alt pc
-# runDir = 'C:/XODMK/xodmkCode/xodmkPython/eye/'
-# os.chdir(runDir)
-# import xodEyeSetRootDir as xdir
-# sys.path.insert(1, xdir.rootDir+'DSP/')
-
-# assumes python projects are located in /python/
-# assumes currentDir is directory containing xodEYEx.py source, ex: /python/xodEYE/
+# assumes python projects are located in python-projects root directory => /python-projects_projRootDir/python_sub_dirs
+# assumes currentDir is directory containing xodEYE*.py source, ex: /python/xodEYE/
+# currentDir = /python-projects_projRootDir projxodEYE/
 
 currentDir = os.getcwd()
 rootDir = os.path.dirname(currentDir)
 
 dataDir = rootDir+'/data'
+dataSrcDir = dataDir+'/src'
+
 movSrcDir = dataDir+'/src/mov'
+eyeSrcDir = dataDir+'/src/eye'
+
 movOutDir = dataDir+'/res/movout'
-eyeSrcDir = dataDir+'/src/eye"
 eyeOutDir = dataDir+'/res/eyeout'
 
-audioSrcDir = dataDir+'/src/wav"
-audioOutDir = dataDir+'/res/wavout"
+audioSrcDir = dataDir+'/src/wav'
+audioOutDir = dataDir+'/res/wavout'
 
+print('\n// *--------------------------------------------------------------* //')
+print('// *---:: Paths ::---*')
+
+
+print("rootDir: " + rootDir)
+print("currentDir: " + currentDir)
+print('')
+print("dataDir: " + dataDir)
+print("dataSrcDir: " + dataSrcDir)
+print('')
+print("movSrcDir: " + movSrcDir)
+print("eyeSrcDir: " + eyeSrcDir)
+print("audioSrcDir: " + audioSrcDir)
+print('')
+print("movOutDir: " + movOutDir)
+print("eyeSrcDir: " + eyeSrcDir)
+print("audioSrcDir: " + audioSrcDir)
+print('')
+# // *--------------------------------------------------------------* //
 
 sys.path.insert(0, rootDir+'/xodEYE')
 import xodEYEdata as eyedata
@@ -100,11 +117,12 @@ from xodmaSpectralUtil import frames_to_time
 from xodmaSpectralPlot import specshow
 
 
+print('')
 print('// //////////////////////////////////////////////////////////////// //')
 print('// *---:: XODMK EYE ESP ::---*')
 print('// //////////////////////////////////////////////////////////////// //')
 
-# // *--------------------------------------------------------------* //
+# // *--------------------------------------------------------------* //currentDir:
 # // # // *---:: Select Program Control ::---*')
 # // *--------------------------------------------------------------* //
 
@@ -206,10 +224,11 @@ earSrc = audioSrcDir + '/' + earSrcNm
 # // *---:: Set processing directories ::---*
 # // *--------------------------------------------------------------* //
 
-xodEyeDir = currentDir + "/"    # ** extra / for this path
+# xodEyeDir = currentDir + "/"    # ** extra / for this path
+xodEyeDir = dataSrcDir    # ** extra / for this path
 
 # Set Image Source Directory (eyeSrcDir/...)
-sourceDir = ['/8018x/xodMetalSphynxEye8018x/']
+sourceDir = ['/eye/8018x/xodMetalSphynxEye8018x/']
 #sourceDir = ['src/eyeRes_EXP05_1920x/']
 
 #sourceDir = ['src/eyeRes_EXP01_1920x/',
@@ -225,9 +244,8 @@ outDir = '/testout/'
 #eyeOutFileName = 'humanEyeESP_pinealResonator1080_'
 eyeOutFileName = 'eyeRes_EXP07_'
 
-maskDir = eyeSrcDir + '8018x/mask8018x/'
+maskDir = eyeSrcDir + '/8018x/mask8018x/'
 maskArray = sorted(glob.glob(maskDir+'*'))
-
 
 # *---------------------------------------------------------------------------*
 
@@ -235,7 +253,6 @@ maskArray = sorted(glob.glob(maskDir+'*'))
 
 effxDict = eyedata.xodLinSQFX_dict
 # effxDict = eyedata.xodExpFX_dict
-
 
 # *---------------------------------------------------------------------------*
 
@@ -278,12 +295,6 @@ os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 #pdb.set_trace()
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-print('\n// *--------------------------------------------------------------* //')
-print('// *---:: Paths ::---*')
-
-print("currentDir: " + currentDir)
-print("rootDir: " + rootDir)
 
 firstSourceDir = xodEyeDir + sourceDir[0]
 print('\nImg Source Directory (first if array):\n' + firstSourceDir + '\n')
