@@ -21,9 +21,8 @@ import os
 import sys
 import numpy as np
 import matplotlib
-# matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
-
+matplotlib.use('TkAgg')
 
 import glob, shutil
 from math import atan2, floor, ceil
@@ -40,19 +39,19 @@ from PIL import ImageEnhance
 currentDir = os.getcwd()
 rootDir = os.path.dirname(currentDir)
 
-eyeDir = currentDir + "/eye/"
-eyeSrcDir = currentDir + "/eye/src/"
+eyeDir = currentDir + "/eye"
+eyeSrcDir = currentDir + "/eye/src"
 
-audioSrcDir = rootDir + "/audio/wavsrc/"
-audioOutDir = rootDir + "/audio/wavout/"
+audioSrcDir = rootDir + "/audio/wavsrc"
+audioOutDir = rootDir + "/audio/wavout"
 
 print("currentDir: " + currentDir)
 print("rootDir: " + rootDir)
 
-sys.path.insert(0, rootDir+'xodEYE/')
+sys.path.insert(0, rootDir+'/xodEYE')
 import xodEYEutil as eyeutil
 
-sys.path.insert(2, rootDir+'git/xodDSP')
+sys.path.insert(2, rootDir+'/xodDSP')
 # import xodClocks as clks
 
 # temp python debugger - use >>>pdb.set_trace() to set break

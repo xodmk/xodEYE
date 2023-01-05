@@ -59,13 +59,17 @@ import pdb
 currentDir = os.getcwd()
 rootDir = os.path.dirname(currentDir)
 
-eyeSrcDir = currentDir + "/eye/src"
+dataDir = rootDir+'/data'
+movSrcDir = dataDir+'/src/mov'
+movOutDir = dataDir+'/res/movout'
+eyeSrcDir = dataDir+'/src/eye"
+eyeOutDir = dataDir+'/res/eyeout'
 
-audioSrcDir = rootDir + "/audio/wavsrc"
-audioOutDir = rootDir + "/audio/wavout"
+audioSrcDir = dataDir+'/src/wav"
+audioOutDir = dataDir+'/res/wavout"
 
 
-sys.path.insert(0, rootDir+'xodEYE/')
+sys.path.insert(0, rootDir+'/xodEYE')
 import xodEYEdata as eyedata
 import xodEYEutil as eyeutil
 import xodEYEu as xodeyeu
@@ -74,14 +78,14 @@ import xodFFmpeg as xodffm
 # import xodEYEx as xodeyex
 
 
-sys.path.insert(1, rootDir+'/git/xodDSP/')
+sys.path.insert(1, rootDir+'/xodDSP')
 import xodClocks as clks
 import xodWavGen as wavGen
 
-sys.path.insert(2, rootDir+'/xodUtil/')
+sys.path.insert(2, rootDir+'/xodUtil')
 # import xodPlotUtil as xodplt
 
-sys.path.insert(3, rootDir+'/xodma/')
+sys.path.insert(3, rootDir+'/xodma')
 import xodmaAudioTools as xodaudio
 
 
@@ -99,7 +103,6 @@ from xodmaSpectralPlot import specshow
 print('// //////////////////////////////////////////////////////////////// //')
 print('// *---:: XODMK EYE ESP ::---*')
 print('// //////////////////////////////////////////////////////////////// //')
-
 
 # // *--------------------------------------------------------------* //
 # // # // *---:: Select Program Control ::---*')
@@ -186,14 +189,13 @@ SzY = 8018
 # // *---:: Set wav file source ::---*
 # // *--------------------------------------------------------------* //
 
-#earSrcNm = 'gorgulans_beatx01.wav'                 # ~7  sec = 220 frames
+earSrcNm = 'gorgulans_beatx01.wav'                 # ~7  sec = 220 frames
 #earSrcNm = 'antimatterbk06.wav'                    # ~14 sec = 434 frames
 #earSrcNm = 'dmttv-axon23.wav'                      # ~23
 #earSrcNm = 'ebolaCallibriscian_uCCrhythm.wav'       # ~28
-earSrcNm = 'cabalisk_abstract.wav'                 # ~53
+#earSrcNm = 'cabalisk_abstract.wav'                 # ~53
 #earSrcNm = 'cabalisk_spaced.wav'                   # ~1.49
 #earSrcNm = 'The_Amen_Break_48K.wav'
-
 
 earSrc = audioSrcDir + '/' + earSrcNm
 
@@ -204,25 +206,27 @@ earSrc = audioSrcDir + '/' + earSrcNm
 # // *---:: Set processing directories ::---*
 # // *--------------------------------------------------------------* //
 
-xodEyeDir = currentDir + "/eye/"    # ** extra / for this path
+xodEyeDir = currentDir + "/"    # ** extra / for this path
 
-# Set Image Source Directory
-sourceDir = ['src/8018x/xodMetalSphynxEye8018x/']
+# Set Image Source Directory (eyeSrcDir/...)
+sourceDir = ['/8018x/xodMetalSphynxEye8018x/']
 #sourceDir = ['src/eyeRes_EXP05_1920x/']
 
 #sourceDir = ['src/eyeRes_EXP01_1920x/',
 #             'src/eyeRes_EXP05_1920x/']
 
-
 # *** must have / at end of variable ***
 #outDir = 'testout/cgbwCryptWitch8018/'
-outDir = 'eyeRes/'
+outDir = '/testout/'
 
 # *** FIXIT - check if outDir is Empty - halt ***
 # currently errors with: OverflowError: cannot convert float infinity to integer
 
 #eyeOutFileName = 'humanEyeESP_pinealResonator1080_'
-eyeOutFileName = 'eyeRes_EXP06_'
+eyeOutFileName = 'eyeRes_EXP07_'
+
+maskDir = eyeSrcDir + '8018x/mask8018x/'
+maskArray = sorted(glob.glob(maskDir+'*'))
 
 
 # *---------------------------------------------------------------------------*
@@ -244,9 +248,7 @@ if cntrlEYE == 'xodChainSeq':
 
 # *---------------------------------------------------------------------------*
 
-maskDir = xodEyeDir + 'src/8018x/mask8018x/'
 
-maskArray = sorted(glob.glob(maskDir+'*'))
 
 
 # *---------------------------------------------------------------------------*

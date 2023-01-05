@@ -31,12 +31,22 @@ from PIL import ImageOps
 from PIL import ImageEnhance
 
 
-import xodEyeSetRootDir as xdir
+currentDir = os.getcwd()
+rootDir = os.path.dirname(currentDir)
 
-sys.path.insert(0, xdir.rootDir+'eye')
+eyeDir = currentDir + "/eye"
+eyeSrcDir = currentDir + "/eye/src"
+
+audioSrcDir = rootDir + "/audio/wavsrc"
+audioOutDir = rootDir + "/audio/wavout"
+
+print("currentDir: " + currentDir)
+print("rootDir: " + rootDir)
+
+sys.path.insert(0, rootDir+'/xodEYE')
 import xodEYEutil as eyeutil
 
-sys.path.insert(1, xdir.rootDir+'DSP')
+sys.path.insert(2, rootDir+'/xodDSP')
 
 
 # temp python debugger - use >>>pdb.set_trace() to set break
