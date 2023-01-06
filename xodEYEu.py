@@ -42,9 +42,6 @@ rootDir = os.path.dirname(currentDir)
 eyeDir = currentDir + "/eye"
 eyeSrcDir = currentDir + "/eye/src"
 
-audioSrcDir = rootDir + "/audio/wavsrc"
-audioOutDir = rootDir + "/audio/wavout"
-
 # print("currentDir: " + currentDir)
 # print("rootDir: " + rootDir)
 
@@ -64,7 +61,7 @@ import pdb
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  
 
-class xodEYEu:
+class XodEYEu:
     ''' # Python ODMK img processing research
         # ffmpeg experimental
         --xLength: length of output video/audio file
@@ -85,18 +82,12 @@ class xodEYEu:
         self.fs = fs
         self.bWidth = 24         # audio sample bit width
         # ub313 bpm = 178 , 267
-        self.bpm = bpm    #glamourGoat14 = 93        
+        self.bpm = bpm
         self.timeSig = timeSig         # time signature: 4 = 4/4; 3 = 3/4
         
         self.imgFormat = imgFormat    # imgFormat => { fbmp, fjpg }
 
         self.framesPerSec = framesPerSec
-
-        # // *-------------------------------------------------------------* //
-        # // *---::Set Default Directories::---* //
-        
-        # self.eyeDir = eyeDir
-        # self.maskDir = eyeDir+'/eye/src/8018x/mask8018x/'
 
         self.goldratio = 1.6180339887
         self.goldratioinv = 0.618033988768953
@@ -116,16 +107,11 @@ class xodEYEu:
         #      ', timeSig = '+str(self.timeSig)+', framesPerSec = '+str(self.framesPerSec)+
         #      ', fs = '+str(self.fs))
 
-
-
     # // *********************************************************************** //    
     # // *********************************************************************** //
     # // *---::ODMK img Pre-processing func::---*
     # // *********************************************************************** //
     # // *********************************************************************** //
-
-
-
 
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - phiFrame2 img files in two directoroies::---*
@@ -164,7 +150,6 @@ class xodEYEu:
     # // *********************************************************************** //
     # // *********************************************************************** //
 
-
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - interlace img files in two directoroies::---*
     # // *--------------------------------------------------------------* //
@@ -174,19 +159,15 @@ class xodEYEu:
             renames and interlaces all files into output dir. 
             The shortest directory length determines output (min length)'''
 
-
         imgFileList1 = []
         imgFileList2 = []
-        
 
         if self.imgFormat=='fjpg':
             imgFileList1.extend(sorted(glob.glob(dir1+'*.jpg')))
             imgFileList2.extend(sorted(glob.glob(dir2+'*.jpg')))    
         elif self.imgFormat=='fbmp':
             imgFileList1.extend(sorted(glob.glob(dir1+'*.bmp')))
-            imgFileList2.extend(sorted(glob.glob(dir2+'*.bmp')))  
-            
-        pdb.set_trace()
+            imgFileList2.extend(sorted(glob.glob(dir2+'*.bmp')))
 
         imgCount = 2*min(len(imgFileList1), len(imgFileList2))
         n_digits = int(ceil(np.log10(imgCount))) + 2
@@ -203,8 +184,8 @@ class xodEYEu:
                 imgNormalizeNm = reName+strInc+'.jpg' 
             elif self.imgFormat=='fbmp':
                 imgNormalizeNm = reName+strInc+'.bmp'
-            #imgConcatNmFull = concatDir+imgNormalizeNm
-            if i%2 == 1: 
+
+            if i % 2 == 1:
                 currentNm = os.path.split(imgFileList1[dirIdx])[1]
                 shutil.copy(imgFileList1[dirIdx], interlaceDir)
                 currentFile = os.path.join(interlaceDir+currentNm)
@@ -214,12 +195,10 @@ class xodEYEu:
                 shutil.copy(imgFileList2[dirIdx], interlaceDir)
                 currentFile = os.path.join(interlaceDir+currentNm)
             
-            imgInterlaceDirNmFull = os.path.join(interlaceDir+imgNormalizeNm)
+            imgInterlaceDirNmFull = os.path.join(interlaceDir + imgNormalizeNm)
             os.rename(currentFile, imgInterlaceDirNmFull)
-            #pdb.set_trace()
     
         return
-
 
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - interlace img files in two directoroies::---*
@@ -230,10 +209,8 @@ class xodEYEu:
             renames and interlaces all files into output dir. 
             The shortest directory length determines output (min length)'''
 
-
         imgFileList1 = []
         imgFileList2 = []
-        
 
         if self.imgFormat=='fjpg':
             imgFileList1.extend(sorted(glob.glob(dir1+'*.jpg')))
@@ -258,7 +235,7 @@ class xodEYEu:
                 imgNormalizeNm = reName+strInc+'.jpg' 
             elif self.imgFormat=='fbmp':
                 imgNormalizeNm = reName+strInc+'.bmp'
-            #imgConcatNmFull = concatDir+imgNormalizeNm
+
             if xCtrl[i] == 1: 
                 currentNm = os.path.split(imgFileList1[dirIdx1])[1]
                 shutil.copy(imgFileList1[dirIdx1], interlaceDir)
@@ -272,13 +249,8 @@ class xodEYEu:
             
             imgInterlaceDirNmFull = os.path.join(interlaceDir+imgNormalizeNm)
             os.rename(currentFile, imgInterlaceDirNmFull)
-            #pdb.set_trace()
     
         return
-
-
-
-
 
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - mirrorHV4 list of files in directory::---*
@@ -323,11 +295,10 @@ class xodEYEu:
     
         return
 
-
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - mirrorHV4 list of files in directory::---*
     # // *--------------------------------------------------------------* //
-    
+
     def mirrorTemporalHV4AllImg(self, srcDir, SzX, SzY, mirrorTemporalHV4Dir, mirrorTemporalHV4Nm, frameDly, ctrl='LR'):
         ''' mirrors image horizontally & vertically - outputs 4 mirrored subframes
             srcDir: input image directory
@@ -346,7 +317,6 @@ class xodEYEu:
             
         [imgObjList, imgSrcList] = self.importAllJpg(srcDir)
 
-
         imgCount = len(imgObjList)
         n_digits = int(ceil(np.log10(imgCount))) + 2
         nextInc = 0
@@ -355,8 +325,7 @@ class xodEYEu:
             pilImg1 = Image.fromarray(imgObjList[i])
             pilImg2 = Image.fromarray(imgObjList[(i + frameDly) % imgCount])
             pilImg3 = Image.fromarray(imgObjList[(i + 2*frameDly) % imgCount])
-            pilImg4 = Image.fromarray(imgObjList[(i + 3*frameDly) % imgCount])            
-            #imgMirrorHV4 = self.eyeMirrorHV4(pilImg, SzX, SzY, ctrl)
+            pilImg4 = Image.fromarray(imgObjList[(i + 3*frameDly) % imgCount])
             
             imgMirrorTemporalHV4 = self.eyeMirrorTemporalHV4(pilImg1, pilImg2, pilImg3, pilImg4, SzX, SzY, ctrl)
             
@@ -372,48 +341,11 @@ class xodEYEu:
     
         return
 
-    
     # // *********************************************************************** //    
     # // *********************************************************************** //
     # // *---::ODMK img Pixel-Banging Algorithms::---*
     # // *********************************************************************** //
     # // *********************************************************************** //
-    
-    
-    # <<<selects pixel banging algorithm>>>
-    # *---------------------------------------------------------------------------*
-    # 0  => Bypass
-    
-    
-    
-    # 1  => EYE Random Select Algorithm              ::odmkImgRndSel::
-    # 2  => EYE Random BPM Algorithm                 ::odmkImgRndSel::
-    # 3  => EYE Random Select Telescope Algorithm    ::**nofunc**::
-    # 4  => EYE BPM rotating Sequence Algorithm      ::odmkImgRotateSeq::
-    # 5  => EYE Rotate & alternate sequence          ::**nofunc**::
-    # 6  => EYE CrossFade Sequencer (alpha-blend)    ::odmkImgXfade::
-    # 67 => EYE CrossFade Sequencer (solarize)       ::odmkImgSolXfade::
-    # 7  => EYE Divide CrossFade Sequencer           ::odmkImgDivXfade::
-    # 8  => EYE CrossFade Rotate sequence            ::odmkImgXfadeRot::
-    # 9  => EYE telescope sequence                   ::odmkImgTelescope::
-    # 10 => EYE CrossFade telescope Sequence         ::odmkImgXfadeTelescope::
-    # 11 => EYE Div Xfade telescope Sequence         ::odmkImgDivXfadeTelescope::
-    # 12 => Eye Echo BPM Sequencer                   ::odmkEyeEchoBpm::
-    # 20 => EYE Color Enhance BPM Algorithm          ::odmkImgColorEnhance::
-    # 22 => EYE Pixel Random Replace Algorithm       ::odmkPxlRndReplace::
-    # 23 => EYE Dual Bipolar Telescope Algorithm     ::odmkDualBipolarTelesc::
-    # 24 => EYE Bananasloth Recursive Algorithm      ::odmkBSlothRecurs::
-    # 26 => EYE Bananasloth Glitch 1                 ::odmkBSlothGlitch1::
-    # 28 => EYE lfo horizontal trails                ::odmkLfoHtrails::
-
-
-
-    # // *********************************************************************** //    
-    # // *********************************************************************** //
-    # // *---::ODMK img Basic func::---*
-    # // *********************************************************************** //
-    # // *********************************************************************** //
-    
 
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Image Random Select Algorithm::---*
@@ -434,7 +366,6 @@ class xodEYEu:
             imio.imwrite(imgRndSelFull, imio.imread(imgFileList[eyeutil.randomIdx(len(imgFileList))]))
 
         return
-
 
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Image Rotate Sequence Algorithm::---*')
@@ -475,8 +406,6 @@ class xodEYEu:
     
         return
 
-
-
     # // *********************************************************************** //    
     # // *********************************************************************** //
     # // *---::ODMK img Batch Manipulation function::---*
@@ -513,10 +442,8 @@ class xodEYEu:
         # example internal control signal 
         alphaX = np.linspace(0.0, 1.0, FrameCtrl)
         
-        
         hop_sz = 56
-    
-    
+
         frameCnt = 0
         xfdirection = 1    # 1 = forward; -1 = backward
         for j in range(numXfades - 1):
@@ -566,8 +493,7 @@ class xodEYEu:
                     for i in range(img.size[0]):    # for every pixel:
                         for j in range(img.size[1]):
                             imgPxl[i,j] = (i, j, 1) # set the colour accordingly
-    
-    
+
                     # update name counter & concat with base img name    
                     nextInc += 1
                     zr = ''
@@ -583,7 +509,6 @@ class xodEYEu:
 
         return
 
-
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - Image Linear F<->B Select Algorithm::---*
     # // *--------------------------------------------------------------* //
@@ -594,8 +519,7 @@ class xodEYEu:
             imgRndSelNm = imgOutNm
         else:
             imgRndSelNm = 'imgRndSelOut'
-    
-    
+
         zn = eyeutil.cyclicZn(xFrames-1)    # less one, then repeat zn[0] for full 360
         
         idx = 0
@@ -629,11 +553,9 @@ class xodEYEu:
                 idx -= 1
            
             nextInc += 1
-            
-        #return [imgRndSelArray, imgRndSelNmArray]
+
         return    
 
-    
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - Image BPM Random Select Algorithm::---*
     # // *--------------------------------------------------------------* //

@@ -22,7 +22,6 @@ import glob, shutil
 from math import atan2, floor, ceil
 import random
 import numpy as np
-import scipy as sp
 import imageio as imio
 from scipy import ndimage
 from scipy import misc
@@ -34,14 +33,6 @@ from PIL import ImageEnhance
 currentDir = os.getcwd()
 rootDir = os.path.dirname(currentDir)
 
-eyeDir = currentDir + "/eye"
-eyeSrcDir = currentDir + "/eye/src"
-
-audioSrcDir = rootDir + "/audio/wavsrc"
-audioOutDir = rootDir + "/audio/wavout"
-
-# print("currentDir: " + currentDir)
-# print("rootDir: " + rootDir)
 
 sys.path.insert(0, rootDir+'/xodEYE')
 import xodEYEutil as eyeutil
@@ -70,7 +61,7 @@ import pdb
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
  
 
-class xodEYEv:
+class XodEYEv:
     ''' # Python ODMK img processing research
         # ffmpeg experimental
         --xLength: length of output video/audio file
@@ -281,91 +272,11 @@ class xodEYEv:
     # // *---::ODMK img Pixel-Banging Algorithms::---*
     # // *********************************************************************** //
     # // *********************************************************************** //
-    
-    
-    # <<<selects pixel banging algorithm>>>
-    # *---------------------------------------------------------------------------*
-    # 0  => Bypass
-    # 1  => EYE Random Select Algorithm              ::odmkImgRndSel::
-    # 2  => EYE Random BPM Algorithm                 ::odmkImgRndSel::
-    # 3  => EYE Random Select Telescope Algorithm    ::**nofunc**::
-    # 4  => EYE BPM rotating Sequence Algorithm      ::odmkImgRotateSeq::
-    # 5  => EYE Rotate & alternate sequence          ::**nofunc**::
-    # 6  => EYE CrossFade Sequencer (alpha-blend)    ::odmkImgXfade::
-    # 67 => EYE CrossFade Sequencer (solarize)       ::odmkImgSolXfade::
-    # 7  => EYE Divide CrossFade Sequencer           ::odmkImgDivXfade::
-    # 8  => EYE CrossFade Rotate sequence            ::odmkImgXfadeRot::
-    # 9  => EYE telescope sequence                   ::odmkImgTelescope::
-    # 10 => EYE CrossFade telescope Sequence         ::odmkImgXfadeTelescope::
-    # 11 => EYE Div Xfade telescope Sequence         ::odmkImgDivXfadeTelescope::
-    # 12 => Eye Echo BPM Sequencer                   ::odmkEyeEchoBpm::
-    # 20 => EYE Color Enhance BPM Algorithm          ::odmkImgColorEnhance::
-    # 21 => EYE Color Enhance Telescope Algorithm    ::odmkImgCEnTelescope::
-    # 22 => EYE Pixel Random Replace Algorithm       ::odmkPxlRndReplace::
-    # 23 => EYE Dual Bipolar Telescope Algorithm     ::odmkDualBipolarTelesc::
-    # 24 => EYE Bananasloth Recursive Algorithm      ::odmkBSlothRecurs::
-    # 26 => EYE Bananasloth Glitch 1                 ::odmkBSlothGlitch1::
-    # 28 => EYE lfo horizontal trails                ::odmkLfoHtrails::
 
 
     # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - EYE image array processing prototype::---*
+    # // *---::XODMKEYE - Video Auto Sequencer MKI::---*
     # // *--------------------------------------------------------------* //
-    
-    def odmkEYEprototype(self, imgFileList, xLength, framesPerSec, FrameCtrl, imgOutDir, imgOutNm='None', usrCtrl=0):
-        ''' basic prototype function '''
-    
-        if imgOutNm != 'None':
-            imgPrototypeNm = imgOutNm
-        else:
-            imgPrototypeNm = 'imgXfadeRot'
-    
-        SzX = imgFileList[0].shape[1]
-        SzY = imgFileList[0].shape[0]
-    
-        numFrames = int(ceil(xLength * framesPerSec))
-        numXfades = int(ceil(numFrames / FrameCtrl))
-    
-        print('// *---numFrames = '+str(numFrames)+'---*')
-        print('// *---FrameCtrl = '+str(FrameCtrl)+'---*')
-        print('// *---numXfades = '+str(numXfades)+'---*')    
-    
-        numImg = len(imgFileList)
-        #numxfadeImg = numImg * FrameCtrl
-    
-        n_digits = int(ceil(np.log10(numFrames))) + 2
-        nextInc = 0
-        # example internal control signal 
-        #alphaX = np.linspace(0.0, 1.0, FrameCtrl)
-    
-    
-        frameCnt = 0
-        # xfdirection = 1    # 1 = forward; -1 = backward
-        for j in range(numXfades - 1):
-            if frameCnt <= numFrames:    # process until end of total length
-                
-    
-                    # update name counter & concat with base img name    
-                    nextInc += 1
-                    zr = ''
-                    for j in range(n_digits - len(str(nextInc))):
-                        zr += '0'
-                    strInc = zr+str(nextInc)
-                    imgPrototypeFull = imgOutDir+imgPrototypeNm+strInc+'.jpg'
-                    
-                    # write img to disk
-                    imio.imwrite(imgPrototypeFull, newImg)
-
-                    frameCnt += 1
-    
-        return
-    
-    
-# // *--------------------------------------------------------------* //
-# // *---::XODMKEYE - Video Auto Sequencer MKI::---*
-# // *--------------------------------------------------------------* //
-
-
     def xodAutoSeq(self, imgSrcArray, autoSeqArray, effxDict, framesPerSec,
                    ctrl, n_digits, eyeOutDir, eyeOutFileNm):
         
@@ -404,11 +315,9 @@ class xodEYEv:
         return
     
 
-# // *--------------------------------------------------------------* //
-# // *---::XODMKEYE - Video Chain Sequencer MKI::---*
-# // *--------------------------------------------------------------* //
-
-
+    # // *--------------------------------------------------------------* //
+    # // *---::XODMKEYE - Video Chain Sequencer MKI::---*
+    # // *--------------------------------------------------------------* //
     def xodChainSeq(self, imgSrcArray, autoTimeArray, effxArray, framesPerSec,
                    n_digits, eyeOutDir, eyeOutFileNm):
         
@@ -621,9 +530,7 @@ class xodEYEv:
                            fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
 
         return
-    
-    
-    
+
     def xodImgLinEFFX(self, imgFileList, numFrames, ctrl, effx, fadeInOut, fwdRev, 
                       n_offset, n_digits, imgOutDir, imgOutNm='None'):
     
@@ -635,12 +542,10 @@ class xodEYEv:
             fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
             fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 2 = rev
             imgOutDir - full path output directory '''
-            
-        
+
         # constant internal value equals number of implemented effects
         numEffx = 5
-        
-        
+
         if imgOutNm != 'None':
             imgLinEFFXNm = imgOutNm
         else:
@@ -664,22 +569,18 @@ class xodEYEv:
             solarX = np.linspace(5.0, 255.0, numFrames)
         elif effx == 3 or effx == 4 or effx == 5:
             alphaX = np.linspace(0.0001, 1.0, numFrames)
-            
-            
+
         if fadeInOut == 0:
             fadeInOut = round(random.random())+1
     
         if fwdRev == 0:
             fwdRev = round(random.random())+1
 
-
         for i in range(numFrames):
             
             if fwdRev == 2:
-                #img1 = imio.imread(imgFileList[(numFrames-1-i) % len(imgFileList)])
                 img1 = imio.imread(imgFileList[eyeutil.circ_idx((numFrames-1-i) + offset, len(imgFileList))])
             else:
-                #img1 = imio.imread(imgFileList[i % len(imgFileList)])
                 img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
             
             # linear select (no-effx) fwd <-> back
@@ -697,7 +598,6 @@ class xodEYEv:
                 resImg = img1
 
             elif effx == 3:
-                #img3 = imio.imread(imgFileList[(i+1) % len(imgFileList)])
                 imgPIL = Image.fromarray(img1.astype(np.uint8))
                 # RGB rotate..
                 imgRgbRot = eyeutil.xodColorRotate(imgPIL, alphaX[i])
@@ -742,7 +642,6 @@ class xodEYEv:
             
         return
 
-
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - Image BPM Random Select Algorithm::---*
     # // *--------------------------------------------------------------* //
@@ -753,9 +652,6 @@ class xodEYEv:
             imgRndSelNm = imgOutNm
         else:
             imgRndSelNm = 'imgRndSelOut'
-    
-        #imgRndSelNmArray = []
-        #imgRndSelArray = []
         
         rIdxArray = eyeutil.randomIdxArray(numFrames, len(imgList))
         

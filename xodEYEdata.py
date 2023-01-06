@@ -90,7 +90,8 @@ xodEYEu_dict = {
 
 xodEYEv_dict = {
             "ImgLinSel"         : 'xodImgLinSel',
-            "LinEFFX"           : 'xodLinEFFX',
+            "LinEFFX"           : 'xodLinEFFX',     # effx - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+                                                    # 3 = div ; 4 = sobelXY ; 5 sobelZ
             "AutoSeq"           : 'xodAutoSeq',    # ctrl 0: start[0], start[rndoffset]
             "ChainSeq"          : 'xodChainSeq',
             "ImgXfade"          : 'xodImgXfade',
