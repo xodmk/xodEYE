@@ -226,6 +226,11 @@ def xodRenameAll(srcDir, n_digits, dstName):
 
     return
 
+def grayConversion(image):
+    grayValue = 0.07 * image[:, :, 2] + 0.72 * image[:, :, 1] + 0.21 * image[:, :, 0]
+    gray_img = grayValue.astype(np.uint8)
+    return gray_img
+
 # // *********************************************************************** //
 # // *********************************************************************** //
 
@@ -410,20 +415,15 @@ def convertBMPtoJPG(srcDir, outDir, reName='None'):
 
     return
 
-
-
 # // *********************************************************************** //    
 # // *********************************************************************** //
 # // *---::ODMK img Src Sequencing func::---*
 # // *********************************************************************** //
 # // *********************************************************************** //
 
-
-
 # // *--------------------------------------------------------------* //
 # // *---::ODMKEYE - repeat list of files in directory n times::---*
 # // *--------------------------------------------------------------* //
-
 
 def repeatAllImg(srcDir, n, w=0, repeatDir='None', repeatName='None'):
     ''' repeats a list of .jpg images in srcDir n times,
@@ -475,11 +475,9 @@ def repeatAllImg(srcDir, n, w=0, repeatDir='None', repeatName='None'):
     #return imgRepeatSrcList
     return
 
-
 # // *--------------------------------------------------------------* //
 # // *---::ODMKEYE - concat all files in directory list::---*
 # // *--------------------------------------------------------------* //
-
 
 def concatAllDir(dirList, concatDir, reName):
     ''' Takes a list of directories containing .jpg /.bmp images,
@@ -584,10 +582,8 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
         xfadeFrames specifies n frames for each switch 
         length is determined by 2 * largest directory '''
 
-
     imgFileList1 = []
     imgFileList2 = []
-    
 
     if self.imgFormat=='fjpg':
         imgFileList1.extend(sorted(glob.glob(dir1+'*.jpg')))

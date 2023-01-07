@@ -6,8 +6,11 @@
 #
 # __::((xodEYEctrl.py))::__
 #
-# Python XODMK img processing research testbench
-# requires: xodEYEutil.py, xodEYEdata.py, xodEYEu.py, xodEYEv.py, xodFFmpeg.py
+# XODMK Python Video Deconstruction Processing Reconstruction
+# The original image funk mutilator
+#
+# requires: xodEYEutil.py, xodEYEdata.py, xodEYEu.py, xodEYEv.py,
+#           xodFFmpeg.py, xodEYEsegment.py
 #
 # *****************************************************************************
 # /////////////////////////////////////////////////////////////////////////////
@@ -93,6 +96,7 @@ import xodEYEdata as eyedata
 import xodEYEutil as eyeutil
 import xodEYEu as xodeyeu
 import xodEYEv as xodeyev
+import xodEYEsegment as xodeyesg
 import xodFFmpeg as xodffm
 # import xodEYEx as xodeyex
 

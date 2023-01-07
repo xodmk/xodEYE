@@ -6,11 +6,9 @@
 #
 # __::((xodEYEv.py))::__
 #
-# Python ODMK img processing research
-# ffmpeg experimental
+# XODMK Python Video Deconstruction Processing Reconstruction
 #
-#
-# <<<PRIMARY-PARAMETERS>>>
+# The original image funk mutilator
 #
 # *****************************************************************************
 # /////////////////////////////////////////////////////////////////////////////
@@ -39,20 +37,8 @@ import xodEYEutil as eyeutil
 
 sys.path.insert(2, rootDir+'/xodDSP')
 
-
 # temp python debugger - use >>>pdb.set_trace() to set break
 import pdb
-
-
-# // *---------------------------------------------------------------------* //
-
-# /////////////////////////////////////////////////////////////////////////////
-# #############################################################################
-# begin : function definitions
-# #############################################################################
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-
 
 # /////////////////////////////////////////////////////////////////////////////
 # #############################################################################
@@ -93,190 +79,31 @@ class XodEYEv:
         # // *---::Set Master Dimensions::---* //
         self.mstrSzX = SzX
         self.mstrSzY = SzY        
-        
-        
+
         # // *-------------------------------------------------------------* //
-        
-        
 
-    # #########################################################################
-    # end : object definition
-    # #########################################################################
+    # // *********************************************************************** //
+    # // *********************************************************************** //
+    # // *---:: XODMK Image Effects Algorithms ::---*
+    # // *********************************************************************** //
+    # // *********************************************************************** //
 
-    # #########################################################################
-    # begin : member method definition
-    # #########################################################################
 
-   
+
+
+
+
+
     # // *********************************************************************** //    
     # // *********************************************************************** //
-    # // *---::ODMK img Post-processing func::---*
+    # // *---:: XODMK Image sequencing Engines ::---*
     # // *********************************************************************** //
     # // *********************************************************************** //
-
-
-    # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - interlace img files in two directoroies::---*
-    # // *--------------------------------------------------------------* //
-
-    def imgXfadeDir(self, dir1, dir2, xCtrl, interlaceDir, reName):
-        ''' Takes two directories containing .jpg /.bmp images,
-            renames and interlaces all files into output dir. 
-            The shortest directory length determines output (min length)'''
-
-
-        imgFileList1 = []
-        imgFileList2 = []
-        
-
-        if self.imgFormat=='fjpg':
-            imgFileList1.extend(sorted(glob.glob(dir1+'*.jpg')))
-            imgFileList2.extend(sorted(glob.glob(dir2+'*.jpg')))    
-        elif self.imgFormat=='fbmp':
-            imgFileList1.extend(sorted(glob.glob(dir1+'*.bmp')))
-            imgFileList2.extend(sorted(glob.glob(dir2+'*.bmp')))     
-
-        imgCount = 2*min(len(imgFileList1), len(imgFileList2))
-        n_digits = int(ceil(np.log10(imgCount))) + 2
-        nextInc = 0
-        dirIdx1 = 0
-        dirIdx2 = 0
-        for i in range(imgCount):
-            nextInc += 1
-            zr = ''
-            for j in range(n_digits - len(str(nextInc))):
-                zr += '0'
-            strInc = zr+str(nextInc)
-            # print('strInc = '+str(strInc))
-            if self.imgFormat=='fjpg':
-                imgNormalizeNm = reName+strInc+'.jpg' 
-            elif self.imgFormat=='fbmp':
-                imgNormalizeNm = reName+strInc+'.bmp'
-            #imgConcatNmFull = concatDir+imgNormalizeNm
-            if xCtrl[i] == 1: 
-                currentNm = os.path.split(imgFileList1[dirIdx1])[1]
-                shutil.copy(imgFileList1[dirIdx1], interlaceDir)
-                currentFile = os.path.join(interlaceDir+currentNm)
-                dirIdx1 += 1
-            else:
-                currentNm = os.path.split(imgFileList2[dirIdx2])[1]                
-                shutil.copy(imgFileList2[dirIdx2], interlaceDir)
-                currentFile = os.path.join(interlaceDir+currentNm)
-                dirIdx2 += 1
-            
-            imgInterlaceDirNmFull = os.path.join(interlaceDir+imgNormalizeNm)
-            os.rename(currentFile, imgInterlaceDirNmFull)
-            #pdb.set_trace()
-    
-        return
-
-
-
-
-
-    # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - mirrorHV4 list of files in directory::---*
-    # // *--------------------------------------------------------------* //
-    
-    def mirrorHV4AllImg(self, srcDir, SzX, SzY, mirrorHV4Dir, mirrorHV4Nm, ctrl='LR'):
-        ''' mirrors image horizontally & vertically - outputs 4 mirrored subframes
-            srcDir: input image directory
-            SzX, SzY: output image frame size (input img pre-scaled if required)
-            mirrorHV4Dir: processed img output directory
-            mirrorHV4Nm: processed img root name
-            ctrl: quadrant location of initial subframe {UL, UR, LL, LR}'''
-    
-        # check write condition, if w=0 ignore outDir
-        if not(ctrl=='UL' or ctrl=='UR' or ctrl=='LL' or ctrl=='LR'):
-            print('ERROR: ctrl must be {UL, UR, LL, LR}')
-            return
-            
-        # If Dir does not exist, makedir:
-        os.makedirs(mirrorHV4Dir, exist_ok=True)
-            
-        [imgObjList, imgSrcList] = self.importAllJpg(srcDir)
-
-
-        imgCount = len(imgObjList)
-        n_digits = int(ceil(np.log10(imgCount))) + 2
-        nextInc = 0
-        for i in range(imgCount):
-            
-            pilImg = Image.fromarray(imgObjList[i])
-            imgMirrorHV4 = self.eyeMirrorHV4(pilImg, SzX, SzY, ctrl)           
-            
-            nextInc += 1
-            zr = ''
-            for h in range(n_digits - len(str(nextInc))):
-                zr += '0'
-            strInc = zr+str(nextInc)
-            imgMirrorHV4Nm = mirrorHV4Nm+strInc+'.jpg'
-
-            imgMirrorHV4NmFull = mirrorHV4Dir+imgMirrorHV4Nm
-            misc.imsave(imgMirrorHV4NmFull, imgMirrorHV4)
-    
-        return
-
-
-    # // *--------------------------------------------------------------* //
-    # // *---::ODMKEYE - mirrorHV4 list of files in directory::---*
-    # // *--------------------------------------------------------------* //
-    
-    def mirrorTemporalHV4AllImg(self, srcDir, SzX, SzY, mirrorTemporalHV4Dir, mirrorTemporalHV4Nm, frameDly, ctrl='LR'):
-        ''' mirrors image horizontally & vertically - outputs 4 mirrored subframes
-            srcDir: input image directory
-            SzX, SzY: output image frame size (input img pre-scaled if required)
-            mirrorHV4Dir: processed img output directory
-            mirrorHV4Nm: processed img root name
-            ctrl: quadrant location of initial subframe {UL, UR, LL, LR}'''
-    
-        # check write condition, if w=0 ignore outDir
-        if not(ctrl=='UL' or ctrl=='UR' or ctrl=='LL' or ctrl=='LR'):
-            print('ERROR: ctrl must be {UL, UR, LL, LR}')
-            return
-            
-        # If Dir does not exist, makedir:
-        os.makedirs(mirrorTemporalHV4Dir, exist_ok=True)
-            
-        [imgObjList, imgSrcList] = self.importAllJpg(srcDir)
-
-
-        imgCount = len(imgObjList)
-        n_digits = int(ceil(np.log10(imgCount))) + 2
-        nextInc = 0
-        for i in range(imgCount):
-            
-            pilImg1 = Image.fromarray(imgObjList[i])
-            pilImg2 = Image.fromarray(imgObjList[(i + frameDly) % imgCount])
-            pilImg3 = Image.fromarray(imgObjList[(i + 2*frameDly) % imgCount])
-            pilImg4 = Image.fromarray(imgObjList[(i + 3*frameDly) % imgCount])            
-            #imgMirrorHV4 = self.eyeMirrorHV4(pilImg, SzX, SzY, ctrl)
-            
-            imgMirrorTemporalHV4 = self.eyeMirrorTemporalHV4(pilImg1, pilImg2, pilImg3, pilImg4, SzX, SzY, ctrl)
-            
-            nextInc += 1
-            zr = ''
-            for h in range(n_digits - len(str(nextInc))):
-                zr += '0'
-            strInc = zr+str(nextInc)
-            imgMirrorTemporalHV4Nm = mirrorTemporalHV4Nm+strInc+'.jpg'
-
-            imgMirrorTemporalHV4NmFull = mirrorTemporalHV4Dir+imgMirrorTemporalHV4Nm
-            misc.imsave(imgMirrorTemporalHV4NmFull, imgMirrorTemporalHV4)
-    
-        return
-
-    
-    # // *********************************************************************** //    
-    # // *********************************************************************** //
-    # // *---::ODMK img Pixel-Banging Algorithms::---*
-    # // *********************************************************************** //
-    # // *********************************************************************** //
-
 
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Video Auto Sequencer MKI::---*
     # // *--------------------------------------------------------------* //
+
     def xodAutoSeq(self, imgSrcArray, autoSeqArray, effxDict, framesPerSec,
                    ctrl, n_digits, eyeOutDir, eyeOutFileNm):
         
@@ -286,8 +113,7 @@ class XodEYEv:
             effxDict - Dictionary of video effect algorithms
             n_digit - Number of digits for output naming (video generation)
             imgOutDir - Full path output directory '''
-            
-            
+
         # numFrames = sum(autoSeqArray)
         n_offset = 0
     
@@ -307,13 +133,10 @@ class XodEYEv:
             
         print('\nProcessed images output to the following directory:')
         print(eyeOutDir)
-    
-    
+
         print('// *--------------------------------------------------------------* //')
-    
-    
+
         return
-    
 
     # // *--------------------------------------------------------------* //
     # // *---::XODMKEYE - Video Chain Sequencer MKI::---*
@@ -327,8 +150,7 @@ class XodEYEv:
             effxDict - Dictionary of video effect algorithms
             n_digit - Number of digits for output naming (video generation)
             imgOutDir - Full path output directory '''
-            
-            
+
         # numFrames = sum(autoSeqArray)
         n_offset = 0
     
@@ -346,11 +168,8 @@ class XodEYEv:
             
         print('\nProcessed images output to the following directory:')
         print(eyeOutDir)
-    
-    
+
         print('// *--------------------------------------------------------------* //')
-    
-    
         return
 
     # // *--------------------------------------------------------------* //
@@ -362,7 +181,6 @@ class XodEYEv:
 
         getattr(self, cntrlEYE)(imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                                 eyeOutDir, eyeOutFileName)
-        
         return
 
     # // *--------------------------------------------------------------* //
@@ -371,69 +189,50 @@ class XodEYEv:
     
     def xodLinSQFX_fwd(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                        eyeOutDir, eyeOutFileNm):
-        
         effx = 1
         fadeInOut = 1
         fwdRev = 1
-
         self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
-    
         return
-    
-    
+
     def xodLinSQFX_rev(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                        eyeOutDir, eyeOutFileNm):
-        
         effx = 1
         fadeInOut = 1
         fwdRev = 0
 
         self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
-    
         return
-
     
     def xodLinSQFX_crot(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                         eyeOutDir, eyeOutFileNm):
-        
+
         effx = 3
         fadeInOut = 1
         fwdRev = 1
-
         self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
-        
         return
-    
     
     def xodLinSQFX_sobelxy(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                         eyeOutDir, eyeOutFileNm):
-        
         effx = 4
         fadeInOut = 1
         fwdRev = 1
-
         self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
-        
         return
-
 
     def xodLinSQFX_sobelz(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                           eyeOutDir, eyeOutFileNm):
-        
         effx = 5
         fadeInOut = 1
         fwdRev = 1
-
         self.xodImgLinEFFX(imgSeqArray, xFrames, ctrl, effx, fadeInOut, fwdRev,
                            n_offset, n_digits, eyeOutDir, eyeOutFileNm)
-        
         return
-
-    
     
     def xodLinSQFX(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                    eyeOutDir, eyeOutFileNm):
@@ -445,8 +244,7 @@ class XodEYEv:
             n_offset    - offset for output frame index
             n_digits    - number of digits for frame index
             imgOutDir   - full path output directory '''
-            
-            
+
         # effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
         #                           3 = cRotate ; 4 = sobelXY ; 5 sobelZ
         # fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
@@ -462,42 +260,9 @@ class XodEYEv:
 
         return
 
-
     # // *--------------------------------------------------------------* //
-    # // *---::XODMKEYE - Image Linear Select Algorithm::---*
+    # // *---::XODMKEYE - Image Linear Effects ::---*
     # // *--------------------------------------------------------------* //
-    
-    def xodImgLinSel(self, imgSeqArray, xLength, framesPerSec, ctrl, n_digits,
-                     imgOutDir, imgOutNm='None'):
-    
-        if imgOutNm != 'None':
-            imgLinSelNm = imgOutNm
-        else:
-            imgLinSelNm = 'imgRndSelOut'
-            
-  
-        if ctrl == 1:
-            offset = round((len(imgSeqArray)-1)*random.random())+1
-        else:
-            offset = 0
-            
-        numFrames = int(ceil(xLength * framesPerSec))
-        nextInc = 1
-        for i in range(numFrames):
-            zr = ''
-            for j in range(n_digits - len(str(nextInc))):
-                zr += '0'
-            strInc = zr+str(nextInc)
-            imgNormalizeNm = imgLinSelNm+strInc+'.jpg'
-            imgLinSelFull = imgOutDir+imgNormalizeNm
-            imgTmp = imio.imread(imgSeqArray[eyeutil.circ_idx(i + offset, len(imgSeqArray))])
-            imio.imwrite(imgLinSelFull, imgTmp)
-
-            nextInc += 1
-            
-        return    
-    
-    
     def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx,
                    fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm):
         
@@ -518,7 +283,6 @@ class XodEYEv:
         xTail = int(np.floor(numFrames - xBeats * xFrames))
         
         ctrl = 0    # linearly progress through src images
-
 
         for i in range(xBeats):
             offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
@@ -642,6 +406,160 @@ class XodEYEv:
             
         return
 
+        # // *--------------------------------------------------------------* //
+        # // *---::XODMKEYE - Image Segmentation Effects ::---*
+        # // *--------------------------------------------------------------* //
+
+    def xodSegmentEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx,
+                   fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm):
+
+        ''' Tempo based linear effects
+            numFrames - total video output frames
+            xFrames - frames per beat
+            effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+                                      3 = cRotate ; 4 = sobelXY ; 5 sobelZ
+            fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+            fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
+            imgOutDir - full path output directory '''
+
+        numFrames = int(ceil(xLength * framesPerSec))
+        n_offset = 0
+
+        xBeats = int(np.floor(numFrames / xFrames))
+        xTail = int(np.floor(numFrames - xBeats * xFrames))
+
+        ctrl = 0  # linearly progress through src images
+
+        for i in range(xBeats):
+            offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
+            self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, ctrl, effx,
+                               fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+
+        offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
+        self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, ctrl, effx,
+                           fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+
+        return
+
+    def xodImgSegmentEFFX(self, imgFileList, numFrames, ctrl, effx, fadeInOut, fwdRev,
+                          n_offset, n_digits, imgOutDir, imgOutNm='None'):
+
+        ''' x-fades from clean <-> effx over numFrames
+            imgFileList - list of full path file names, .jpg
+            numFrames - length of output sequence written to out dir
+            effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+                                      3 = cRotate ; 4 = sobelXY ; 5 sobelZ
+            fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+            fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 2 = rev
+            imgOutDir - full path output directory '''
+
+        # constant internal value equals number of implemented effects
+        numEffx = 2
+
+        if imgOutNm != 'None':
+            imgLinEFFXNm = imgOutNm
+        else:
+            imgLinEFFXNm = 'imgLinEFFX'
+
+        if n_offset != 0:
+            nextInc = n_offset
+        else:
+            f_idx = eyeutil.getLatestIdx(imgOutDir, imgLinEFFXNm)
+            nextInc = 1 + f_idx
+
+        if ctrl == 1:
+            offset = round((len(imgFileList) - 1) * random.random()) + 1
+        else:
+            offset = 0
+
+        if effx == 0:
+            effx = round((numEffx - 1) * random.random()) + 1
+
+        if effx == 1:
+            solarX = np.linspace(5.0, 255.0, numFrames)
+        elif effx == 2:
+            alphaX = np.linspace(0.0001, 1.0, numFrames)
+
+        if fadeInOut == 0:
+            fadeInOut = round(random.random()) + 1
+
+        if fwdRev == 0:
+            fwdRev = round(random.random()) + 1
+
+        for i in range(numFrames):
+            if fwdRev == 2:
+                img1 = imio.imread(imgFileList[eyeutil.circ_idx((numFrames - 1 - i) + offset, len(imgFileList))])
+            else:
+                img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
+
+            # linear select (no-effx) fwd <-> back
+            if effx == 1:
+                imgPIL1 = Image.fromarray(img1)
+                imgSmooth = eyeutil.median_filter_rgb(imgPIL1, 8)
+                imgSmoothArray  = np.array(imgSmooth)
+                resImg = self.xodImgSegmentFX(imgSmoothArray)
+
+            elif effx == 2:
+                imgPIL1 = Image.fromarray(img1)
+                imgSmooth = eyeutil.median_filter_rgb(imgPIL1, 8)
+                imgSmoothArray = np.array(imgSmooth)
+                imgSegment = self.xodImgSegmentFX(imgSmoothArray)
+                imgPIL2 = Image.fromarray(imgSegment)
+
+                if fadeInOut == 2:
+                    alphaB = Image.blend(imgPIL1, imgPIL2, alphaX[i])
+                else:
+                    alphaB = Image.blend(imgPIL2, imgPIL1, alphaX[i])
+                alphaB = ImageOps.autocontrast(alphaB, cutoff=0)
+                resImg = np.array(alphaB)
+
+            zr = ''
+            for j in range(n_digits - len(str(nextInc))):
+                zr += '0'
+            strInc = zr + str(nextInc)
+            imgNormalizeNm = imgLinEFFXNm + strInc + '.jpg'
+            imgLinSelFull = imgOutDir + imgNormalizeNm
+            imio.imwrite(imgLinSelFull, resImg)
+
+            nextInc += 1
+
+        return
+
+    # // *********************************************************************** //
+    # // *********************************************************************** //
+    # // *---:: XODMK Image Sequencing Algorithms ::---*
+    # // *********************************************************************** //
+    # // *********************************************************************** //
+
+    def xodImgLinSel(self, imgSeqArray, xLength, framesPerSec, ctrl, n_digits,
+                     imgOutDir, imgOutNm='None'):
+
+        if imgOutNm != 'None':
+            imgLinSelNm = imgOutNm
+        else:
+            imgLinSelNm = 'imgRndSelOut'
+
+        if ctrl == 1:
+            offset = round((len(imgSeqArray) - 1) * random.random()) + 1
+        else:
+            offset = 0
+
+        numFrames = int(ceil(xLength * framesPerSec))
+        nextInc = 1
+        for i in range(numFrames):
+            zr = ''
+            for j in range(n_digits - len(str(nextInc))):
+                zr += '0'
+            strInc = zr + str(nextInc)
+            imgNormalizeNm = imgLinSelNm + strInc + '.jpg'
+            imgLinSelFull = imgOutDir + imgNormalizeNm
+            imgTmp = imio.imread(imgSeqArray[eyeutil.circ_idx(i + offset, len(imgSeqArray))])
+            imio.imwrite(imgLinSelFull, imgTmp)
+
+            nextInc += 1
+
+        return
+
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - Image BPM Random Select Algorithm::---*
     # // *--------------------------------------------------------------* //
@@ -672,8 +590,7 @@ class XodEYEv:
             imio.imwrite(imgRndSelFull, imgList[rIdxArray[k]])
             
         return
-        
-    
+
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - Image Rotate Sequence Algorithm::---*')
     # // *--------------------------------------------------------------* //
@@ -710,8 +627,6 @@ class XodEYEv:
     
         return
 
-        
-        
     # // *--------------------------------------------------------------* //
     # // *---::ODMKEYE - Image CrossFade Sequence Algorithm::---*')
     # // *--------------------------------------------------------------* //    
@@ -2548,11 +2463,155 @@ class XodEYEv:
                     xCnt -= 1
                     frameCnt += 1                    
     
-        return    
-    
-    
-    
-    
+        return
+
+        # // *********************************************************************** //
+        # // *********************************************************************** //
+        # // *---::ODMK img Post-processing func::---*
+        # // *********************************************************************** //
+        # // *********************************************************************** //
+
+        # // *--------------------------------------------------------------* //
+        # // *---::ODMKEYE - interlace img files in two directoroies::---*
+        # // *--------------------------------------------------------------* //
+
+    def imgXfadeDir(self, dir1, dir2, xCtrl, interlaceDir, reName):
+        ''' Takes two directories containing .jpg /.bmp images,
+            renames and interlaces all files into output dir.
+            The shortest directory length determines output (min length)'''
+
+        imgFileList1 = []
+        imgFileList2 = []
+
+        if self.imgFormat == 'fjpg':
+            imgFileList1.extend(sorted(glob.glob(dir1 + '*.jpg')))
+            imgFileList2.extend(sorted(glob.glob(dir2 + '*.jpg')))
+        elif self.imgFormat == 'fbmp':
+            imgFileList1.extend(sorted(glob.glob(dir1 + '*.bmp')))
+            imgFileList2.extend(sorted(glob.glob(dir2 + '*.bmp')))
+
+        imgCount = 2 * min(len(imgFileList1), len(imgFileList2))
+        n_digits = int(ceil(np.log10(imgCount))) + 2
+        nextInc = 0
+        dirIdx1 = 0
+        dirIdx2 = 0
+        for i in range(imgCount):
+            nextInc += 1
+            zr = ''
+            for j in range(n_digits - len(str(nextInc))):
+                zr += '0'
+            strInc = zr + str(nextInc)
+            # print('strInc = '+str(strInc))
+            if self.imgFormat == 'fjpg':
+                imgNormalizeNm = reName + strInc + '.jpg'
+            elif self.imgFormat == 'fbmp':
+                imgNormalizeNm = reName + strInc + '.bmp'
+            # imgConcatNmFull = concatDir+imgNormalizeNm
+            if xCtrl[i] == 1:
+                currentNm = os.path.split(imgFileList1[dirIdx1])[1]
+                shutil.copy(imgFileList1[dirIdx1], interlaceDir)
+                currentFile = os.path.join(interlaceDir + currentNm)
+                dirIdx1 += 1
+            else:
+                currentNm = os.path.split(imgFileList2[dirIdx2])[1]
+                shutil.copy(imgFileList2[dirIdx2], interlaceDir)
+                currentFile = os.path.join(interlaceDir + currentNm)
+                dirIdx2 += 1
+
+            imgInterlaceDirNmFull = os.path.join(interlaceDir + imgNormalizeNm)
+            os.rename(currentFile, imgInterlaceDirNmFull)
+            # pdb.set_trace()
+
+        return
+
+    # // *--------------------------------------------------------------* //
+    # // *---::ODMKEYE - mirrorHV4 list of files in directory::---*
+    # // *--------------------------------------------------------------* //
+
+    def mirrorHV4AllImg(self, srcDir, SzX, SzY, mirrorHV4Dir, mirrorHV4Nm, ctrl='LR'):
+        ''' mirrors image horizontally & vertically - outputs 4 mirrored subframes
+            srcDir: input image directory
+            SzX, SzY: output image frame size (input img pre-scaled if required)
+            mirrorHV4Dir: processed img output directory
+            mirrorHV4Nm: processed img root name
+            ctrl: quadrant location of initial subframe {UL, UR, LL, LR}'''
+
+        # check write condition, if w=0 ignore outDir
+        if not (ctrl == 'UL' or ctrl == 'UR' or ctrl == 'LL' or ctrl == 'LR'):
+            print('ERROR: ctrl must be {UL, UR, LL, LR}')
+            return
+
+        # If Dir does not exist, makedir:
+        os.makedirs(mirrorHV4Dir, exist_ok=True)
+
+        [imgObjList, imgSrcList] = self.importAllJpg(srcDir)
+
+        imgCount = len(imgObjList)
+        n_digits = int(ceil(np.log10(imgCount))) + 2
+        nextInc = 0
+        for i in range(imgCount):
+
+            pilImg = Image.fromarray(imgObjList[i])
+            imgMirrorHV4 = self.eyeMirrorHV4(pilImg, SzX, SzY, ctrl)
+
+            nextInc += 1
+            zr = ''
+            for h in range(n_digits - len(str(nextInc))):
+                zr += '0'
+            strInc = zr + str(nextInc)
+            imgMirrorHV4Nm = mirrorHV4Nm + strInc + '.jpg'
+
+            imgMirrorHV4NmFull = mirrorHV4Dir + imgMirrorHV4Nm
+            misc.imsave(imgMirrorHV4NmFull, imgMirrorHV4)
+
+        return
+
+    # // *--------------------------------------------------------------* //
+    # // *---::ODMKEYE - mirrorHV4 list of files in directory::---*
+    # // *--------------------------------------------------------------* //
+
+    def mirrorTemporalHV4AllImg(self, srcDir, SzX, SzY, mirrorTemporalHV4Dir, mirrorTemporalHV4Nm, frameDly, ctrl='LR'):
+        ''' mirrors image horizontally & vertically - outputs 4 mirrored subframes
+            srcDir: input image directory
+            SzX, SzY: output image frame size (input img pre-scaled if required)
+            mirrorHV4Dir: processed img output directory
+            mirrorHV4Nm: processed img root name
+            ctrl: quadrant location of initial subframe {UL, UR, LL, LR}'''
+
+        # check write condition, if w=0 ignore outDir
+        if not (ctrl == 'UL' or ctrl == 'UR' or ctrl == 'LL' or ctrl == 'LR'):
+            print('ERROR: ctrl must be {UL, UR, LL, LR}')
+            return
+
+        # If Dir does not exist, makedir:
+        os.makedirs(mirrorTemporalHV4Dir, exist_ok=True)
+
+        [imgObjList, imgSrcList] = self.importAllJpg(srcDir)
+
+        imgCount = len(imgObjList)
+        n_digits = int(ceil(np.log10(imgCount))) + 2
+        nextInc = 0
+        for i in range(imgCount):
+
+            pilImg1 = Image.fromarray(imgObjList[i])
+            pilImg2 = Image.fromarray(imgObjList[(i + frameDly) % imgCount])
+            pilImg3 = Image.fromarray(imgObjList[(i + 2 * frameDly) % imgCount])
+            pilImg4 = Image.fromarray(imgObjList[(i + 3 * frameDly) % imgCount])
+            # imgMirrorHV4 = self.eyeMirrorHV4(pilImg, SzX, SzY, ctrl)
+
+            imgMirrorTemporalHV4 = self.eyeMirrorTemporalHV4(pilImg1, pilImg2, pilImg3, pilImg4, SzX, SzY, ctrl)
+
+            nextInc += 1
+            zr = ''
+            for h in range(n_digits - len(str(nextInc))):
+                zr += '0'
+            strInc = zr + str(nextInc)
+            imgMirrorTemporalHV4Nm = mirrorTemporalHV4Nm + strInc + '.jpg'
+
+            imgMirrorTemporalHV4NmFull = mirrorTemporalHV4Dir + imgMirrorTemporalHV4Nm
+            misc.imsave(imgMirrorTemporalHV4NmFull, imgMirrorTemporalHV4)
+
+        return
 
 # // *---------------------------------------------------------------------* //
 
