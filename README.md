@@ -11,4 +11,6 @@ xodEYEu.py: A collection of image processing algorithms with the main objective 
 
 xodEYEv.py: A collection of video processing algorithms with the main objective of remixing and deconstructing/reconstructing source video
 
+xodEYEsegment.py: Image segmentation experimental effects (currently using scikit-image (temp..) )
+
 xodEYEctrl.py: The top-level UI control program that sequences function calls and controls the generation of the output
