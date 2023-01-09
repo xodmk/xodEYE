@@ -137,7 +137,8 @@ print('// //////////////////////////////////////////////////////////////// //')
 # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpLin"]
 # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpStride"]
 
-cntrlEYE = eyedata.xodEYEv_dict["LinEFFX"]
+# cntrlEYE = eyedata.xodEYEv_dict["LinEFFX"]
+cntrlEYE = eyedata.xodEYEv_dict["SegEFFX"]
 # cntrlEYE = eyedata.xodEYEv_dict["AutoSeq"]
 # cntrlEYE = eyedata.xodEYEv_dict["ChainSeq"]
 
@@ -147,7 +148,7 @@ cntrlEYE = eyedata.xodEYEv_dict["LinEFFX"]
 srcSequence = 0
 xfadeSel = 0
 ctrlSel = 0
-effxSel = 0
+effxSel = 1
 cntrlOnsetDet = 0
 postProcess = 0
 cntrlRender = 1
@@ -249,7 +250,7 @@ outDir = '/testout/'
 # currently errors with: OverflowError: cannot convert float infinity to integer
 
 #eyeOutFileName = 'humanEyeESP_pinealResonator1080_'
-eyeOutFileName = 'eyeRes_EXP07_'
+eyeOutFileName = 'eyeSegmentRes_EXP01_'
 
 maskDir = eyeSrcDir + '/8018x/mask8018x/'
 maskArray = sorted(glob.glob(maskDir+'*'))
@@ -613,15 +614,134 @@ elif srcSequence == 5:
 
     imgSeqArray = sorted(glob.glob(srcDir+'*'))
 
-    print('// *--------------------------------------------------------------* //')   
-    
+    print('// *--------------------------------------------------------------* //')
+
+
+# /////////////////////////////////////////////////////////////////////////////
+# #############################################################################
+# begin : XODMK EYE image generator
+# #############################################################################
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+# // *********************************************************************** //
+# // *********************************************************************** //
+
+elif cntrlEYE == 'xodLinEFFX':
+
+    print('\n// *--------------------------------------------------------------* //')
+    print('// *---::XODMKVIDEOu - Image Linear EFFX xFade Algorithm::---*')
+    print('// *--------------------------------------------------------------* //')
+
+    ''' Tempo based linear effects
+        numFrames - total video output frames
+        xBFrames - frames per beat
+        effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+                                  3 = div ; 4 = sobelXY ; 5 sobelZ
+        fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+        fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
+        imgOutDir - full path output directory '''
+
+    # eyeOutFileName = 'myOutputFileName'    # defined above
+
+    # If Dir does not exist, makedir:
+    os.makedirs(eyeOutDir, exist_ok=True)
+    fadeInOut = 0
+    fwdRev = 0
+    effx = effxSel
+
+    xFrames = int(np.ceil(eyeClks.framesPerBeat))
+    # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
+
+    # pdb.set_trace()
+    # imgSeqArray = imgSrcArray[0]
+
+    print('\nBegin Processing frames...')
+
+    eyev.xodLinEFFX(imgSeqArray, xLength, framesPerSec, xFrames, effx, fadeInOut, fwdRev,
+                    n_digits, eyeOutDir, eyeOutFileName)
+
+    print('\nProcessed images output to the following directory:')
+    print(eyeOutDir)
+
+    print('// *--------------------------------------------------------------* //')
+
+# // *********************************************************************** //
+
+elif cntrlEYE == 'xodSegmentEFFX':
+
+    print('\n// *--------------------------------------------------------------* //')
+    print('// *---::XODMKVIDEOu - Image Segment EFFX xFade Algorithm::---*')
+    print('// *--------------------------------------------------------------* //')
+
+    ''' Tempo based Segment effects
+        numFrames - total video output frames
+        xBFrames - frames per beat
+        effx      - effects type: 0 = random ; 1 = histSegment ; 2 = histSegmentCLR
+        fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+        fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
+        imgOutDir - full path output directory '''
+
+    # eyeOutFileName = 'myOutputFileName'    # defined above
+
+    # If Dir does not exist, makedir:
+    os.makedirs(eyeOutDir, exist_ok=True)
+    fadeInOut = 0
+    fwdRev = 0
+    effx = effxSel
+
+    xFrames = int(np.ceil(eyeClks.framesPerBeat))
+    # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
+
+    # pdb.set_trace()
+    # imgSeqArray = imgSrcArray[0]
+
+    print('\nBegin Processing frames...')
+
+    eyev.xodSegmentEFFX(imgSeqArray, xLength, framesPerSec, xFrames, effx, fadeInOut, fwdRev,
+                        n_digits, eyeOutDir, eyeOutFileName)
+
+    print('\nProcessed images output to the following directory:')
+    print(eyeOutDir)
+
+    print('// *--------------------------------------------------------------* //')
+
+# // *********************************************************************** //
+
+if cntrlEYE == 'xodAutoSeq':
+    print('\n')
+    print('// *--------------------------------------------------------------* //')
+    print('// *---:: XODMKEYE - EYE XOD Auto Sequence::---*')
+    print('// *--------------------------------------------------------------* //')
+
+    eyev.xodAutoSeq(imgSeqArray, autoSeqArray, effxDict, framesPerSec,
+                    ctrlSel, n_digits, eyeOutDir, eyeOutFileName)
+
+    print('\nProcessed images output to the following directory:')
+    print(eyeOutDir)
+
+    print('// *--------------------------------------------------------------* //')
+
+# // *********************************************************************** //
+
+if cntrlEYE == 'xodChainSeq':
+    print('\n')
+    print('// *--------------------------------------------------------------* //')
+    print('// *---:: XODMKEYE - EYE XOD Chain Sequence::---*')
+    print('// *--------------------------------------------------------------* //')
+
+    eyev.xodChainSeq(imgSeqArray, autoTimeArray, effxArray, framesPerSec,
+                     n_digits, eyeOutDir, eyeOutFileName)
+
+    print('\nProcessed images output to the following directory:')
+    print(eyeOutDir)
+
+    print('// *--------------------------------------------------------------* //')
 
 # /////////////////////////////////////////////////////////////////////////////
 # #############################################################################
 # begin : XODMK EYE image processing
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 
 # // *********************************************************************** //
 # // *********************************************************************** //
@@ -920,55 +1040,6 @@ if cntrlEYE == 'xodXfadeTelescopeII':
     
     print('// *--------------------------------------------------------------* //')
 
-
-# // *********************************************************************** //
-# // *********************************************************************** //
-
-
-
-# /////////////////////////////////////////////////////////////////////////////
-# #############################################################################
-# begin : XODMK EYE image generator
-# #############################################################################
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-
-if cntrlEYE == 'xodAutoSeq':
-    
-    print('\n')
-    print('// *--------------------------------------------------------------* //')
-    print('// *---:: XODMKEYE - EYE XOD Auto Sequence::---*')
-    print('// *--------------------------------------------------------------* //')
-
-    eyev.xodAutoSeq(imgSeqArray, autoSeqArray, effxDict, framesPerSec,
-                    ctrlSel, n_digits, eyeOutDir, eyeOutFileName)
-
-    print('\nProcessed images output to the following directory:')
-    print(eyeOutDir)
-
-    print('// *--------------------------------------------------------------* //')
-    
-    
-# // *********************************************************************** //    
-    
-    
-if cntrlEYE == 'xodChainSeq':
-    
-    print('\n')
-    print('// *--------------------------------------------------------------* //')
-    print('// *---:: XODMKEYE - EYE XOD Chain Sequence::---*')
-    print('// *--------------------------------------------------------------* //')
-
-
-    eyev.xodChainSeq(imgSeqArray, autoTimeArray, effxArray, framesPerSec,
-                    n_digits, eyeOutDir, eyeOutFileName)
-
-    print('\nProcessed images output to the following directory:')
-    print(eyeOutDir)
-
-    print('// *--------------------------------------------------------------* //')
-    
-
 # // *********************************************************************** //
 # // *********************************************************************** //
 
@@ -978,7 +1049,6 @@ if cntrlEYE == 'xodPxlRndRotate':
     print('// *--------------------------------------------------------------* //')
     print('// *---:: XODMKEYE - EYE Pixel Random Replace f::---*')
     print('// *--------------------------------------------------------------* //')
-
 
     pxlRndRotateNm = eyeOutFileName
     pxlRndRotateDir = eyeOutDir
@@ -1258,52 +1328,6 @@ if cntrlEYE == 'xodMskDualESP':
 #
 #     print('// *--------------------------------------------------------------* //')
 
-
-# // *********************************************************************** //
-# // *********************************************************************** //
-
-elif cntrlEYE == 'xodLinEFFX':
-
-    print('\n// *--------------------------------------------------------------* //')
-    print('// *---::XODMKVIDEOu - Image Linear EFFX xFade Algorithm::---*')
-    print('// *--------------------------------------------------------------* //')
-
-    ''' Tempo based linear effects
-        numFrames - total video output frames
-        xBFrames - frames per beat
-        effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                  3 = div ; 4 = sobelXY ; 5 sobelZ
-        fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-        fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
-        imgOutDir - full path output directory '''
-
-    # eyeOutFileName = 'myOutputFileName'    # defined above
-
-    # If Dir does not exist, makedir:
-    os.makedirs(eyeOutDir, exist_ok=True)
-    fadeInOut = 0
-    fwdRev = 0
-    effx = effxSel
-
-    xFrames = int(np.ceil(eyeClks.framesPerBeat))
-    #xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
-    
-    #pdb.set_trace()
-    #imgSeqArray = imgSrcArray[0]
-
-    print('\nBegin Processing frames...')
-    
-    eyev.xodLinEFFX(imgSeqArray, xLength, framesPerSec, xFrames, effx, fadeInOut, fwdRev,
-                    n_digits, eyeOutDir, eyeOutFileName)
-
-    
-    print('\nProcessed images output to the following directory:')
-    print(eyeOutDir)
-
-
-    print('// *--------------------------------------------------------------* //')
-
-
 # // *********************************************************************** //
 # // *********************************************************************** //
 
@@ -1437,13 +1461,9 @@ if cntrlEYE == 'imgInterLaceBpmDir':
     print('\nOutput all images to: ' + imgInterlaceBpmDir)
     
     print('// *--------------------------------------------------------------* //')
-    
-
 
 # // *********************************************************************** //
 # // *********************************************************************** //
-# // *********************************************************************** //
-
 
 if cntrlEYE == 102:
 
@@ -1510,7 +1530,6 @@ elif cntrlEYE == 2:
 # // *********************************************************************** //
 # // *********************************************************************** //
 # // *********************************************************************** //
-
 
 
 # ***GOOD -> FUNCTIONALIZEIT***
@@ -1645,7 +1664,6 @@ elif cntrlEYE == 5:
 # // *--------------------------------------------------------------* //
 # // *---::ODMKEYE - Image CrossFade Rotate Sequencer::---*')
 # // *--------------------------------------------------------------* //
-
 
 if cntrlEYE == 8:
 # *****CURRENT - CHECKIT*****
@@ -1918,7 +1936,6 @@ if cntrlEYE == 234:
     print('// *---::ODMKEYE - EYE odmkLfoParascopeII::---*')
     print('// *--------------------------------------------------------------* //')
 
-
     # srcXfadeDir = xodEyeDir+'eyeSrcExp23/'    # defined above
     #eyeOutFileName = 'myOutputFileName'    # defined above
     fxLfoParascopeIINm = eyeOutFileName
@@ -1942,9 +1959,7 @@ if cntrlEYE == 234:
     print('\nProcessed images output to the following directory:')
     print(fxLfoParascopeIIDir)
 
-
     print('// *--------------------------------------------------------------* //')
-
 
 if cntrlEYE == 24:
     
@@ -1985,15 +2000,12 @@ if cntrlEYE == 24:
     print('// *--------------------------------------------------------------* //')
 
 
-
-
 if cntrlEYE == 'xodMskDualV':
     
     print('\n')
     print('// *--------------------------------------------------------------* //')
     print('// *---:: XODMKEYE - EYE xodMskDualESP ::---*')
     print('// *--------------------------------------------------------------* //')
-
 
     # srcXfadeDir = xodEyeDir+'eyeSrcExp23/'    # defined above
     #eyeOutFileName = 'myOutputFileName'    # defined above
@@ -2013,7 +2025,6 @@ if cntrlEYE == 'xodMskDualV':
     
     #pdb.set_trace()
 
-
     eyev.xodMskDualV(imgSeqArray, maskArray, sLength, framesPerSec, xfadeFrames,
                        n_digits, xodMskDualESPDir, imgOutNm=xodMskDualESPNm,
                        effx=effxSel, inOrOut=inOut)
@@ -2021,14 +2032,11 @@ if cntrlEYE == 'xodMskDualV':
     print('\nProcessed images output to the following directory:')
     print(xodMskDualESPDir)
 
-
     print('// *--------------------------------------------------------------* //')
     
 # // *********************************************************************** //
 # // *********************************************************************** //
-    
-   
-   
+
 if cntrlEYE == 627:
     
     print('\n')
@@ -2071,13 +2079,11 @@ if cntrlEYE == 627:
     print('// *--------------------------------------------------------------* //')
 
 
-
 # /////////////////////////////////////////////////////////////////////////////
 # #############################################################################
 # begin : img post-processing
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 
 if postProcess == 1:
     print('\n')
@@ -2102,7 +2108,6 @@ if postProcess == 1:
 
     eyeutil.repeatAllImg(srcDir, n, w=1, repeatDir=repeatDir, repeatName=repeatNm)
 
-
 elif postProcess == 2:
     print('\n')
     print('// *--------------------------------------------------------------* //')
@@ -2124,16 +2129,12 @@ elif postProcess == 2:
     # If Dir does not exist, makedir:
     os.makedirs( repeatRevDir, exist_ok=True)
 
-
     eyeutil.repeatReverseAllImg(repeatSrcDir, n, w=1, repeatReverseDir=repeatRevDir,
                                 repeatReverseName=repeatRevNm)
 
-
-
 # // *********************************************************************** //
 # // *********************************************************************** //
 # // *********************************************************************** //
-
 
 elif postProcess == 4:
     print('\n')
@@ -2160,13 +2161,9 @@ elif postProcess == 4:
     
     print('// *--------------------------------------------------------------* //')
 
-
-
-
 # // *********************************************************************** //
 # // *********************************************************************** //
 # // *********************************************************************** //
-
 
 elif postProcess == 5:
     print('\n')

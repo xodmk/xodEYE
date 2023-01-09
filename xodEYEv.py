@@ -34,6 +34,7 @@ rootDir = os.path.dirname(currentDir)
 
 sys.path.insert(0, rootDir+'/xodEYE')
 import xodEYEutil as eyeutil
+import xodEYEsegment as xodeyesg
 
 sys.path.insert(2, rootDir+'/xodDSP')
 
@@ -494,16 +495,10 @@ class XodEYEv:
 
             # linear select (no-effx) fwd <-> back
             if effx == 1:
-                imgPIL1 = Image.fromarray(img1)
-                imgSmooth = eyeutil.median_filter_rgb(imgPIL1, 8)
-                imgSmoothArray  = np.array(imgSmooth)
-                resImg = self.xodImgSegmentFX(imgSmoothArray)
+                resImg = xodeyesg.segmentEYEhist(img1)
 
             elif effx == 2:
-                imgPIL1 = Image.fromarray(img1)
-                imgSmooth = eyeutil.median_filter_rgb(imgPIL1, 8)
-                imgSmoothArray = np.array(imgSmooth)
-                imgSegment = self.xodImgSegmentFX(imgSmoothArray)
+                imgSegment = xodeyesg.segmentEYEhist(img1)
                 imgPIL2 = Image.fromarray(imgSegment)
 
                 if fadeInOut == 2:
