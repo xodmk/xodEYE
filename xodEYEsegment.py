@@ -49,6 +49,12 @@ sys.path.insert(0, rootDir+'/xodUtil')
 import xodPlotUtil as xodplt
 
 
+# temp python debugger - use >>>pdb.set_trace() to set break
+import pdb
+
+
+# // *--------------------------------------------------------------* //
+
 def segmentEYEhist(eyeSrc):
     """ estimate the noise standard deviation from the noisy image
         sigma_est = np.mean(estimate_sigma(noisy, multichannel=True))
@@ -196,6 +202,71 @@ def segmentEYEhistPlot(eyeSrc):
 
     return
 
+# // *--------------------------------------------------------------* //
+
+
+def segmentEYEmask(eyeSrc, imgArr):
+    """ estimate the noise standard deviation from the noisy image
+        sigma_est = np.mean(estimate_sigma(noisy, multichannel=True))
+        // multichannel depricated -> channel_axis
+    """
+
+    sigma_est = np.mean(estimate_sigma(eyeSrc, channel_axis=-1))
+    print("estimated noise standard deviation = {}".format(sigma_est))
+
+    patch_kw = dict(patch_size=5,  # 5x5 patches
+                    patch_distance=6,  # 13x13 search area
+                    channel_axis=-1)  # (changed from multichannel=True)
+
+    # Denoise Cut-off Distance - higher value = more blurring
+    # blurThresh = 0.15
+    blurThresh = 1.15
+
+    denoise = denoise_nl_means(eyeSrc, h=blurThresh * sigma_est, fast_mode=True, **patch_kw)
+    denoise_ubyte = img_as_ubyte(denoise)
+    denoise_gray = eyeutil.grayConversion(denoise_ubyte)
+
+    segm1 = (denoise_gray <= 75)
+    segm2 = (denoise_gray > 75) & (denoise_gray <= 150)
+    segm3 = (denoise_gray > 150) & (denoise_gray <= 225)
+    segm4 = (denoise_gray > 225)
+
+    # all_segments = np.zeros((denoise_gray.shape[0], denoise_gray.shape[1], 3))
+    #
+    # all_segments[segm1] = (1, 0, 0)
+    # all_segments[segm2] = (0, 1, 0)
+    # all_segments[segm3] = (0, 0, 1)
+    # all_segments[segm4] = (1, 1, 0)
+
+    segm1_opened = nd.binary_opening(segm1, np.ones((3, 3)))
+    segm1_closed = nd.binary_closing(segm1_opened, np.ones((3, 3)))
+
+    segm2_opened = nd.binary_opening(segm2, np.ones((3, 3)))
+    segm2_closed = nd.binary_closing(segm2_opened, np.ones((3, 3)))
+
+    segm3_opened = nd.binary_opening(segm3, np.ones((3, 3)))
+    segm3_closed = nd.binary_closing(segm3_opened, np.ones((3, 3)))
+
+    segm4_opened = nd.binary_opening(segm4, np.ones((3, 3)))
+    segm4_closed = nd.binary_closing(segm4_opened, np.ones((3, 3)))
+
+    all_segments_clean = np.zeros((denoise_gray.shape[0], denoise_gray.shape[1], 3))
+
+    # all_segments_clean[segm1_closed] = (0.86, 0, 0)
+    # all_segments_clean[segm2_closed] = (0, 0.86, 0.86)
+    # all_segments_clean[segm3_closed] = (0.86, 1, 0.0)
+
+    all_segments_clean[segm1_closed] = (0.86, 0, 0)
+    all_segments_clean[segm2_closed] = (0, 0.86, 0.86)
+    all_segments_clean[segm3_closed] = (0.86, 1, 0.0)
+    all_segments_clean[segm4_closed] = (0, 0, 0.2)
+
+    eyeRes = all_segments_clean
+
+
+
+    return eyeRes
+
 
 if 0:
     # debug..
@@ -215,4 +286,3 @@ if 0:
     eye01 = imio.imread(movDir + "/spiceIndicator1080/spiceIndicatorGnk000139.jpg")
 
     segmentEYEhistPlot(eye01)
-

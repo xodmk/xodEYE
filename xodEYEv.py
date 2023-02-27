@@ -502,11 +502,19 @@ class XodEYEv:
                 imgPIL2 = Image.fromarray(imgSegment)
 
                 if fadeInOut == 2:
-                    alphaB = Image.blend(imgPIL1, imgPIL2, alphaX[i])
+                    alphaB = Image.blend(img1, imgPIL2, alphaX[i])
                 else:
-                    alphaB = Image.blend(imgPIL2, imgPIL1, alphaX[i])
+                    alphaB = Image.blend(imgPIL2, img1, alphaX[i])
                 alphaB = ImageOps.autocontrast(alphaB, cutoff=0)
                 resImg = np.array(alphaB)
+
+            elif effx == 3:
+                # reverse index linear
+                img1 = imio.imread(imgFileList[eyeutil.circ_idx((numFrames - 1 - i) + offset, len(imgFileList))])
+                # forward index linear
+                img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
+
+                resImg = xodeyesg.segmentEYEhist(img1)
 
             zr = ''
             for j in range(n_digits - len(str(nextInc))):
@@ -603,7 +611,6 @@ class XodEYEv:
     
         zn = eyeutil.cyclicZn(numFrames-1)    # less one, then repeat zn[0] for full 360
 
-    
         imgCount = numFrames
         n_digits = int(ceil(np.log10(imgCount))) + 2
         nextInc = 0

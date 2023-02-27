@@ -128,7 +128,7 @@ print('// //////////////////////////////////////////////////////////////// //')
 print('// *---:: XODMK EYE ESP ::---*')
 print('// //////////////////////////////////////////////////////////////// //')
 
-# // *--------------------------------------------------------------* //currentDir:
+# // *--------------------------------------------------------------* //
 # // # // *---:: Select Program Control ::---*')
 # // *--------------------------------------------------------------* //
 
@@ -183,27 +183,27 @@ imgFormat = 'fjpg'
 
 SzX = 1920
 SzY = 1080
-#SzY = 1920
+# SzY = 1920
 
-#SzX = 1920
-#SzY = 1280
+# SzX = 1920
+# SzY = 1280
 
 # B4
-#SzX = 4299
-#SzY = 3035
+# SzX = 4299
+# SzY = 3035
 
 # SzX = 8018
 # SzY = 8018
 
 # Golden ratio frames:
-#mstrSzX = 1076
-#mstrSzY = 666
+# mstrSzX = 1076
+# mstrSzY = 666
 
-#mstrSzX = 1257
-#mstrSzY = 777
+# mstrSzX = 1257
+# mstrSzY = 777
 
-#mstrSzX = 1436
-#mstrSzY = 888
+# mstrSzX = 1436
+# mstrSzY = 888
 
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -215,12 +215,12 @@ SzY = 1080
 # // *--------------------------------------------------------------* //
 
 earSrcNm = 'gorgulans_beatx01.wav'                 # ~7  sec = 220 frames
-#earSrcNm = 'antimatterbk06.wav'                    # ~14 sec = 434 frames
-#earSrcNm = 'dmttv-axon23.wav'                      # ~23
-#earSrcNm = 'ebolaCallibriscian_uCCrhythm.wav'       # ~28
-#earSrcNm = 'cabalisk_abstract.wav'                 # ~53
-#earSrcNm = 'cabalisk_spaced.wav'                   # ~1.49
-#earSrcNm = 'The_Amen_Break_48K.wav'
+# earSrcNm = 'antimatterbk06.wav'                    # ~14 sec = 434 frames
+# earSrcNm = 'dmttv-axon23.wav'                      # ~23
+# earSrcNm = 'ebolaCallibriscian_uCCrhythm.wav'       # ~28
+# earSrcNm = 'cabalisk_abstract.wav'                 # ~53
+# earSrcNm = 'cabalisk_spaced.wav'                   # ~1.49
+# earSrcNm = 'The_Amen_Break_48K.wav'
 
 earSrc = audioSrcDir + '/' + earSrcNm
 
@@ -234,22 +234,22 @@ earSrc = audioSrcDir + '/' + earSrcNm
 # xodEyeDir = currentDir + "/"    # ** extra / for this path
 xodEyeDir = dataSrcDir    # ** extra / for this path
 
-# Set Image Source Directory (eyeSrcDir/...)
+# Set Image Source Directory (/eyeSrcDir + ...)
 # sourceDir = ['/eye/8018x/xodMetalSphynxEye8018x/']
 
 sourceDir = ['/mov/spiceIndicator1080/']
 
-#sourceDir = ['src/eyeRes_EXP01_1920x/',
+# sourceDir = ['src/eyeRes_EXP01_1920x/',
 #             'src/eyeRes_EXP05_1920x/']
 
 # *** must have / at end of variable ***
-#outDir = 'testout/cgbwCryptWitch8018/'
-outDir = '/testout/'
+# outDir = 'testout/cgbwCryptWitch8018/'
+outDir = '/testoutGR/'
 
 # *** FIXIT - check if outDir is Empty - halt ***
 # currently errors with: OverflowError: cannot convert float infinity to integer
 
-#eyeOutFileName = 'humanEyeESP_pinealResonator1080_'
+# eyeOutFileName = 'humanEyeESP_pinealResonator1080_'
 eyeOutFileName = 'eyeSegmentRes_EXP01_'
 
 maskDir = eyeSrcDir + '/8018x/mask8018x/'
@@ -517,7 +517,7 @@ if srcSequence == 0:
 if cntrlEYE == 'xodChainSeq':              
 
     print("__xodChainSeq__ - autoNFrameArray: ")
-    for i in range(len(autoTimeArray)):            
+    for i in range(len(autoTimeArray)):
         print(str(int(autoTimeArray[i] * framesPerSec)))
 
     print('\n// *--------------------------------------------------------------* //')

@@ -2640,7 +2640,6 @@ class XodEYEu:
         print('// *---numxfadeImg = '+str(xfadeFrames)+'---*')
         print('// *---numXfades = '+str(numXfades)+'---*')    
 
-    
         alphaX = np.linspace(0.0, 1.0, xfadeFrames)
         
         nextInc = 0
