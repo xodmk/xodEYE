@@ -107,6 +107,12 @@ def segmentEYEhist(eyeSrc):
     all_segments_clean[segm3_closed] = (0.86, 1, 0.0)
     all_segments_clean[segm4_closed] = (0, 0, 0.2)
 
+    # all_segments_mask = np.zeros((denoise_gray.shape[0], denoise_gray.shape[1], 3))
+    #
+    # for row, pxl in enumerate(pxls):
+    #     for col, pxll in enumerate(pxl):
+    #         all_segments_clean
+
     eyeRes = all_segments_clean
 
     return eyeRes
@@ -205,7 +211,7 @@ def segmentEYEhistPlot(eyeSrc):
 # // *--------------------------------------------------------------* //
 
 
-def segmentEYEmask(eyeSrc, imgArr):
+def segmentEYEmask_FourSg(eyeSrc, imgArr):
     """ estimate the noise standard deviation from the noisy image
         sigma_est = np.mean(estimate_sigma(noisy, multichannel=True))
         // multichannel depricated -> channel_axis
@@ -221,6 +227,7 @@ def segmentEYEmask(eyeSrc, imgArr):
     # Denoise Cut-off Distance - higher value = more blurring
     # blurThresh = 0.15
     blurThresh = 1.15
+    # blurThresh = 3.15
 
     denoise = denoise_nl_means(eyeSrc, h=blurThresh * sigma_est, fast_mode=True, **patch_kw)
     denoise_ubyte = img_as_ubyte(denoise)
@@ -256,14 +263,115 @@ def segmentEYEmask(eyeSrc, imgArr):
     # all_segments_clean[segm2_closed] = (0, 0.86, 0.86)
     # all_segments_clean[segm3_closed] = (0.86, 1, 0.0)
 
-    all_segments_clean[segm1_closed] = (0.86, 0, 0)
-    all_segments_clean[segm2_closed] = (0, 0.86, 0.86)
-    all_segments_clean[segm3_closed] = (0.86, 1, 0.0)
-    all_segments_clean[segm4_closed] = (0, 0, 0.2)
+    colors = 0
+    if colors ==1:
+
+        all_segments_clean[segm1_closed] = (0.86, 0, 0)
+        all_segments_clean[segm2_closed] = (0, 0.86, 0.86)
+        all_segments_clean[segm3_closed] = (0.86, 1, 0.0)
+        all_segments_clean[segm4_closed] = (0, 0, 0.2)
+
+    else:
+
+        maskEyeSrc1 = imgArr[0]
+        maskEyeSrc2 = imgArr[1]
+        maskEyeSrc3 = imgArr[2]
+        maskEyeSrc4 = imgArr[3]
+        # fill segment with src channel data of same positions
+        all_segments_clean[segm1_closed] = maskEyeSrc1[segm1_closed]        # (0.86, 0, 0)
+        all_segments_clean[segm2_closed] = maskEyeSrc2[segm2_closed]        # (0, 0.86, 0.86)
+        all_segments_clean[segm3_closed] = maskEyeSrc3[segm3_closed]        # (0.86, 1, 0.0)
+        all_segments_clean[segm4_closed] = maskEyeSrc4[segm4_closed]        # (0, 0, 0.2)
+
+        all_segments_clean = eyeutil.median_filter_rgb(all_segments_clean, 13)
 
     eyeRes = all_segments_clean
 
+    # // *--------------------------------------------------------------* //
+    # exp
+    # all_segments_mask = np.zeros((denoise_gray.shape[0], denoise_gray.shape[1], 3))
+    # for row, pxl in enumerate(pxls):
+    #     for col, pxll in enumerate(pxl):
+    #         all_segments_clean
+    # // *--------------------------------------------------------------* //
 
+    return eyeRes
+
+
+def segmentEYErotation_FourSg(eyeSrc, imgArr):
+    """ estimate the noise standard deviation from the noisy image
+        sigma_est = np.mean(estimate_sigma(noisy, multichannel=True))
+        // multichannel depricated -> channel_axis
+    """
+
+    sigma_est = np.mean(estimate_sigma(eyeSrc, channel_axis=-1))
+    print("estimated noise standard deviation = {}".format(sigma_est))
+
+    patch_kw = dict(patch_size=5,  # 5x5 patches
+                    patch_distance=6,  # 13x13 search area
+                    channel_axis=-1)  # (changed from multichannel=True)
+
+    # Denoise Cut-off Distance - higher value = more blurring
+    # blurThresh = 0.15
+    blurThresh = 1.15
+    # blurThresh = 3.15
+
+    denoise = denoise_nl_means(eyeSrc, h=blurThresh * sigma_est, fast_mode=True, **patch_kw)
+    denoise_ubyte = img_as_ubyte(denoise)
+    denoise_gray = eyeutil.grayConversion(denoise_ubyte)
+
+    segm1 = (denoise_gray <= 75)
+    segm2 = (denoise_gray > 75) & (denoise_gray <= 150)
+    segm3 = (denoise_gray > 150) & (denoise_gray <= 225)
+    segm4 = (denoise_gray > 225)
+
+    # all_segments = np.zeros((denoise_gray.shape[0], denoise_gray.shape[1], 3))
+    #
+    # all_segments[segm1] = (1, 0, 0)
+    # all_segments[segm2] = (0, 1, 0)
+    # all_segments[segm3] = (0, 0, 1)
+    # all_segments[segm4] = (1, 1, 0)
+
+    segm1_opened = nd.binary_opening(segm1, np.ones((3, 3)))
+    segm1_closed = nd.binary_closing(segm1_opened, np.ones((3, 3)))
+
+    segm2_opened = nd.binary_opening(segm2, np.ones((3, 3)))
+    segm2_closed = nd.binary_closing(segm2_opened, np.ones((3, 3)))
+
+    segm3_opened = nd.binary_opening(segm3, np.ones((3, 3)))
+    segm3_closed = nd.binary_closing(segm3_opened, np.ones((3, 3)))
+
+    segm4_opened = nd.binary_opening(segm4, np.ones((3, 3)))
+    segm4_closed = nd.binary_closing(segm4_opened, np.ones((3, 3)))
+
+    all_segments_clean = np.zeros((denoise_gray.shape[0], denoise_gray.shape[1], 3))
+
+    # all_segments_clean[segm1_closed] = (0.86, 0, 0)
+    # all_segments_clean[segm2_closed] = (0, 0.86, 0.86)
+    # all_segments_clean[segm3_closed] = (0.86, 1, 0.0)
+
+    maskEyeSrc1 = imgArr[0]
+    maskEyeSrc2 = imgArr[1]
+    maskEyeSrc3 = imgArr[2]
+    maskEyeSrc4 = imgArr[3]
+
+    # fill segment with src channel data of same positions
+    all_segments_clean[segm1_closed] = maskEyeSrc1[segm1_closed]        # (0.86, 0, 0)
+    all_segments_clean[segm2_closed] = maskEyeSrc2[segm2_closed]        # (0, 0.86, 0.86)
+    all_segments_clean[segm3_closed] = maskEyeSrc3[segm3_closed]        # (0.86, 1, 0.0)
+    all_segments_clean[segm4_closed] = maskEyeSrc4[segm4_closed]        # (0, 0, 0.2)
+
+    all_segments_clean = eyeutil.median_filter_rgb(all_segments_clean, 13)
+
+    eyeRes = all_segments_clean
+
+    # // *--------------------------------------------------------------* //
+    # exp
+    # all_segments_mask = np.zeros((denoise_gray.shape[0], denoise_gray.shape[1], 3))
+    # for row, pxl in enumerate(pxls):
+    #     for col, pxll in enumerate(pxl):
+    #         all_segments_clean
+    # // *--------------------------------------------------------------* //
 
     return eyeRes
 

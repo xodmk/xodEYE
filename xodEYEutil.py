@@ -645,7 +645,6 @@ def createSrcArray(eyeRootDir, sourceDir):
     imgSrcArray = []
 
     for d in range(len(sourceDir)):
-
         imgSeqArray = []
         sDirTmp = eyeRootDir + sourceDir[d]
         srcDir.append(sDirTmp)
@@ -655,6 +654,22 @@ def createSrcArray(eyeRootDir, sourceDir):
         imgSrcArray.extend(imgSeqArray)
 
     return imgSrcArray, srcDir
+
+def createMultiSrcArray(eyeRootDir, sourceDir):
+    multiSrcDir = []
+    multiSeqArray = []
+
+    for d in range(len(sourceDir)):
+        tempSeqArray = []
+        sDirTmp = eyeRootDir + sourceDir[d]
+        multiSrcDir.append(sDirTmp)
+        sortedDir = sorted(glob.glob(sDirTmp + '*'))
+        for s in sortedDir:
+            tempSeqArray.append(s.replace('\\', '/'))
+        tempSeqArray.extend(tempSeqArray)
+        multiSeqArray.append(tempSeqArray)
+
+    return multiSeqArray, multiSrcDir
 
 
 def scanImagDir(dirList, numFrames, xCtrl):

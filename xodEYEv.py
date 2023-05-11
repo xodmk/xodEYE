@@ -412,7 +412,7 @@ class XodEYEv:
         # // *--------------------------------------------------------------* //
 
     def xodSegmentEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx,
-                   fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm):
+                       fadeInOut, fwdRev, n_digit, eyeOutDir, maskSrcArrList='None', eyeOutFileNm='None'):
 
         ''' Tempo based linear effects
             numFrames - total video output frames
@@ -431,41 +431,49 @@ class XodEYEv:
 
         ctrl = 0  # linearly progress through src images
 
+        # process each Beat in sequence
         for i in range(xBeats):
             offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
-            self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, ctrl, effx,
-                               fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
-
+            self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, xFrames, ctrl, effx,
+                                   fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, maskSrcArrList, eyeOutFileNm)
+        # finally process 'tail' (leftover samples when xLength is not evenly divisible by xBeats)
         offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
-        self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, ctrl, effx,
-                           fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
+        self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, xFrames, ctrl, effx,
+                               fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, maskSrcArrList, eyeOutFileNm)
 
         return
 
-    def xodImgSegmentEFFX(self, imgFileList, numFrames, ctrl, effx, fadeInOut, fwdRev,
-                          n_offset, n_digits, imgOutDir, imgOutNm='None'):
+    def xodImgSegmentEFFX(self, imgFileList, numFrames, xFrames, ctrl, effx, fadeInOut, fwdRev,
+                          n_offset, n_digits, imgOutDir, maskSrcArrList='None', imgOutNm='None'):
 
-        ''' x-fades from clean <-> effx over numFrames
+        """ x-fades from clean <-> effx over numFrames
             imgFileList - list of full path file names, .jpg
             numFrames - length of output sequence written to out dir
             effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
                                       3 = cRotate ; 4 = sobelXY ; 5 sobelZ
             fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
             fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 2 = rev
-            imgOutDir - full path output directory '''
+            imgOutDir - full path output directory """
 
         # constant internal value equals number of implemented effects
-        numEffx = 2
+        numEffx = 5
 
         if imgOutNm != 'None':
-            imgLinEFFXNm = imgOutNm
+            imgSegEFFXNm = imgOutNm
         else:
-            imgLinEFFXNm = 'imgLinEFFX'
+            imgSegEFFXNm = 'imgSegEFFX'
+
+        numSegments = 0
+        # if maskSrcArrList != None:
+        if len(maskSrcArrList) > 11:
+            numSegments = 11
+        else:
+            numSegments = len(maskSrcArrList)
 
         if n_offset != 0:
             nextInc = n_offset
         else:
-            f_idx = eyeutil.getLatestIdx(imgOutDir, imgLinEFFXNm)
+            f_idx = eyeutil.getLatestIdx(imgOutDir, imgSegEFFXNm)
             nextInc = 1 + f_idx
 
         if ctrl == 1:
@@ -473,6 +481,7 @@ class XodEYEv:
         else:
             offset = 0
 
+        # // *--------------------------------------------------------------* //
         if effx == 0:
             effx = round((numEffx - 1) * random.random()) + 1
 
@@ -480,6 +489,14 @@ class XodEYEv:
             solarX = np.linspace(5.0, 255.0, numFrames)
         elif effx == 2:
             alphaX = np.linspace(0.0001, 1.0, numFrames)
+
+        if effx == 5:
+            znArr = []
+            mxFrames = np.zeros(numSegments)
+            for ii in range(numSegments):
+                mxFrames[ii] = xFrames * (round((numSegments - 1) * random.random()) + 1)
+                # znArr.append(eyeutil.cyclicZn(int(mxFrames[ii])))      # less one, then repeat zn[0] for full 360
+        # // *--------------------------------------------------------------* //
 
         if fadeInOut == 0:
             fadeInOut = round(random.random()) + 1
@@ -493,6 +510,7 @@ class XodEYEv:
             else:
                 img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
 
+            # // *--------------------------------------------------------------* //
             # linear select (no-effx) fwd <-> back
             if effx == 1:
                 resImg = xodeyesg.segmentEYEhist(img1)
@@ -500,7 +518,6 @@ class XodEYEv:
             elif effx == 2:
                 imgSegment = xodeyesg.segmentEYEhist(img1)
                 imgPIL2 = Image.fromarray(imgSegment)
-
                 if fadeInOut == 2:
                     alphaB = Image.blend(img1, imgPIL2, alphaX[i])
                 else:
@@ -510,19 +527,93 @@ class XodEYEv:
 
             elif effx == 3:
                 # reverse index linear
-                img1 = imio.imread(imgFileList[eyeutil.circ_idx((numFrames - 1 - i) + offset, len(imgFileList))])
-                # forward index linear
-                img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
+                maskSrcArr = []
 
-                resImg = xodeyesg.segmentEYEhist(img1)
+                # pdb.set_trace()
+                for j in range(numSegments):
+                    if fwdRev == 2:
+                        # reverse index linear
+                        # maskImgTmp = Image.open(maskSrcArrList[scanIdx][eyeutil.circ_idx((numFrames - 1 - i) + offset,
+                        #                                                 len(maskSrcArrList[scanIdx]))])
+                        maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx((numFrames - 1 - i) + offset,
+                                                                                    len(maskSrcArrList[j]))])
+                    else:
+                        # forward index linear
+                        maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx(i + offset,
+                                                                                    len(maskSrcArrList[j]))])
+                    maskSrcArr.append(maskImgTmp)
+
+                maskSrcArr = np.asarray(maskSrcArr)
+                resImg = xodeyesg.segmentEYEmask_FourSg(img1, maskSrcArr)
+
+            elif effx == 4:
+                # reverse index linear
+                maskSrcArr = []
+
+                scanIdxArr = np.zeros(numSegments)
+                if i % xFrames == 0:
+                    print('xodEYEv.py - scanIdxArr[]:')
+                    for ii in range(numSegments):
+                        scanIdxArr[ii] = round((numSegments - 1) * random.random())
+                        print('scanIdxArr[' + str(ii) + '] = ' + str(scanIdxArr[ii]))
+
+                # pdb.set_trace()
+                for j in range(numSegments):
+                    if fwdRev == 2:
+                        # reverse index linear
+                        # maskImgTmp = Image.open(maskSrcArrList[scanIdx][eyeutil.circ_idx((numFrames - 1 - i) + offset,
+                        #                                                 len(maskSrcArrList[scanIdx]))])
+                        maskImgTmp = imio.imread(maskSrcArrList[int(scanIdxArr[j])][eyeutil.circ_idx((numFrames - 1 - i) + offset,
+                                                                                    len(maskSrcArrList[int(scanIdxArr[j])]))])
+                    else:
+                        # forward index linear
+                        # maskImgTmp = Image.open(maskSrcArrList[scanIdx][eyeutil.circ_idx(i + offset,
+                        #                                                 len(maskSrcArrList[scanIdx]))])
+                        maskImgTmp = imio.imread(maskSrcArrList[int(scanIdxArr[j])][eyeutil.circ_idx(i + offset,
+                                                                                    len(maskSrcArrList[int(scanIdxArr[j])]))])
+                    maskSrcArr.append(maskImgTmp)
+
+                maskSrcArr = np.asarray(maskSrcArr)
+                resImg = xodeyesg.segmentEYEmask_FourSg(img1, maskSrcArr)
+
+            elif effx == 5:
+                # reverse index linear
+                maskSrcArr = []
+                angArr = []
+
+                # pdb.set_trace()
+                for j in range(numSegments):
+                    angArr[j] = (atan2(znArr[j][i % (mxFrames[j] - 1)].imag,
+                                       znArr[j][i % (mxFrames[j] - 1)].real)) * 180 / np.pi
+                    if int(round(random.random())):
+                        angArr[j] = -angArr[j]
+
+                    if fwdRev == 2:
+                        # reverse index linear
+                        maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx((numFrames - 1 - i) + offset,
+                                                                                    len(maskSrcArrList[j]))])
+                    else:
+                        # forward index linear
+                        maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx(i + offset,
+                                                                                    len(maskSrcArrList[j]))])
+
+                    maskImg_rotB = ndimage.rotate(maskImgTmp, angArr[j], reshape=False)
+                    maskImg_rotZ = eyeutil.cropZoom(maskImg_rotB, 2)
+                    # maskImg_rot = Image.fromarray(maskImg_rotZ)
+
+                    maskSrcArr.append(maskImg_rotZ)
+
+                maskSrcArr = np.asarray(maskSrcArr)
+                resImg = xodeyesg.segmentEYErotation_FourSg(img1, maskSrcArr)
+            # // *--------------------------------------------------------------* //
 
             zr = ''
-            for j in range(n_digits - len(str(nextInc))):
+            for k in range(n_digits - len(str(nextInc))):
                 zr += '0'
             strInc = zr + str(nextInc)
-            imgNormalizeNm = imgLinEFFXNm + strInc + '.jpg'
-            imgLinSelFull = imgOutDir + imgNormalizeNm
-            imio.imwrite(imgLinSelFull, resImg)
+            imgNormalizeNm = imgSegEFFXNm + strInc + '.jpg'
+            imgSegSelFull = imgOutDir + imgNormalizeNm
+            imio.imwrite(imgSegSelFull, resImg)
 
             nextInc += 1
 
