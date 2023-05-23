@@ -134,26 +134,37 @@ print('// //////////////////////////////////////////////////////////////// //')
 # // *---:: Select Program Control ::---*')
 # // *--------------------------------------------------------------* //
 
+# __:: Select EYE Mode ::__
+#EYE_MODE = 'XEYE_T'
+#EYE_MODE = 'XEYE_U'
+EYE_MODE = 'XEYE_V'
 
-# cntrlEYE = eyedata.xodEYEutil_dict["ResizeAll"]
-# cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpLin"]
-# cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpStride"]
 
-# cntrlEYE = eyedata.xodEYEv_dict["LinEFFX"]
-cntrlEYE = eyedata.xodEYEv_dict["SegEFFX"]
-# cntrlEYE = eyedata.xodEYEv_dict["AutoSeq"]
-# cntrlEYE = eyedata.xodEYEv_dict["ChainSeq"]
+if EYE_MODE == 'XEYE_T':
+    cntrlEYE = eyedata.xodEYEutil_dict["ResizeAll"]
+    # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpLin"]
+    # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpStride"]
 
-# cntrlEYE = eyedata.xodEYEu_dict["MskDualESP"]
-# cntrlEYE = 0
+elif EYE_MODE == 'XEYE_U':
+    cntrlEYE = eyedata.xodEYEu_dict["MskDualESP"]
+
+elif EYE_MODE == 'XEYE_V':
+    # cntrlEYE = eyedata.xodEYEv_dict["LinEFFX"]
+    cntrlEYE = eyedata.xodEYEv_dict["SegEFFX"]
+    # cntrlEYE = eyedata.xodEYEv_dict["AutoSeq"]
+    # cntrlEYE = eyedata.xodEYEv_dict["ChainSeq"]
+
+else:
+    cntrlEYE = 0
+
 
 srcSequence = 0
 xfadeSel = 0
 ctrlSel = 0
-effxSel = 5
+effxSel = 2
 cntrlOnsetDet = 0
 postProcess = 0
-cntrlRender = 1
+cntrlRender = 0
 
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -183,9 +194,11 @@ imgFormat = 'fjpg'
 
 # HD Standard video aspect ratio
 
-SzX = 1920
-SzY = 1080
-# SzY = 1920
+#SzX = 1920
+#SzY = 1080
+
+SzX = 1080
+SzY = 1920
 
 # SzX = 1920
 # SzY = 1280
@@ -218,9 +231,9 @@ SzY = 1080
 
 # earSrcNm = 'gorgulans_beatx01.wav'                    # ~7  sec = 220 frames
 # earSrcNm = 'antimatterbk06.wav'                     # ~14 sec = 434 frames
-# earSrcNm = 'dmttv-axon23.wav'                       # ~23
+earSrcNm = 'dmttv-axon23.wav'                       # ~23
 # earSrcNm = 'ebolaCallibriscian_uCCrhythm.wav'       # ~28
-earSrcNm = 'glamourgoat014_93bpm.wav'                 # 31
+# earSrcNm = 'glamourgoat014_93bpm.wav'                 # 31
 
 # earSrcNm = 'cabalisk_abstract.wav'                  # ~53
 # earSrcNm = 'cabalisk_spaced.wav'                    # ~1.49
@@ -238,28 +251,54 @@ earSrc = audioSrcDir + '/' + earSrcNm
 # xodEyeDir = currentDir + "/"    # ** extra / for this path
 xodEyeDir = dataSrcDir    # ** extra / for this path
 
-# Set Image Source Directory (/eyeSrcDir + ...)
-# sourceDir = ['/eye/8018x/xodMetalSphynxEye8018x/']
 
-sourceDir = ['/mov/spiceIndicator1080/']
+if EYE_MODE == 'XEYE_T':
+    cntrlEYE = eyedata.xodEYEutil_dict["ResizeAll"]
+    # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpLin"]
+    # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpStride"]
 
-auxSrcDir = ['/mov/bananaSkanks1080/', '/mov/wutangKungFuSrc1080/', '/mov/greenInfernoSrc1080/', '/mov/baliBarong1080/']
+elif EYE_MODE == 'XEYE_U':
+    # Set Image Source Directory (/eyeSrcDir + ...)
+    sourceDir = ['/eye/8018x/xodMetalSphynxEye8018x/']
 
-# sourceDir = ['src/eyeRes_EXP01_1920x/',
-#             'src/eyeRes_EXP05_1920x/']
+    # Set EYE Mask Directory (black & white high contrast img)
+    maskDir = eyeSrcDir + '/8018x/mask8018x/'
+    maskArray = sorted(glob.glob(maskDir + '*'))
 
-# *** must have / at end of variable ***
-# outDir = 'testout/cgbwCryptWitch8018/'
-outDir = '/testoutGR/'
+    # Set EYE Res Image Name
+    # ex: eyeOutFileName = 'metalwitch8018xI_'
+    eyeOutFileName = 'metalwitch8018xII_'
+
+    # Set EYE Res Directory
+    # *** must have / at end of variable ***
+    outDir = 'testout/metalwitch8018xII/'
+
+elif EYE_MODE == 'XEYE_V':
+    # sourceDir = ['/mov/spiceIndicator1080/']
+
+    # auxSrcDir = ['/mov/bananaSkanks1080/', '/mov/wutangKungFuSrc1080/',
+    #              '/mov/greenInfernoSrc1080/', '/mov/baliBarong1080/']
+
+    sourceDir = ['src/mov/metalwitch8018xI/',
+                 'src/mov/metalwitch8018xII/']
+
+    # Set EYE Res Image Name
+    # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
+    eyeOutFileName = 'metalwitch_EXP01_'
+
+    # *** must have / at end of variable ***
+    outDir = '/testoutGR/'
+
+else:
+    sourceDir = ['/eye/8018x/xodMetalSphynxEye8018x/']
+    eyeOutFileName = 'metalwitch8018xI_'
+    outDir = 'testout/metalwitch8018xI/'
 
 # *** FIXIT - check if outDir is Empty - halt ***
 # currently errors with: OverflowError: cannot convert float infinity to integer
 
-# eyeOutFileName = 'humanEyeESP_pinealResonator1080_'
-eyeOutFileName = 'eyeSegmentRes_EXP01_'
-
-maskDir = eyeSrcDir + '/8018x/mask8018x/'
-maskArray = sorted(glob.glob(maskDir+'*'))
+#maskDir = eyeSrcDir + '/8018x/mask8018x/'
+#maskArray = sorted(glob.glob(maskDir+'*'))
 
 eyeOutDir = dataOutDir + outDir
 os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
@@ -565,39 +604,47 @@ if cntrlEYE == 'xodChainSeq':
 
     print('\n// *--------------------------------------------------------------* //')
 
-# if srcSequence == 0:
-#
-#    #imgSeqArray = sorted(glob.glob(srcDir+'*'))   
-#    srcDir = []
-#    imgSeqArray = []
-#    for d in range(len(sourceDir)):
-#        sDirTmp = xodEyeDir+sourceDir[d]
-#        srcDir.append(sDirTmp)
-#        sortedDir = sorted(glob.glob(sDirTmp+'*'))
-#        for s in sortedDir:
-#            imgSeqArray.append(s.replace('\\', '/'))
-
 
 if srcSequence == 1:
     
     print('\n// *--------------------------------------------------------------* //')
-    print('// *---:: XODMKVIDEO - SRC-SEQ - LFO video scanner ::---*')
+    print('// *---:: XODMKVIDEO - SRC-SEQ - Pre-Scaling ::---*')
     print('// *--------------------------------------------------------------* //')
     
-    # LFO video scanner - scans video directories by LFO modulation
+    # if not os.path.isdir(xodEyeDir + sourceDir[0]):
+    #    print("Error Source Dir doesn't exist: " + str(sourceDir))
 
-    fsLfo = 500.0
-    TLfo = 1.0 / fsLfo
-    tbLFOGen = wavGen.xodWavGen(fsLfo, audioOutDir)
-    
-    testLFOfreq = 30
-    xCtrl = tbLFOGen(numFrames, testLFOfreq, 'sin', fs=fsLfo)
+    for d in sourceDir:
+        # print(str(i))
+        p = lambda i: os.path.isdir(xodEyeDir + d)
+        if p:
+            # print("Found src dir: " + xodEyeDir + sourceDir[i])
+            print("Found src dir: " + xodEyeDir + d)
+        else:
+            print("Error Source Dir doesn't exist: " + xodEyeDir + d)
 
-    # scale and quantize xCtrl input
-    for i in range(len(xCtrl)):
-        xCtrl[i] = int(len(srcDirList)*xCtrl[i])
+    imgSeqArray, imgSrcRawDir = eyeutil.createSrcArray(xodEyeDir, sourceDir)
 
-    imgSeqArray = eyeutil.scanImagDir(srcDirList, numFrames, xCtrl)
+    print('\nCreated imgSrcArray: - Array of .jpg file paths\n')
+
+    reSzX = SzX
+    reSzY = SzY
+
+    if ctrlSel == 1:
+        aspectCtrl = 'height'
+    elif ctrlSel == 2:
+        aspectCtrl = 'width'
+    else:
+        aspectCtrl = 'None'
+
+    eyeutil.xodResizeAll(imgSrcRawDir, reSzX, reSzY, imgSrcDir,
+                         imgOutNm=eyeOutFileName, keepAspect=aspectCtrl)
+
+    pdb.set_trace()
+    # pdb.set_trace()
+    for p in range(len(imgSrcDir)):
+        print(imgSrcDir[p])
+        print("# of images in directory: " + str(len(imgSeqArray[p])))
     
     print('\nCreated *imgSeqArray* - sequenced list of .jpg file paths')
     print('// *--------------------------------------------------------------* //')
@@ -651,7 +698,31 @@ elif srcSequence == 3:
 
     print('Created *imgAltArray* - sequenced list of .jpg file paths')
     print('// *--------------------------------------------------------------* //')
-    
+
+if srcSequence == 4:
+
+    print('\n// *--------------------------------------------------------------* //')
+    print('// *---:: XODMKVIDEO - SRC-SEQ - LFO video scanner ::---*')
+    print('// *--------------------------------------------------------------* //')
+
+    # LFO video scanner - scans video directories by LFO modulation
+
+    fsLfo = 500.0
+    TLfo = 1.0 / fsLfo
+    tbLFOGen = wavGen.xodWavGen(fsLfo, audioOutDir)
+
+    testLFOfreq = 30
+    xCtrl = tbLFOGen(numFrames, testLFOfreq, 'sin', fs=fsLfo)
+
+    # scale and quantize xCtrl input
+    for i in range(len(xCtrl)):
+        xCtrl[i] = int(len(srcDirList) * xCtrl[i])
+
+    imgSeqArray = eyeutil.scanImagDir(srcDirList, numFrames, xCtrl)
+
+    print('\nCreated *imgSeqArray* - sequenced list of .jpg file paths')
+    print('// *--------------------------------------------------------------* //')
+
 
 elif srcSequence == 5:
 
