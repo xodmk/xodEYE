@@ -255,18 +255,18 @@ class XodEYEv:
     # // *---::XODMKEYE - Image Linear Effects ::---*
     # // *--------------------------------------------------------------* //
 
-    def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, srcCrop,
+    def xodLinEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, srcReshape,
                    effx, fadeInOut, fwdRev, n_digit, eyeOutDir, eyeOutFileNm):
 
-        ''' Tempo based linear effects
-            numFrames - total video output frames
-            xFrames - frames per beat
-            srcCrop   - crop Source Images to Output dimensions
-            effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+        """ Tempo based linear effects
+            numFrames    - total video output frames
+            xFrames      - frames per beat
+            srcReshape   - crop Source Images to Output dimensions
+            effx         - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
                                       3 = cRotate ; 4 = sobelXY ; 5 sobelZ
-            fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-            fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
-            imgOutDir - full path output directory '''
+            fadeInOut    - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+            fwdRrev      - frame direction: 0 = random ; 1 = fwd ; 0 = rev
+            imgOutDir    - full path output directory """
 
         numFrames = int(ceil(xLength * framesPerSec))
         n_offset = 0
@@ -278,27 +278,27 @@ class XodEYEv:
 
         for i in range(xBeats):
             offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
-            self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, ctrl, effx, srcCrop,
+            self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, ctrl, effx, srcReshape,
                                fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
 
         offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
-        self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, ctrl, effx, srcCrop,
+        self.xodImgLinEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, ctrl, effx, srcReshape,
                            fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, eyeOutFileNm)
 
         return
 
-    def xodImgLinEFFX(self, imgFileList, numFrames, ctrl, effx, srcCrop, fadeInOut, fwdRev,
+    def xodImgLinEFFX(self, imgFileList, numFrames, ctrl, effx, srcReshape, fadeInOut, fwdRev,
                       n_offset, n_digits, imgOutDir, imgOutNm='None'):
 
-        ''' x-fades from clean <-> effx over numFrames
-            imgFileList - list of full path file names, .jpg
-            numFrames - length of output sequence written to out dir
-            srcCrop   - crop Source Images to Output dimensions
-            effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                      3 = cRotate ; 4 = sobelXY ; 5 sobelZ
-            fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-            fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 2 = rev
-            imgOutDir - full path output directory '''
+        """ x-fades from clean <-> effx over numFrames
+            imgFileList   - list of full path file names, .jpg
+            numFrames     - length of output sequence written to out dir
+            srcReshape    - crop Source Images to Output dimensions
+            effx          - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+                                          3 = cRotate ; 4 = sobelXY ; 5 sobelZ
+            fadeInOut     - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+            fwdRrev       - frame direction: 0 = random ; 1 = fwd ; 2 = rev
+            imgOutDir     - full path output directory """
 
         # constant internal value equals number of implemented effects
         numEffx = 5
@@ -341,8 +341,8 @@ class XodEYEv:
                 img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
 
             imgPIL1 = Image.fromarray(img1)
-            if srcCrop:
-                imgPIL1 = eyeutil.xodEyeCrop(imgPIL1, self.mstrSzX, self.mstrSzY, 0)
+            if srcReshape:
+                imgPIL1 = eyeutil.xodEyeReshape(imgPIL1, self.mstrSzX, self.mstrSzY, 0)
 
             # linear select (no-effx) fwd <-> back
             if effx == 1:
@@ -559,17 +559,13 @@ class XodEYEv:
                         #                                                 len(maskSrcArrList[scanIdx]))])
                         maskImgTmp = imio.imread(
                             maskSrcArrList[int(scanIdxArr[j])][eyeutil.circ_idx((numFrames - 1 - i) + offset,
-                                                                                len(maskSrcArrList[
-                                                                                        int(scanIdxArr[j])]))])
+                                                                                len(maskSrcArrList[int(scanIdxArr[j])]))])
                     else:
                         # forward index linear
                         # maskImgTmp = Image.open(maskSrcArrList[scanIdx][eyeutil.circ_idx(i + offset,
                         #                                                 len(maskSrcArrList[scanIdx]))])
                         maskImgTmp = imio.imread(maskSrcArrList[int(scanIdxArr[j])][eyeutil.circ_idx(i + offset,
-                                                                                                     len(maskSrcArrList[
-                                                                                                             int(
-                                                                                                                 scanIdxArr[
-                                                                                                                     j])]))])
+                                                                                    len(maskSrcArrList[int(scanIdxArr[j])]))])
                     maskSrcArr.append(maskImgTmp)
 
                 maskSrcArr = np.asarray(maskSrcArr)

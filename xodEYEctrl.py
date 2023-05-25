@@ -201,7 +201,7 @@ if EYE_MODE == 'XEYE_T':
     # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpStride"]
 
     srcSequence = 1     # 0: direct
-    srcCrop = 0
+    srcReshape = 0
     xfadeSel = 0
     ctrlSel = 0
     effxSel = 4
@@ -219,7 +219,7 @@ elif EYE_MODE == 'XEYE_U':
     cntrlEYE = eyedata.xodEYEu_dict["MskDualESP"]
 
     srcSequence = 0     # 0: direct
-    srcCrop = 0
+    srcReshape = 0
     xfadeSel = 0
     ctrlSel = 0
     effxSel = 1
@@ -262,7 +262,7 @@ elif EYE_MODE == 'XEYE_V':
     # cntrlEYE = eyedata.xodEYEv_dict["ChainSeq"]
 
     srcSequence = 0     # 0: direct
-    srcCrop = 1
+    srcReshape = 1
     xfadeSel = 0
     ctrlSel = 0
     effxSel = 0
@@ -314,7 +314,7 @@ else:
     cntrlEYE = 0
 
     srcSequence = 0     # 0: direct, 1: pre-scale
-    srcCrop = 0
+    srcReshape = 0
     xfadeSel = 0
     ctrlSel = 0
     effxSel = 0
@@ -361,6 +361,7 @@ print('\n// *--------------------------------------------------------------* //'
 print('// *---:: User Parameters ::---*')
 
 print('CTRL Src-Sequence  = '+str(srcSequence))
+print('CTRL Src-Reshape   = '+str(srcReshape))
 print('CTRL Eye-Algorithm = '+str(cntrlEYE))
 print('CTRL Post-Process  = '+str(postProcess))
 print('CTRL Render Video  = '+str(cntrlRender))
@@ -374,7 +375,6 @@ print('XodEYE Img Dimensions [X, Y]: --------- '+str(SzX)+' x '+str(SzY))
 # /////////////////////////////////////////////////////////////////////////////
 # *--- End: USER INTERFACE --*
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 
 print('\n// *--------------------------------------------------------------* //')
 print('// *---:: Audio - Load .wav file ::---*')
@@ -390,7 +390,6 @@ else:
     wavSrc_ch1 = wavSrc
     wavSrc_ch2 = 0
 
-
 # length of input signal - '0' => length of input .wav file
 print('Channel A Source Audio:') 
 print('wavSrc Channels: --------------------- '+str(len(np.shape(wavSrc))))
@@ -404,7 +403,6 @@ period = 1.0 / fs
 
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 
 if cntrlOnsetDet == 1:
     print('\n// *--------------------------------------------------------------* //')
@@ -486,7 +484,6 @@ print('\n// *--------------------------------------------------------------* //'
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-
 if cntrlEYE == 'xodRenameAll':
 
     print('\n// *--------------------------------------------------------------* //')
@@ -535,17 +532,9 @@ if cntrlEYE == 'convBMPtoJPG':
 
 # /////////////////////////////////////////////////////////////////////////////
 # #############################################################################
-# end : img pre-processing
-# #############################################################################
-# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-
-# /////////////////////////////////////////////////////////////////////////////
-# #############################################################################
 # begin : img Src Sequencing
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
 
 if srcSequence == 0:
     print('\n// *--------------------------------------------------------------* //')
@@ -555,33 +544,6 @@ if srcSequence == 0:
     imgSeqArray, imgSeqDir = eyeutil.createImgSeqArray(xodEyeDir, sourceDir)
     print('\nCreated imgSeqArray: - Array of .jpg file paths\n')
     # pdb.set_trace()
-
-
-# if srcSequence == 0:
-#     print('\n// *--------------------------------------------------------------* //')
-#     print('// *---:: XODMKEYE - Create Source Sequence [Basic] ::---*')
-#     print('// *--------------------------------------------------------------* //')
-#     # if not os.path.isdir(xodEyeDir + sourceDir[0]):
-#     #    print("Error Source Dir doesn't exist: " + str(sourceDir))
-#
-#     for d in sourceDir:
-#         # print(str(i))
-#         p = lambda i: os.path.isdir(xodEyeDir + d)
-#         if p:
-#             # print("Found src dir: " + xodEyeDir + sourceDir[i])
-#             print("Found src dir: " + xodEyeDir + d)
-#         else:
-#             print("Error Source Dir doesn't exist: " + xodEyeDir + d)
-#
-#     imgSeqArray, imgSrcDir = eyeutil.createSrcArray(xodEyeDir, sourceDir)
-#
-#     print('\nCreated imgSrcArray: - Array of .jpg file paths\n')
-#
-#     # pdb.set_trace()
-#     for p in range(len(imgSrcDir)):
-#         print(imgSrcDir[p])
-#         print("# of images in directory: " + str(len(imgSeqArray[p])))
-
 
 # FIXIT FIXIT
 elif srcSequence == 2:
@@ -645,16 +607,16 @@ if cntrlEYE == 'xodLinEFFX':
     print('// *---::XODMKVIDEOu - Image Linear EFFX xFade Algorithm::---*')
     print('// *--------------------------------------------------------------* //')
 
-    ''' Tempo based linear effects
-        numFrames - total video output frames
-        xBFrames  - frames per beat
-        srcCrop   - Crops the source images to output dimensions
-        SzX, SzY  - Output Image dimensions
-        effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                  3 = div ; 4 = sobelXY ; 5 sobelZ
-        fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-        fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
-        imgOutDir - full path output directory '''
+    """ Tempo based linear effects
+        numFrames   - total video output frames
+        xBFrames    - frames per beat
+        srcReshape  - Crops the source images to output dimensions
+        SzX, SzY    - Output Image dimensions
+        effx        - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+                                    3 = div ; 4 = sobelXY ; 5 sobelZ
+        fadeInOut   - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+        fwdRrev     - frame direction: 0 = random ; 1 = fwd ; 0 = rev
+        imgOutDir   - full path output directory """
 
     # eyeOutFileName = 'myOutputFileName'    # defined above
 
@@ -672,7 +634,7 @@ if cntrlEYE == 'xodLinEFFX':
 
     print('\nBegin Processing frames...')
 
-    eyev.xodLinEFFX(imgSeqArray, xLength, framesPerSec, xFrames, srcCrop, effx,
+    eyev.xodLinEFFX(imgSeqArray, xLength, framesPerSec, xFrames, srcReshape, effx,
                     fadeInOut, fwdRev, n_digits, eyeOutDir, eyeOutFileName)
 
     print('\nProcessed images output to the following directory:')
@@ -872,7 +834,7 @@ if cntrlEYE == 'xodFrameIntpLin':
     ctrl = ctrlSel
     # effx = 0
 
-    eyeutil.xodFrameInterpolate(imgSrcArray[0], xfadeFrames, ctrl, n_digits,
+    eyeutil.xodFrameInterpolate(imgSeqArray[0], xfadeFrames, ctrl, n_digits,
                                 eyeOutDir, eyeOutFileName)
 
     print('\nOutput all images to: ' + eyeOutDir)
@@ -925,7 +887,7 @@ if cntrlEYE == 'xodStrideIntp':
     # output dir where processed img files are stored:
     # eyeOutDir = 'myOutputDirName'    # defined above
     
-    #xfadeFrames = framesPerBeat
+    # xfadeFrames = framesPerBeat
     xfadeFrames = ctrlSel
     effx = effxSel
     
@@ -979,18 +941,13 @@ if cntrlEYE == 'xodImgXfade':
 
     XfadeNm = eyeOutFileName
     
-    #pdb.set_trace()
-    
     outXfadeDir = eyeOutDir
 
     # xfadeFrames = int(np.ceil(eyeClks.framesPerBeat))
     xfadeFrames = 3 * int(np.ceil(eyeClks.framesPerBeat))
-    
-    
-    
+
     eyeu.xodImgXfade(imgSeqArray, xLength, framesPerSec, xfadeFrames, n_digits,
                      outXfadeDir, imgOutNm=XfadeNm)
-    
 
     print('\nProcessed images output to the following directory:')
     print(outXfadeDir)
@@ -1005,7 +962,6 @@ if cntrlEYE == 'xodXfadeTelescopeI':
     print('// *--------------------------------------------------------------* //')
     print('// *---::XODMKEYE - Cross-fade Telescope I f::---*')
     print('// *--------------------------------------------------------------* //')
-
 
     xodXfadeTelescNm = eyeOutFileName
     xodXfadeTelescDir = eyeOutDir
@@ -1120,7 +1076,7 @@ if cntrlEYE == 'xodBSlothSwitch':
     print('\n')
     print('// *--------------------------------------------------------------* //')
     print('// *---::ODMKEYE - EYE Bananasloth Glitch 2 f::---*')
-    print('// *--------------------------------------------------------------* //')# // *********************************************************************** //
+    print('// *--------------------------------------------------------------* //')
 
     bSlothSwitchNm = eyeOutFileName
     bSlothSwitchDir = eyeOutDir
@@ -1183,7 +1139,7 @@ if cntrlEYE == 'xodFxSlothCultII':
     sLength = xLength
 
     eyeu.xodFxSlothCultII(imgSeqArray, maskArray, sLength, framesPerSec, xfadeFrames,
-                        n_digits, fxSlothCultDir, imgOutNm=fxSlothCultNm)
+                          n_digits, fxSlothCultDir, imgOutNm=fxSlothCultNm)
 
     print('\nProcessed images output to the following directory:')
     print(fxSlothCultDir)
@@ -1212,9 +1168,6 @@ if cntrlEYE == 'xodLfoParascope':
     # xfadeFrames = xLength
 
     sLength = xLength
-    
-    # pdb.set_trace()
-
 
     eyeu.xodLfoParascope(imgSeqArray, sLength, framesPerSec, xfadeFrames, n_digits,
                          fxLfoParascopeDir, imgOutNm=fxLfoParascopeNm)
@@ -1252,7 +1205,7 @@ if cntrlEYE == 'xodMskLfoParascope':
     # pdb.set_trace()
 
     eyeu.xodMskLfoParascope(imgSeqArray, sLength, framesPerSec, xfadeFrames, lfoDepth,
-                            n_digits,fxMskLfoParascopeDir, imgOutNm=fxMskLfoParascopeNm)
+                            n_digits, fxMskLfoParascopeDir, imgOutNm=fxMskLfoParascopeNm)
 
     print('\nProcessed images output to the following directory:')
     print(fxMskLfoParascopeDir)
@@ -1302,35 +1255,6 @@ if cntrlEYE == 'xodMskDualESP':
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-
-# // *********************************************************************** //
-# // *********************************************************************** //
-    
-# elif cntrlEYE == 'xodImgLinSel':
-#
-#     print('\n// *--------------------------------------------------------------* //')
-#     print('// *---::XODMKVIDEOu - Image Linear Select ::---*')
-#     print('// *--------------------------------------------------------------* //')
-#
-#     os.makedirs(eyeOutDir, exist_ok=True)
-#
-#     if len(imgSrcArray) > 1:
-#         print("WARNING: Multiple Directory Array - using only first entry")
-#
-#     #pdb.set_trace()
-#
-#     imgSeqArray = imgSrcArray[0]
-#
-#     eyev.xodImgLinSel(imgSeqArray, xLength, framesPerSec, ctrlSel,
-#                       n_digits, eyeOutDir, eyeOutFileName)
-#
-#     print('\nProcessed images output to the following directory:')
-#     print(eyeOutDir)
-#
-#     print('// *--------------------------------------------------------------* //')
-
-# // *********************************************************************** //
-
 if cntrlEYE == 'xodVLfoParascope':
     
     print('\n')
@@ -1355,7 +1279,7 @@ if cntrlEYE == 'xodVLfoParascope':
     # pdb.set_trace()
 
     eyev.xodVLfoParascope(imgSeqArray, sLength, framesPerSec, xfadeFrames, n_digits,
-                           fxVLfoParascopeDir, imgOutNm=fxVLfoParascopeNm)
+                          fxVLfoParascopeDir, imgOutNm=fxVLfoParascopeNm)
 
     print('\nProcessed images output to the following directory:')
     print(fxVLfoParascopeDir)
@@ -1384,8 +1308,6 @@ if cntrlEYE == 'xodVideoGoreXXZ01':
     # xfadeFrames = xLength
 
     sLength = xLength
-    
-    # pdb.set_trace()
 
     eyev.xodVideoGoreXXZ01(imgSeqArray, sLength, framesPerSec, xfadeFrames,
                            n_digits, videoGoreXXZ01Dir, videoGoreXXZ01Nm, inOrOut=0)
@@ -1412,8 +1334,8 @@ if cntrlEYE == 'imgInterlaceDir':
     print('// *---::ODMKEYE - imgInterlaceDir interlace files in directories::---*')
     print('// *--------------------------------------------------------------* //')
 
-    srcDir1 = xodEyeDir+imgInterlaceSrcDir1
-    srcDir2 = xodEyeDir+imgInterlaceSrcDir2
+    srcDir1 = xodEyeDir + imgInterlaceSrcDir1
+    srcDir2 = xodEyeDir + imgInterlaceSrcDir2
     
     interlaceNm = imgInterlaceReName
     
@@ -1434,18 +1356,16 @@ if cntrlEYE == 'imgInterLaceBpmDir':
     print('// *---::ODMKEYE - imgInterlaceDir interlace files in directories::---*')
     print('// *--------------------------------------------------------------* //')
 
-    srcDir1 = xodEyeDir+imgInterlaceSrcDir1
-    srcDir2 = xodEyeDir+imgInterlaceSrcDir2
+    srcDir1 = xodEyeDir + imgInterlaceSrcDir1
+    srcDir2 = xodEyeDir + imgInterlaceSrcDir2
     
     interlaceNm = imgInterlaceReName
     
     imgInterlaceBpmDir = xodEyeDir + imgInterlaceOutDir
     os.makedirs(imgInterlaceBpmDir, exist_ok=True)
-    
-    
+
     xfadeFrames = framesPerBeat
 
-    
     eyeutil.imgInterLaceBpmDir(srcDir1, srcDir2, imgInterlaceBpmDir, xfadeFrames,
                                reName=interlaceNm)
     
@@ -1531,7 +1451,7 @@ elif cntrlEYE == 3:
     # eyeOutDir = 'myOutputDirName'    # defined above
     imgTelescRnddir = xodEyeDir+eyeOutDir
     # If Dir does not exist, makedir:
-    os.makedirs( imgTelescRnddir, exist_ok=True)
+    os.makedirs(imgTelescRnddir, exist_ok=True)
 
     # For now, assume tlPeriod * tlItr matches final video length
     frameRate = 30
@@ -1578,12 +1498,13 @@ elif cntrlEYE == 3:
 #                newDimY -= hop_sz
             
             # scale image to new dimensions
-            imgItr = eyeutil.odmkEyeRescale(imgClone, newDimX, newDimY)
+            img2 = Image.fromarray(imgClone)
+            imgItr = img2.resize((newDimX, newDimY), resample=Image.BICUBIC)
             # region = (left, upper, right, lower)
             # subbox = (i + 1, i + 1, newDimX, newDimY)
             for j in range(SzY):
                 for k in range(SzX):
-                    if ((j > t+hop_sz) and (j < newDimY) and (k > t+hop_sz) and (k < newDimX)):
+                    if (j > t + hop_sz) and (j < newDimY) and (k > t + hop_sz) and (k < newDimX):
                         imgClone[j, k, :] = imgItr[j - t, k - t, :]
             nextInc += 1
             zr = ''

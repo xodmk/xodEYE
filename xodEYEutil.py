@@ -184,6 +184,15 @@ def samples2frames(numSamples, sr, framesPerSec):
     return int((numSamples/sr) * framesPerSec)
 
 
+def isValidPIL(file_path):
+    try:
+        img = Image.open(file_path)
+        img.verify()
+        return True
+    except (IOError, SyntaxError):
+        return False
+
+
 def xodRenameAll(srcDir, n_digits, dstName):
 
     try:
@@ -218,7 +227,193 @@ def grayConversion(image):
     return gray_img
 
 
-# // *********************************************************************** //
+# // *--------------------------------------------------------------* //
+# // *---:: XODMKEYE - concat all files in directory list::---*
+# // *--------------------------------------------------------------* //
+
+def convertJPGtoBMP(srcDir, outDir, reName='None'):
+    """ converts .jpg  images to .bmp images,
+        renames and concatenates all files into new arrays. """
+
+    imgFileList = []
+    imgFileList.extend(sorted(glob.glob(srcDir+'*.jpg')))
+
+    imgCount = len(imgFileList)
+    n_digits = int(ceil(np.log10(imgCount))) + 2
+    nextInc = 0 
+    for i in range(imgCount):
+        imgObj = imio.imread(imgFileList[i])
+        nextInc += 1
+        zr = ''
+        for j in range(n_digits - len(str(nextInc))):
+            zr += '0'
+        strInc = zr+str(nextInc)
+        imgNormalizeNm = reName+strInc+'.bmp'
+        imgNmFull = os.path.join(outDir+imgNormalizeNm)
+        imio.imwrite(imgNmFull, imgObj)
+    return
+
+
+def convertBMPtoJPG(srcDir, outDir, reName='None'):
+    """ converts .bmp  images to .jpg images,
+        renames and concatenates all files into new arrays. """
+
+    imgFileList = []
+    imgFileList.extend(sorted(glob.glob(srcDir+'*.bmp')))
+
+    imgCount = len(imgFileList)
+    n_digits = int(ceil(np.log10(imgCount))) + 2
+    nextInc = 0 
+    for i in range(imgCount):
+        imgObj = imio.imread(imgFileList[i])
+        nextInc += 1
+        zr = ''
+        for j in range(n_digits - len(str(nextInc))):
+            zr += '0'
+        strInc = zr+str(nextInc)
+        imgNormalizeNm = reName+strInc+'.jpg'
+        imgNmFull = os.path.join(outDir+imgNormalizeNm)
+        imio.imwrite(imgNmFull, imgObj)
+    return
+
+
+
+# // *--------------------------------------------------------------* //
+# // *---:: XODEYE Utility Reshaping Functions ::---*
+# // *--------------------------------------------------------------* //
+
+def cropZoom(img, zoom_factor, **kwargs):
+    SzY, SzX = img.shape[:2]
+
+    # ensure that the final image is >=, then crop
+    if SzX % 2 != 0:
+        SzXX = SzX + 1
+    else:
+        SzXX = SzX
+
+    if SzY % 2 != 0:
+        SzYY = SzY + 1
+    else:
+        SzYY = SzY
+
+    # width and height of the zoomed image
+    # zoomSzY = int(np.round(zoom_factor * SzYY))
+    # zoomSzX = int(np.round(zoom_factor * SzXX))
+
+    # for multichannel images we don't want to apply the zoom factor to the RGB
+    # dimension, so instead we create a tuple of zoom factors, one per array
+    # dimension, with 1's for any trailing dimensions after the width and height.
+    # *** (xxx,) * n => (xxx, xxx, ... xxx) repeated n times
+    # zoom_tuple = (zoom_factor,) * 2 + (1,) * (img.ndim - 2)
+    zoom_tuple = [zoom_factor, ] * 2 + [1, ] * (img.ndim - 2)  # outputs [2, 2, 1]
+
+    # bounding box of the clip region within the input array
+    # img[bottom:top, left:right] - crops image to range
+
+    deltaX = SzXX // 4
+    deltaY = SzYY // 4
+    halfSzX = SzXX // 2
+    halfSzY = SzYY // 2
+
+    # out = ndimage.zoom(img[deltaY:zoomSzY - deltaY, deltaX:zoomSzX - deltaX], zoom_tuple, **kwargs)
+    out = ndimage.zoom(img[deltaY:deltaY + halfSzY, deltaX:deltaX + halfSzX], zoom_tuple, **kwargs)
+
+    # `out` might still be slightly larger than `img` due to rounding, so
+    # trim off any extra pixels at the edges
+    if out.shape[0] != SzY or out.shape[1] != SzX:
+        out = out[0:SzY, 0:SzX]
+
+    # if zoom_factor == 1, just return the input array
+    else:
+        out = img
+    return out
+
+
+def xodEyeCrop(img, SzX, SzY, high):
+    """ crop img to SzX width x SzY height
+        high: crops from center top [good for heads] """
+
+    imgWidth = img.width
+    imgHeight = img.height
+
+    if imgWidth < SzX:
+        print('ERROR: imgWidth is smaller than crop width')
+        return 1
+    elif imgWidth > SzX:
+        cropLeft = floor((imgWidth - SzX) / 2)
+    else:
+        cropLeft = 0
+
+    if imgHeight < SzY:
+        print('ERROR: imgHeight is smaller than crop height')
+        return 1
+    elif imgHeight > SzY and high == 0:
+        cropTop = floor((imgHeight - SzY) / 2)
+    else:
+        cropTop = 0
+
+    # box=(left, upper, right, lower)
+    if high == 1:
+        imgCrop = img.crop((cropLeft, 0, cropLeft + SzX, SzY))
+    else:
+        imgCrop = img.crop((cropLeft, cropTop, cropLeft + SzX, cropTop + SzY))
+
+    return imgCrop
+
+
+def xodEyeReshape(img, SzX, SzY, high):
+    """ Reshape img to SzX width x SzY height
+        Detect closest dimension (X or Y) scale then crop or resize
+        img: assumes PIL image format
+        high: crops from center top [good for heads] """
+
+    srcWidth = img.width
+    srcHeight = img.height
+
+    expandX = 0
+    expandY = 0
+    compressX = 0
+    compressY = 0
+    xdiff = 0
+    ydiff = 0
+
+    # Find minimum dimension difference
+    if srcWidth < SzX:
+        expandX = 1
+        xdiff = SzX - srcWidth
+    elif srcWidth > SzX:
+        compressX = 1
+        xdiff = SzX - srcWidth
+        cropLeft = floor((srcWidth - SzX) / 2)
+
+    if srcHeight < SzY:
+        pexpandY = 1
+        ydiff = SzY - srcHeight
+    elif srcHeight > SzY and high == 0:
+        compressY = 1
+        ydiff = SzY - srcHeight
+        cropTop = floor((srcHeight - SzY) / 2)
+    elif srcHeight > SzY and high == 1:
+        compressY = 1
+        ydiff = SzY - srcHeight
+        cropTop = 0
+    else:
+        cropTop = 0
+
+
+
+
+    # box=(left, upper, right, lower)
+    if high == 1:
+        imgReshape = img.crop((cropLeft, 0, cropLeft + SzX, SzY))
+    else:
+        imgReshape = img.crop((cropLeft, cropTop, cropLeft + SzX, cropTop + SzY))
+
+    return imgReshape
+
+
+
+
 # // *********************************************************************** //
 
 def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
@@ -243,24 +438,24 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
         imgScaledOutNm = imgOutNm
     else:
         imgScaledOutNm = 'xodResizeAllOut'
-        
+
     # if keepAspect == width:
 
     imgFileList = []
-    imgFileList.extend(sorted(glob.glob(srcDir+'*')))
+    imgFileList.extend(sorted(glob.glob(srcDir + '*')))
     imgCount = len(imgFileList)
     # Find num digits required to represent max index
     n_digits = int(ceil(np.log10(imgCount))) + 2
     nextInc = 0
     for k in range(imgCount):
         srcImg = Image.open(imgFileList[k])
-        
+
         if keepAspect == 'width':
             scaleSzX = round(SzX)
-            scaleSzY = round(scaleSzX * srcImg.size[1]/srcImg.size[0])
+            scaleSzY = round(scaleSzX * srcImg.size[1] / srcImg.size[0])
         elif keepAspect == 'height':
             scaleSzY = round(SzY)
-            scaleSzX = round(scaleSzY * srcImg.size[0]/srcImg.size[1])
+            scaleSzX = round(scaleSzY * srcImg.size[0] / srcImg.size[1])
         else:
             scaleSzX = round(SzX)
             scaleSzY = round(SzY)
@@ -268,13 +463,13 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
         imgScaled = srcImg.resize((scaleSzX, scaleSzY), Image.BICUBIC)
         # auto increment output file name
         nextInc += 1
-        zr = ''    # reset lead-zero count to zero each itr
+        zr = ''  # reset lead-zero count to zero each itr
         for j in range(n_digits - len(str(nextInc))):
             zr += '0'
-        strInc = zr+str(nextInc)
-        imgScaledNm = imgScaledOutNm+strInc+'.jpg'
+        strInc = zr + str(nextInc)
+        imgScaledNm = imgScaledOutNm + strInc + '.jpg'
 
-        imgScaledFull = outDir+imgScaledNm
+        imgScaledFull = outDir + imgScaledNm
         imio.imwrite(imgScaledFull, imgScaled)
 
     return
@@ -301,103 +496,73 @@ def xodCropAll(srcDir, SzX, SzY, outDir, imgOutNm='None', high=0):
     if imgOutNm != 'None':
         imgCropOutNm = imgOutNm
     else:
-        imgCropOutNm = 'xodCropOut'        
-        
+        imgCropOutNm = 'xodCropOut'
+
     imgFileList = []
-    imgFileList.extend(sorted(glob.glob(srcDir+'*')))
+    imgFileList.extend(sorted(glob.glob(srcDir + '*')))
     imgCount = len(imgFileList)
     # Find num digits required to represent max index
     n_digits = int(ceil(np.log10(imgCount))) + 2
     nextInc = 0
     for k in range(imgCount):
         srcImg = Image.open(imgFileList[k])
-        
+
         imgCrop = xodEyeCrop(srcImg, SzX, SzY, high)
-        
+
         # pdb.set_trace()
-        
+
         # auto increment output file name
         nextInc += 1
-        zr = ''    # reset lead-zero count to zero each itr
+        zr = ''  # reset lead-zero count to zero each itr
         for j in range(n_digits - len(str(nextInc))):
             zr += '0'
-        strInc = zr+str(nextInc)
-        imgCropNm = imgCropOutNm+strInc+'.jpg'
+        strInc = zr + str(nextInc)
+        imgCropNm = imgCropOutNm + strInc + '.jpg'
 
-        imgCropFull = outDir+imgCropNm
+        imgCropFull = outDir + imgCropNm
         imio.imwrite(imgCropFull, imgCrop)
 
     return
 
 
-# // *--------------------------------------------------------------* //
-# // *---::ODMKEYE - concat all files in directory list::---*
-# // *--------------------------------------------------------------* //
+# // *********************************************************************** //
+# // *---:: XODEYE Utility Rotation Functions ::---*
+# // *********************************************************************** //
 
+def eyeRotate(img, ang, rotd=0):
+    """ example rotate image
+        img: PIL image object
+        ang = angle of rotation
+        rotd: rotation direction - 0 = clock, 1 = anti-clock """
 
-def convertJPGtoBMP(srcDir, outDir, reName='None'):
-    """ converts .jpg  images to .bmp images,
-        renames and concatenates all files into new arrays. """
+    SzX = img.width
+    SzY = img.height
 
-    imgFileList = []
-    imgFileList.extend(sorted(glob.glob(srcDir+'*.jpg')))
+    rotScale = 1.618
 
-    imgCount = len(imgFileList)
-    n_digits = int(ceil(np.log10(imgCount))) + 2
-    nextInc = 0 
-    for i in range(imgCount):
+    if rotd == 1:
+        ang = -ang
+    imgRot = img.resize((int(SzX * rotScale), int(SzY * rotScale)))
 
-        imgObj = imio.imread(imgFileList[i])        
-        
-        nextInc += 1
-        zr = ''
-        for j in range(n_digits - len(str(nextInc))):
-            zr += '0'
-        strInc = zr+str(nextInc)
+    # new center pixel
+    cenX = int(imgRot.width / 2)
+    cenY = int(imgRot.height / 2)
 
-        imgNormalizeNm = reName+strInc+'.bmp'
-        
-        imgNmFull = os.path.join(outDir+imgNormalizeNm)
-        imio.imwrite(imgNmFull, imgObj)
+    imgRot = imgRot.rotate(ang, resample=Image.BICUBIC)
+    imgRot = imgRot.crop((int(cenX - SzX / 2), int(cenY - SzY / 2),
+                          int(cenX + SzX / 2), int(cenY + SzY / 2)))
 
-    return
+    return imgRot
 
-
-def convertBMPtoJPG(srcDir, outDir, reName='None'):
-    """ converts .bmp  images to .jpg images,
-        renames and concatenates all files into new arrays. """
-
-    imgFileList = []
-    imgFileList.extend(sorted(glob.glob(srcDir+'*.bmp')))
-
-    imgCount = len(imgFileList)
-    n_digits = int(ceil(np.log10(imgCount))) + 2
-    nextInc = 0 
-    for i in range(imgCount):
-
-        imgObj = imio.imread(imgFileList[i])        
-        
-        nextInc += 1
-        zr = ''
-        for j in range(n_digits - len(str(nextInc))):
-            zr += '0'
-        strInc = zr+str(nextInc)
-
-        imgNormalizeNm = reName+strInc+'.jpg'
-        
-        imgNmFull = os.path.join(outDir+imgNormalizeNm)
-        imio.imwrite(imgNmFull, imgObj)
-
-    return
 
 # // *********************************************************************** //    
 # // *********************************************************************** //
-# // *---::ODMK img Src Sequencing func::---*
+# // *---:: XODEYE img Src Sequencing func::---*
 # // *********************************************************************** //
 # // *********************************************************************** //
 
 # // *--------------------------------------------------------------* //
-# // *---::ODMKEYE - repeat list of files in directory n times::---*
+# // *---:: XODEYE - repeat list of files in directory n times::---*
 # // *--------------------------------------------------------------* //
 
 
@@ -451,7 +616,7 @@ def repeatAllImg(srcDir, n, w=0, repeatDir='None', repeatName='None'):
 
 
 # // *--------------------------------------------------------------* //
-# // *---::ODMKEYE - concat all files in directory list::---*
+# // *---:: XODEYE - concat all files in directory list::---*
 # // *--------------------------------------------------------------* //
 
 
@@ -487,7 +652,7 @@ def concatAllDir(dirList, concatDir, reName):
 
 
 # // *--------------------------------------------------------------* //
-# // *---::ODMKEYE - interlace img files in two directoroies::---*
+# // *---:: XODEYE - interlace img files in two directoroies::---*
 # // *--------------------------------------------------------------* //
 
 def imgInterlaceDir(self, dir1, dir2, interlaceDir, reName):
@@ -538,7 +703,7 @@ def imgInterlaceDir(self, dir1, dir2, interlaceDir, reName):
 
 
 # // *--------------------------------------------------------------* //
-# // *---::ODMKEYE - interlace img files in two directoroies::---*
+# // *---:: XODEYE - interlace img files in two directoroies::---*
 # // *--------------------------------------------------------------* //
 
 def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
@@ -600,7 +765,7 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
 
 # // *********************************************************************** //    
 # // *********************************************************************** //
-# // *---:: XODMK img Src Sequencing func::---*
+# // *---:: XODEYE Utility img Src Sequencing func::---*
 # // *********************************************************************** //
 # // *********************************************************************** //
 
@@ -757,141 +922,13 @@ def pulseScanRnd(dirList, numFrames, pulseLen):
     return srcImgArray
 
 
-# // *********************************************************************** //    
-# // *********************************************************************** //
-# // *---::ODMK img Pre-processing func::---*
-# // *********************************************************************** //
-# // *********************************************************************** //
-
-
-def odmkEyeRescale(img, SzX, SzY):
-    # Rescale Image to SzW width and SzY height:
-    # img = Image.fromarray(array) ??  
-    img2 = Image.fromarray(img)
-    imgRescale = img2.resize((SzX, SzY), resample=Image.BICUBIC)
-    return imgRescale
-
-
-def cropZoom(img, zoom_factor, **kwargs):
-
-    SzY, SzX = img.shape[:2]
-    
-    # ensure that the final image is >=, then crop
-    if SzX % 2 != 0:
-        SzXX = SzX + 1
-    else:
-        SzXX = SzX
-        
-    if SzY % 2 != 0:
-        SzYY = SzY + 1
-    else:
-        SzYY = SzY
-
-    # width and height of the zoomed image
-    # zoomSzY = int(np.round(zoom_factor * SzYY))
-    # zoomSzX = int(np.round(zoom_factor * SzXX))
-
-    # for multichannel images we don't want to apply the zoom factor to the RGB
-    # dimension, so instead we create a tuple of zoom factors, one per array
-    # dimension, with 1's for any trailing dimensions after the width and height.
-    # *** (xxx,) * n => (xxx, xxx, ... xxx) repeated n times
-    # zoom_tuple = (zoom_factor,) * 2 + (1,) * (img.ndim - 2)
-    zoom_tuple = [zoom_factor, ] * 2 + [1, ] * (img.ndim - 2)    # outputs [2, 2, 1]
-
-    # bounding box of the clip region within the input array
-    # img[bottom:top, left:right] - crops image to range
-
-    deltaX = SzXX // 4
-    deltaY = SzYY // 4
-    halfSzX = SzXX // 2
-    halfSzY = SzYY // 2
-
-    # out = ndimage.zoom(img[deltaY:zoomSzY - deltaY, deltaX:zoomSzX - deltaX], zoom_tuple, **kwargs)
-    out = ndimage.zoom(img[deltaY:deltaY + halfSzY, deltaX:deltaX + halfSzX], zoom_tuple, **kwargs)
-
-    # `out` might still be slightly larger than `img` due to rounding, so
-    # trim off any extra pixels at the edges
-    if out.shape[0] != SzY or out.shape[1] != SzX:
-        out = out[0:SzY, 0:SzX]
-
-    # if zoom_factor == 1, just return the input array
-    else:
-        out = img
-    return out
-
-
-def xodEyeCrop(img, SzX, SzY, high):
-    """ crop img to SzX width x SzY height
-        high: crops from center top [good for heads] """
-
-    imgWidth = img.width
-    imgHeight = img.height
-
-    if imgWidth < SzX:
-        print('ERROR: imgWidth is smaller than crop width')
-        return 1
-    elif imgWidth > SzX:
-        cropLeft = floor((imgWidth - SzX) / 2)
-    else:
-        cropLeft = 0
-
-    if imgHeight < SzY:
-        print('ERROR: imgHeight is smaller than crop height')
-        return 1
-    elif imgHeight > SzY and high == 0:
-        cropTop = floor((imgHeight - SzY) / 2)
-    else:
-        cropTop = 0
-
-    # box=(left, upper, right, lower)
-    if high == 1:
-        imgCrop = img.crop((cropLeft, 0, cropLeft+SzX, SzY))
-    else:
-        imgCrop = img.crop((cropLeft, cropTop, cropLeft+SzX, cropTop+SzY))
-    
-    return imgCrop
-
-
-def eyeRotate(img, ang, rotd=0):
-    ''' example rotate image
-        img: PIL image object
-        ang = angle of rotation
-        rotd: rotation direction - 0 = clock, 1 = anti-clock
-        
-        '''
-    #eyeBox = img.getbbox()
-    
-    #pdb.set_trace()
-    
-    SzX = img.width
-    SzY = img.height
-    
-    rotScale = 1.618
-        
-    if rotd == 1:
-        ang = -ang
-    imgRot = img.resize(( int(SzX*rotScale), int(SzY*rotScale) ))
-    
-    # new center pixel
-    cenX = int(imgRot.width/2)
-    cenY = int(imgRot.height/2)
-    
-    
-    imgRot = imgRot.rotate(ang, resample=Image.BICUBIC)
-    imgRot = imgRot.crop((int(cenX-SzX/2), int(cenY-SzY/2), 
-                          int(cenX+SzX/2), int(cenY+SzY/2) ))
-        
-    return imgRot
-
-
-
 # XOD Rotate Color Function  
 def xodColorRotate(img, rotateStep):
-    ''' rotateStep [0:1] - linear mix from 100%r -> 100%b etc. 
+    """ rotateStep [0:1] - linear mix from 100%r -> 100%b etc.
         - red case:   (0%)r -> (33%)g -> (66%)b - (100%)r
         - green case: (0%)g -> (33%)b -> (66%)r - (100%)g
-        - blue case:  (0%)b -> (33%)r -> (66%)g - (100%)b
-    '''
+        - blue case:  (0%)b -> (33%)r -> (66%)g - (100%)b """
+
     if isinstance(img, Image.Image):
         
         if rotateStep < 0 or rotateStep > 1.0:
@@ -899,8 +936,6 @@ def xodColorRotate(img, rotateStep):
             return 1
 
         r,g,b = img.split()
-        
-        #pdb.set_trace()
         
         # case: 0% -> 33%
         if rotateStep < 0.333:
@@ -942,15 +977,8 @@ def xodColorRotate(img, rotateStep):
         return None
 
 
-# // *********************************************************************** //    
-# // *********************************************************************** //
-# // *---:: XODMK img Image Processing Func::---*
-# // *********************************************************************** //
-# // *********************************************************************** //
-
-
 # // *--------------------------------------------------------------* //
-# // *---::XODMKEYE - Linear interpolate between frames::---*
+# // *---:: XODEYE Utility Linear interpolate between frames::---*
 # // *--------------------------------------------------------------* //
 
 def xodFrameInterpolate(imgFileList, xfadeFrames, ctrl, n_digits,

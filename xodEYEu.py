@@ -2703,7 +2703,7 @@ class XodEYEu:
     # // *--------------------------------------------------------------* //
 
     def xodLfoParascope(self, imgFileList, xLength, framesPerSec, xfadeFrames,
-                         n_digits, imgOutDir, imgOutNm='None', inOrOut=0):
+                        n_digits, imgOutDir, imgOutNm='None', inOrOut=0):
         """ xodLfoParascope function """
 
         if imgOutNm != 'None':
@@ -2788,7 +2788,8 @@ class XodEYEu:
                         # newDimY -= hop_sz_mod
                         newDimY = int(newDimY)
 
-                    # print('*****LFO[t] = '+str(LFO[t])+', hop_sz_mod = '+str(hop_sz_mod)+', newDimX = '+str(newDimX)+', newDimY = '+str(newDimY))
+                    # print('*****LFO[t] = '+str(LFO[t])+', hop_sz_mod = '+str(hop_sz_mod)+',
+                    #       newDimX = '+str(newDimX)+', newDimY = '+str(newDimY))
 
                     # scale image to new dimensions
                     imgClone3 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
@@ -2916,7 +2917,8 @@ class XodEYEu:
                         # newDimY -= hop_sz_mod
                         newDimY = int(newDimY)
 
-                    # print('*****LFO[t] = '+str(LFO[t])+', hop_sz_mod = '+str(hop_sz_mod)+', newDimX = '+str(newDimX)+', newDimY = '+str(newDimY))
+                    # print('*****LFO[t] = '+str(LFO[t])+', hop_sz_mod = '+str(hop_sz_mod)+',
+                    #       newDimX = '+str(newDimX)+', newDimY = '+str(newDimY))
 
                     # scale image to new dimensions
                     imgClone3 = Image.open(imgFileList[round(numImg*random.random()) % numImg])
@@ -2984,7 +2986,7 @@ class XodEYEu:
         # imgBpTscAlt = Image.open(mskFileList[round(numImg * random.random()) % numMsk])
 
         if effx > 2:
-            imgBpTscX   = Image.open(imgFileList[round(numImg*random.random()) % numImg])
+            imgBpTscX = Image.open(imgFileList[round(numImg*random.random()) % numImg])
 
         SzX = imgBpTscOut.width
         SzY = imgBpTscOut.height
@@ -3139,7 +3141,7 @@ class XodEYEu:
 
                     # scale image to new dimensions
                     if fx == 0:
-                        newXYbox0 = ( int(focal[0] - SzX/2), int(focal[1] - SzY/2) )
+                        newXYbox0 = (int(focal[0] - SzX/2), int(focal[1] - SzY/2))
                         imgBpTsc1.paste(imgClone1, box=newXYbox0, mask=imgMsk1)
                         imgBpTsc2.paste(imgClone4, box=newXYbox0, mask=imgMsk2)
                         imgBpTsc3.paste(imgClone4, box=newXYbox0)
@@ -3149,7 +3151,7 @@ class XodEYEu:
                         imgItr2 = imgClone2.resize((newDimX, newDimY), resample=Image.BICUBIC)
                         imgItr3 = imgClone3.resize((newDimX, newDimY), resample=Image.BICUBIC)
                         imgItr4 = imgClone4.resize((newDimX, newDimY), resample=Image.BICUBIC)
-                        newXYbox0 = ( int(focal[0] - newDimX/2), int(focal[1] - newDimY/2) )
+                        newXYbox0 = (int(focal[0] - newDimX/2), int(focal[1] - newDimY/2))
                         imgMsk3 = imgMsk2.resize((newDimX, newDimY), resample=Image.BICUBIC)
                         imgBpTsc1.paste(imgItr2, box=newXYbox0, mask=imgMsk3)
                         imgBpTsc2.paste(imgItr1, box=newXYbox0, mask=imgMsk3)
@@ -3161,8 +3163,8 @@ class XodEYEu:
                         imgClone3 = imgBpTscOut.copy()
                         imgItr3 = imgClone3.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
                         imgItr4 = imgClone4.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
-                        newXYbox0 = ( int(focal[0] - newDimX/2), int(focal[1] - newDimY/2) )
-                        newXYbox1 = ( int(focal[0] - newDimX2/2), int(focal[1] - newDimY2/2) )
+                        newXYbox0 = (int(focal[0] - newDimX/2), int(focal[1] - newDimY/2))
+                        newXYbox1 = (int(focal[0] - newDimX2/2), int(focal[1] - newDimY2/2))
                         imgMsk3 = imgMsk2.resize((newDimX, newDimY), resample=Image.BICUBIC)
                         imgMsk4 = imgMsk3.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
                         imgBpTsc1.paste(imgItr2, box=newXYbox0, mask=imgMsk3)
@@ -3175,9 +3177,9 @@ class XodEYEu:
                         imgItr3 = imgClone4.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
                         imgItr4 = imgClone3.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
                         imgItr5 = imgClone5.resize((newDimX3, newDimY3), resample=Image.BICUBIC)
-                        newXYbox0 = ( int(focal[0] - newDimX/2), int(focal[1] - newDimY/2) )
-                        newXYbox1 = ( int(focal[0] - newDimX2/2), int(focal[1] - newDimY2/2) )
-                        newXYbox2 = ( int(focal[0] - newDimX3/2), int(focal[1] - newDimY2/2) )
+                        newXYbox0 = (int(focal[0] - newDimX/2), int(focal[1] - newDimY/2))
+                        newXYbox1 = (int(focal[0] - newDimX2/2), int(focal[1] - newDimY2/2))
+                        newXYbox2 = (int(focal[0] - newDimX3/2), int(focal[1] - newDimY2/2))
                         imgMsk3 = imgMsk1.resize((newDimX, newDimY), resample=Image.BICUBIC)
                         imgMsk4 = imgMsk2.resize((newDimX2, newDimY2), resample=Image.BICUBIC)
                         imgMsk5 = imgMsk3.resize((newDimX3, newDimY3), resample=Image.BICUBIC)
