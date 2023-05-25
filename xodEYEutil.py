@@ -15,46 +15,35 @@
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # *****************************************************************************
 
-import os, sys
-import glob, shutil
+import os
+# import sys
+import glob
+import shutil
 from math import floor, ceil
 import random
-import colorsys
 import numpy as np
 import scipy as sp
 from scipy.signal import convolve2d
 import imageio as imio
 from scipy import ndimage
-#from scipy import misc
 from PIL import Image
 from PIL import ImageOps
-#from PIL import ImageEnhance
+# from PIL import ImageEnhance
 
 
 # temp python debugger - use >>>pdb.set_trace() to set break
 import pdb
 
 
-
-# // *---------------------------------------------------------------------* //
-#clear_all()
-
-# // *---------------------------------------------------------------------* //
-
 # /////////////////////////////////////////////////////////////////////////////
 # #############################################################################
-# begin : function definitions
+# begin : utility function definitions
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 
-# -----------------------------------------------------------------------------
-# utility func
-# -----------------------------------------------------------------------------
-
-
 def cyclicZn(n):
-    ''' calculates the Zn roots of unity '''
+    """ calculates the Zn roots of unity """
     cZn = np.zeros((n, 1))*(0+0j)    # column vector of zero complex values
     for k in range(n):
         # z(k) = e^(((k)*2*pi*1j)/n)        # Define cyclic group Zn points
@@ -64,28 +53,31 @@ def cyclicZn(n):
 
 
 def quarterCos(n):
-    ''' returns a quarter period cosine wav of length n '''
+    """ returns a quarter period cosine wav of length n """
     t = np.linspace(0, np.pi/4, n)
-    qtrcos = np.zeros((n))
+    qtrcos = np.zeros(n)
     for j in range(n):
         qtrcos[j] = sp.cos(t[j])
     return qtrcos
 
+
 def randomIdx(k):
-    '''returns a random index in range 0 - k-1'''
+    """ returns a random index in range 0 - k-1 """
     randIdx = round(random.random()*(k-1))
     return randIdx
 
+
 def randomIdxArray(n, k):
-    '''for an array of k elements, returns a list of random elements
-       of length n (n integers rangin from 0:k-1)'''
+    """ for an array of k elements, returns a list of random elements
+       of length n (n integers rangin from 0:k-1) """
     randIdxArray = []
     for i in range(n):
         randIdxArray.append(round(random.random()*(k-1)))
     return randIdxArray
-      
+
+
 def randomPxlLoc(SzX, SzY):
-    '''Returns a random location in a 2D array of SzX by SzY'''
+    """ Returns a random location in a 2D array of SzX by SzY """
     randPxlLoc = np.zeros(2)
     randPxlLoc[0] = int(round(random.random()*(SzX-1)))
     randPxlLoc[1] = int(round(random.random()*(SzY-1)))
@@ -108,7 +100,7 @@ class odmkWeightRnd:
 
 
 class odmkFibonacci:
-    ''' Iterator that generates numbers in the Fibonacci sequence '''
+    """ Iterator that generates numbers in the Fibonacci sequence """
 
     def __init__(self, max):
         self.max = max
@@ -127,7 +119,7 @@ class odmkFibonacci:
 
 
 def genFileList(dirList):
-    ''' Returns a list of image file names '''
+    """ Returns a list of image file names """
     imgFileList = []
     for i in range(len(dirList)):
         imgFileList.extend(sorted(glob.glob(dirList[i]+'*')))
@@ -139,7 +131,7 @@ def getLatestIdx(imgDir, imgNm):
     imagelist = glob.glob(imgDir+'/*.jpg')
     for s in imagelist:
         f_list.append(s.replace('\\', '/'))
-    #f_list = glob.glob(imgDir+'/*.jpg')
+    # f_list = glob.glob(imgDir+'/*.jpg')
     if not f_list:
         f_idx = 0
     else:
@@ -153,9 +145,7 @@ def getLatestIdx(imgDir, imgNm):
 
 # generator - use next()
 def genNextFilename(imgFileList):
-    """
-    generates an incrementing sequence of filenames from imgFileList
-    """
+    """ generates an incrementing sequence of filenames from imgFileList """
     j = 0
     while True:
         file_name = imgFileList[j]
@@ -166,20 +156,15 @@ def genNextFilename(imgFileList):
         yield file_name
 
 
-
 def genRandFilename(imgFileList):
-    """
-    generates a sequence of randomly selected filenames from imgFileList
-    """
+    """ generates a sequence of randomly selected filenames from imgFileList """
     while True:
         file_name = imgFileList[randomIdx(len(imgFileList))]
         yield file_name
                 
 
 def genRandBurstFilename(imgFileList, burst):
-    """
-    generates a sequence of randomly selected filenames from imgFileList
-    """
+    """ generates a sequence of randomly selected filenames from imgFileList """
     while True:
         startIdx = randomIdx(len(imgFileList))
         for burstIdx in range(burst):
@@ -226,19 +211,21 @@ def xodRenameAll(srcDir, n_digits, dstName):
 
     return
 
+
 def grayConversion(image):
     grayValue = 0.07 * image[:, :, 2] + 0.72 * image[:, :, 1] + 0.21 * image[:, :, 0]
     gray_img = grayValue.astype(np.uint8)
     return gray_img
 
+
 # // *********************************************************************** //
 # // *********************************************************************** //
 
 def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
-    ''' resizes all .jpg files in srcDir 
-        keepAspect: 
+    """ resizes all .jpg files in srcDir
+        keepAspect:
             width = uses SzX & auto calculates Y to preserve aspect ratio
-            height = uses SzY & auto calculates X '''
+            height = uses SzY & auto calculates X """
 
     try:
         next(os.scandir(srcDir))
@@ -252,16 +239,13 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
         print('Output directory is does not exist')
         return False
 
-
     if imgOutNm != 'None':
         imgScaledOutNm = imgOutNm
     else:
         imgScaledOutNm = 'xodResizeAllOut'
         
-    #if keepAspect == width:
-        
+    # if keepAspect == width:
 
-        
     imgFileList = []
     imgFileList.extend(sorted(glob.glob(srcDir+'*')))
     imgCount = len(imgFileList)
@@ -280,8 +264,7 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
         else:
             scaleSzX = round(SzX)
             scaleSzY = round(SzY)
-        
-        
+
         imgScaled = srcImg.resize((scaleSzX, scaleSzY), Image.BICUBIC)
         # auto increment output file name
         nextInc += 1
@@ -298,10 +281,10 @@ def xodResizeAll(srcDir, SzX, SzY, outDir, imgOutNm='None', keepAspect='None'):
 
 
 def xodCropAll(srcDir, SzX, SzY, outDir, imgOutNm='None', high=0):
-    ''' crops all .jpg files in srcDir. 
-        high: 
+    """ crops all .jpg files in srcDir.
+        high:
             0 = crops horizontally & vertically centered
-            1 = crops from top==0, horizontally centered '''
+            1 = crops from top==0, horizontally centered """
 
     try:
         next(os.scandir(srcDir))
@@ -353,14 +336,11 @@ def xodCropAll(srcDir, SzX, SzY, outDir, imgOutNm='None', high=0):
 
 
 def convertJPGtoBMP(srcDir, outDir, reName='None'):
-    ''' converts .jpg  images to .bmp images,
-        renames and concatenates all files into new arrays. '''
-
+    """ converts .jpg  images to .bmp images,
+        renames and concatenates all files into new arrays. """
 
     imgFileList = []
     imgFileList.extend(sorted(glob.glob(srcDir+'*.jpg')))
-
-    #pdb.set_trace()
 
     imgCount = len(imgFileList)
     n_digits = int(ceil(np.log10(imgCount))) + 2
@@ -383,23 +363,18 @@ def convertJPGtoBMP(srcDir, outDir, reName='None'):
     return
 
 
-
 def convertBMPtoJPG(srcDir, outDir, reName='None'):
-    ''' converts .bmp  images to .jpg images,
-        renames and concatenates all files into new arrays. '''
-
+    """ converts .bmp  images to .jpg images,
+        renames and concatenates all files into new arrays. """
 
     imgFileList = []
     imgFileList.extend(sorted(glob.glob(srcDir+'*.bmp')))
-
-    #pdb.set_trace()
 
     imgCount = len(imgFileList)
     n_digits = int(ceil(np.log10(imgCount))) + 2
     nextInc = 0 
     for i in range(imgCount):
 
-        
         imgObj = imio.imread(imgFileList[i])        
         
         nextInc += 1
@@ -425,13 +400,14 @@ def convertBMPtoJPG(srcDir, outDir, reName='None'):
 # // *---::ODMKEYE - repeat list of files in directory n times::---*
 # // *--------------------------------------------------------------* //
 
+
 def repeatAllImg(srcDir, n, w=0, repeatDir='None', repeatName='None'):
-    ''' repeats a list of .jpg images in srcDir n times,
+    """ repeats a list of .jpg images in srcDir n times,
         duplicates and renames all files in the source directory.
         The new file names are formatted for processing with ffmpeg
         if w = 1, write files into output directory.
         if concatDir specified, change output dir name.
-        if concatName specified, change output file names'''
+        if concatName specified, change output file names"""
 
     # check write condition, if w=0 ignore outDir
     if w == 0 and repeatDir != 'None':
@@ -453,7 +429,6 @@ def repeatAllImg(srcDir, n, w=0, repeatDir='None', repeatName='None'):
     imgFileList.extend(sorted(glob.glob(srcDir+'*')))
     imgCount = len(imgFileList)
 
-
     imgRepeatSrcList = []
     imgCount = len(imgFileList) * n
     n_digits = int(ceil(np.log10(imgCount))) + 2
@@ -472,26 +447,25 @@ def repeatAllImg(srcDir, n, w=0, repeatDir='None', repeatName='None'):
             imgSrcTemp = imio.imread(imgFileList[j])
             imio.imwrite(imgRepeatNmFull, imgSrcTemp)
 
-    #return imgRepeatSrcList
     return
+
 
 # // *--------------------------------------------------------------* //
 # // *---::ODMKEYE - concat all files in directory list::---*
 # // *--------------------------------------------------------------* //
 
+
 def concatAllDir(dirList, concatDir, reName):
-    ''' Takes a list of directories containing .jpg /.bmp images,
+    """ Takes a list of directories containing .jpg /.bmp images,
         renames and concatenates all files into new arrays.
         The new file names are formatted for processing with ffmpeg
         if w = 1, write files into output directory.
         if concatDir specified, change output dir name.
-        if concatName specified, change output file names'''
+        if concatName specified, change output file names"""
             
     imgFileList = []
     for i in range(len(dirList)):
-        imgFileList.extend(sorted(glob.glob(dirList[i]+'*')))                
-            
-    #pdb.set_trace()
+        imgFileList.extend(sorted(glob.glob(dirList[i]+'*')))
 
     imgCount = len(imgFileList)
     n_digits = int(ceil(np.log10(imgCount))) + 2
@@ -502,16 +476,11 @@ def concatAllDir(dirList, concatDir, reName):
         for j in range(n_digits - len(str(nextInc))):
             zr += '0'
         strInc = zr+str(nextInc)
-
         imgNormalizeNm = reName+strInc+'.jpg'
-
         currentNm = os.path.split(imgFileList[i])[1]
-        
         shutil.copy(imgFileList[i], concatDir)
         currentFile = os.path.join(concatDir+currentNm)
-        
         imgConcatNmFull = os.path.join(concatDir+imgNormalizeNm)
-        
         os.rename(currentFile, imgConcatNmFull)
 
     return
@@ -522,19 +491,17 @@ def concatAllDir(dirList, concatDir, reName):
 # // *--------------------------------------------------------------* //
 
 def imgInterlaceDir(self, dir1, dir2, interlaceDir, reName):
-    ''' Takes two directories containing .jpg /.bmp images,
-        renames and interlaces all files into output dir. 
-        The shortest directory length determines output (min length)'''
-
+    """ Takes two directories containing .jpg /.bmp images,
+        renames and interlaces all files into output dir.
+        The shortest directory length determines output (min length)"""
 
     imgFileList1 = []
     imgFileList2 = []
-    
 
-    if self.imgFormat=='fjpg':
+    if self.imgFormat == 'fjpg':
         imgFileList1.extend(sorted(glob.glob(dir1+'*.jpg')))
         imgFileList2.extend(sorted(glob.glob(dir2+'*.jpg')))    
-    elif self.imgFormat=='fbmp':
+    elif self.imgFormat == 'fbmp':
         imgFileList1.extend(sorted(glob.glob(dir1+'*.bmp')))
         imgFileList2.extend(sorted(glob.glob(dir2+'*.bmp')))     
 
@@ -549,12 +516,12 @@ def imgInterlaceDir(self, dir1, dir2, interlaceDir, reName):
             zr += '0'
         strInc = zr+str(nextInc)
         # print('strInc = '+str(strInc))
-        if self.imgFormat=='fjpg':
+        if self.imgFormat == 'fjpg':
             imgNormalizeNm = reName+strInc+'.jpg' 
-        elif self.imgFormat=='fbmp':
+        elif self.imgFormat == 'fbmp':
             imgNormalizeNm = reName+strInc+'.bmp'
-        #imgConcatNmFull = concatDir+imgNormalizeNm
-        if i%2 == 1: 
+        # imgConcatNmFull = concatDir+imgNormalizeNm
+        if i % 2 == 1:
             currentNm = os.path.split(imgFileList1[dirIdx])[1]
             shutil.copy(imgFileList1[dirIdx], interlaceDir)
             currentFile = os.path.join(interlaceDir+currentNm)
@@ -566,10 +533,8 @@ def imgInterlaceDir(self, dir1, dir2, interlaceDir, reName):
         
         imgInterlaceDirNmFull = os.path.join(interlaceDir+imgNormalizeNm)
         os.rename(currentFile, imgInterlaceDirNmFull)
-        #pdb.set_trace()
 
     return
-
 
 
 # // *--------------------------------------------------------------* //
@@ -577,18 +542,18 @@ def imgInterlaceDir(self, dir1, dir2, interlaceDir, reName):
 # // *--------------------------------------------------------------* //
 
 def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
-    ''' Takes two directories containing .jpg /.bmp images,
-        renames and interlaces all files into output dir. 
-        xfadeFrames specifies n frames for each switch 
-        length is determined by 2 * largest directory '''
+    """ Takes two directories containing .jpg /.bmp images,
+        renames and interlaces all files into output dir.
+        xfadeFrames specifies n frames for each switch
+        length is determined by 2 * largest directory """
 
     imgFileList1 = []
     imgFileList2 = []
 
-    if self.imgFormat=='fjpg':
+    if self.imgFormat == 'fjpg':
         imgFileList1.extend(sorted(glob.glob(dir1+'*.jpg')))
         imgFileList2.extend(sorted(glob.glob(dir2+'*.jpg')))    
-    elif self.imgFormat=='fbmp':
+    elif self.imgFormat == 'fbmp':
         imgFileList1.extend(sorted(glob.glob(dir1+'*.bmp')))
         imgFileList2.extend(sorted(glob.glob(dir2+'*.bmp')))     
 
@@ -609,13 +574,13 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
             zr += '0'
         strInc = zr+str(nextInc)
         # print('strInc = '+str(strInc))
-        if self.imgFormat=='fjpg':
+        if self.imgFormat == 'fjpg':
             imgNormalizeNm = reName+strInc+'.jpg' 
-        elif self.imgFormat=='fbmp':
+        elif self.imgFormat == 'fbmp':
             imgNormalizeNm = reName+strInc+'.bmp'
-        #imgConcatNmFull = concatDir+imgNormalizeNm
+        # imgConcatNmFull = concatDir+imgNormalizeNm
         if i % xfadeFrames == 0:
-            sel = not(sel)
+            sel = not sel
         if sel == 0: 
             currentNm = os.path.split(imgFileList1[dirIdx1 % list1Count])[1]
             shutil.copy(imgFileList1[dirIdx1 % list1Count], interlaceDir)
@@ -629,7 +594,6 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
         
         imgInterlaceDirNmFull = os.path.join(interlaceDir+imgNormalizeNm)
         os.rename(currentFile, imgInterlaceDirNmFull)
-        #pdb.set_trace()
 
     return
 
@@ -639,6 +603,43 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
 # // *---:: XODMK img Src Sequencing func::---*
 # // *********************************************************************** //
 # // *********************************************************************** //
+
+
+def createImgSeqArray(xodEyeDir, inputSrcDir):
+    for sd in inputSrcDir:
+        # print(str(i))
+        p = lambda i: os.path.isdir(xodEyeDir + sd)
+        if p:
+            # print("Found src dir: " + xodEyeDir + sourceDir[i])
+            print("Found src dir: " + xodEyeDir + sd)
+        else:
+            print("Error Source Dir doesn't exist: " + xodEyeDir + sd)
+    imgSeqArray, imgSeqDir = createSrcArray(xodEyeDir, inputSrcDir)
+    print('\nCreated imgSeqArray: - Array of .jpg file paths\n')
+    # pdb.set_trace()
+    for q in range(len(imgSeqDir)):
+        print(imgSeqDir[q])
+        print("# of images in directory: " + str(len(imgSeqArray[q])))
+    return imgSeqArray, imgSeqDir
+
+
+def createMultiImgSeqArray(xodEyeDir, inputSrcDir):
+    for sd in inputSrcDir:
+        # print(str(i))
+        p = lambda i: os.path.isdir(xodEyeDir + sd)
+        if p:
+            # print("Found src dir: " + xodEyeDir + sourceDir[i])
+            print("Found src dir: " + xodEyeDir + sd)
+        else:
+            print("Error Source Dir doesn't exist: " + xodEyeDir + sd)
+    multiSeqArray, multiSeqDir = createMultiSrcArray(xodEyeDir, inputSrcDir)
+    print('\nCreated imgSrcArray: - Array of .jpg file paths\n')
+    # pdb.set_trace()
+    for q in range(len(multiSeqDir)):
+        print(multiSeqDir[q])
+        print("# of images in directory: " + str(len(multiSeqArray[q])))
+    return multiSeqArray, multiSeqDir
+
 
 def createSrcArray(eyeRootDir, sourceDir):
     srcDir = []
@@ -654,6 +655,7 @@ def createSrcArray(eyeRootDir, sourceDir):
         imgSrcArray.extend(imgSeqArray)
 
     return imgSrcArray, srcDir
+
 
 def createMultiSrcArray(eyeRootDir, sourceDir):
     multiSrcDir = []
@@ -673,14 +675,12 @@ def createMultiSrcArray(eyeRootDir, sourceDir):
 
 
 def scanImagDir(dirList, numFrames, xCtrl):
-    ''' scans image directory selection with xCtrl value
-        dirList is a 2D list of n of (variable length list) 
-        output is a list sequence of length numFrames '''
+    """ scans image directory selection with xCtrl value
+        dirList is a 2D list of n of (variable length list)
+        output is a list sequence of length numFrames """
     
-    #genObjx = scanImgDirGen
-    
-        # check xCtrl is bounded by len(dirList)
-    if (len(xCtrl) != numFrames):
+    # check xCtrl is bounded by len(dirList)
+    if len(xCtrl) != numFrames:
         print('ERROR: length of xCtrl must equal length of src dir')
         return
         
@@ -691,42 +691,35 @@ def scanImagDir(dirList, numFrames, xCtrl):
         # print('Length of imgArray'+str(i)+' = '+str(len(tmpArray)))
         imgArray[i] = tmpArray
 
-    #pdb.set_trace()
-    
-    
     srcImgArray = []
     for i in range(numFrames):
 
-        if (xCtrl[i] > len(dirList)):
+        if xCtrl[i] > len(dirList):
             print('Warning: xCtrl value exceeds # of input src dir')
             xCtrl[i] = int(len(dirList))
         else:
-            xCtrl[i] =int(xCtrl[i])
+            xCtrl[i] = int(xCtrl[i])
 
         xIdx = int(xCtrl[i])
-        yIdx = int(circ_idx( i, len(imgArray[int(xCtrl[i])]) ))
+        yIdx = int(circ_idx(i, len(imgArray[int(xCtrl[i])])))
 
-        
         # srcDir length are arbitrary - read frames (% by srcDir length to roll) then inc corresponding index
-        #srcImgArray.append(next(genObjx))
         srcImgArray.append(imgArray[xIdx][yIdx])
-        
-        #pdb.set_trace()
 
     return srcImgArray
 
 
 def pulseScanRnd(dirList, numFrames, pulseLen):
-    ''' Scans frames from a list of img directories, creates new renamed sequence
+    """ Scans frames from a list of img directories, creates new renamed sequence
         pulse = log based array index ( np.logspace(...) )
         xLength - length of final sequence (seconds)
         framesPerSec - video frames per second
         framesPerBeat - video frames per beat (tempo sync)
         xCtrl - directory selector, quantized to # of src dir
-        returns: imgArray - sequenced list of fullpath img names '''
+        returns: imgArray - sequenced list of fullpath img names """
 
     # check xCtrl is bounded by len(dirList)
-    if (pulseLen > numFrames):
+    if pulseLen > numFrames:
         print('ERROR: numFrames must be greater than pulseLen')
         return 1
         
@@ -735,8 +728,7 @@ def pulseScanRnd(dirList, numFrames, pulseLen):
         tmpArray = []
         tmpArray.extend(sorted(glob.glob(dirList[i]+'*')))
         imgArray[i] = tmpArray
-        
-        
+
     pulse = np.logspace(0.01, 2, pulseLen, dtype=int, endpoint=False)
       
     random.seed(56)
@@ -744,26 +736,23 @@ def pulseScanRnd(dirList, numFrames, pulseLen):
     xCtrlPrev = 0
     imgIdx = 0
     pulseIdx = 0
-    
-    #pdb.set_trace()
 
     srcImgArray = []
     for i in range(numFrames):
-        if (i%pulseLen == 0):
+        if i % pulseLen == 0:
             xCtrlPrev = xCtrl
-            xCtrl=random.randint(0,len(dirList)-1)
-            while xCtrl==xCtrlPrev:
-                xCtrl=random.randint(0,len(dirList)-1)
-            ss=random.randint(0,len(imgArray[xCtrl]))
+            xCtrl = random.randint(0, len(dirList)-1)
+            while xCtrl == xCtrlPrev:
+                xCtrl = random.randint(0, len(dirList)-1)
+            ss=random.randint(0, len(imgArray[xCtrl]))
             pulseIdx = 0
-        yIdx = int(circ_idx( ss+pulse[pulseIdx], len(imgArray[xCtrl]) ))
+        yIdx = int(circ_idx(ss + pulse[pulseIdx], len(imgArray[xCtrl])))
         assert xCtrl < len(dirList), "xCtrl = "+str(xCtrl)
         assert yIdx < len(imgArray[xCtrl]), "yIdx = "+str(yIdx)
-        #print("pulseScanRnd: xCtrl = "+str(xCtrl)+", yIdx = "+str(yIdx)+", ss = "+str(ss))
+        # print("pulseScanRnd: xCtrl = "+str(xCtrl)+", yIdx = "+str(yIdx)+", ss = "+str(ss))
         srcImgArray.append(imgArray[xCtrl][yIdx])
-        pulseIdx+=1
-        imgIdx+=1;
-
+        pulseIdx += 1
+        imgIdx += 1
 
     return srcImgArray
 
@@ -798,40 +787,32 @@ def cropZoom(img, zoom_factor, **kwargs):
     else:
         SzYY = SzY
 
-
     # width and height of the zoomed image
-    #zoomSzY = int(np.round(zoom_factor * SzYY))
-    #zoomSzX = int(np.round(zoom_factor * SzXX))
+    # zoomSzY = int(np.round(zoom_factor * SzYY))
+    # zoomSzX = int(np.round(zoom_factor * SzXX))
 
     # for multichannel images we don't want to apply the zoom factor to the RGB
     # dimension, so instead we create a tuple of zoom factors, one per array
     # dimension, with 1's for any trailing dimensions after the width and height.
     # *** (xxx,) * n => (xxx, xxx, ... xxx) repeated n times
     # zoom_tuple = (zoom_factor,) * 2 + (1,) * (img.ndim - 2)
-    zoom_tuple = [zoom_factor,] * 2 + [1,] * (img.ndim - 2)    # outputs [2, 2, 1]
-
+    zoom_tuple = [zoom_factor, ] * 2 + [1, ] * (img.ndim - 2)    # outputs [2, 2, 1]
 
     # bounding box of the clip region within the input array
     # img[bottom:top, left:right] - crops image to range
-
 
     deltaX = SzXX // 4
     deltaY = SzYY // 4
     halfSzX = SzXX // 2
     halfSzY = SzYY // 2
 
-
     # out = ndimage.zoom(img[deltaY:zoomSzY - deltaY, deltaX:zoomSzX - deltaX], zoom_tuple, **kwargs)
     out = ndimage.zoom(img[deltaY:deltaY + halfSzY, deltaX:deltaX + halfSzX], zoom_tuple, **kwargs)
 
-    
     # `out` might still be slightly larger than `img` due to rounding, so
     # trim off any extra pixels at the edges
-    if (out.shape[0] != SzY or out.shape[1] != SzX):
+    if out.shape[0] != SzY or out.shape[1] != SzX:
         out = out[0:SzY, 0:SzX]
-
-    #pdb.set_trace()
-
 
     # if zoom_factor == 1, just return the input array
     else:
@@ -839,9 +820,9 @@ def cropZoom(img, zoom_factor, **kwargs):
     return out
 
 
-
 def xodEyeCrop(img, SzX, SzY, high):
-    ''' crop img to SzX width x SzY height '''
+    """ crop img to SzX width x SzY height
+        high: crops from center top [good for heads] """
 
     imgWidth = img.width
     imgHeight = img.height
