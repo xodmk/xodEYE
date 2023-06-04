@@ -58,8 +58,7 @@ class XodEYEv:
         --framesPerSec: video frames per second
         --fs: audio sample rate
         --rootDir: root directory of Python code
-        >>tbEYEu = eyeInst.odmkEYEu(eyeLength, 93, 30.0, 41000, rootDir)
-    """
+        >>tbEYEu = eyeInst.odmkEYEu(eyeLength, 93, 30.0, 41000, rootDir) """
 
     def __init__(self, xLength, bpm, timeSig, SzX, SzY, imgFormat, framesPerSec=30.0, fs=48000):
 
@@ -101,12 +100,12 @@ class XodEYEv:
     def xodAutoSeq(self, imgSrcArray, autoSeqArray, effxDict, framesPerSec,
                    ctrl, n_digits, eyeOutDir, eyeOutFileNm):
 
-        ''' Tempo based auto sequencer
+        """ Tempo based auto sequencer
             imgSrcArray - Array of video Source img folders
             autoSeqArray - Array of video segments lengths (# ov audio samples)
             effxDict - Dictionary of video effect algorithms
             n_digit - Number of digits for output naming (video generation)
-            imgOutDir - Full path output directory '''
+            imgOutDir - Full path output directory """
 
         # numFrames = sum(autoSeqArray)
         n_offset = 0
@@ -137,12 +136,12 @@ class XodEYEv:
     def xodChainSeq(self, imgSrcArray, autoTimeArray, effxArray, framesPerSec,
                     n_digits, eyeOutDir, eyeOutFileNm):
 
-        ''' Tempo based Chain sequencer
+        """ Tempo based Chain sequencer
             imgSrcArray - Array of video Source img folders
             autoSeqArray - Array of video segments lengths (# ov frames)
             effxDict - Dictionary of video effect algorithms
             n_digit - Number of digits for output naming (video generation)
-            imgOutDir - Full path output directory '''
+            imgOutDir - Full path output directory """
 
         # numFrames = sum(autoSeqArray)
         n_offset = 0
@@ -229,13 +228,13 @@ class XodEYEv:
     def xodLinSQFX(self, imgSeqArray, xFrames, ctrl, n_offset, n_digits,
                    eyeOutDir, eyeOutFileNm):
 
-        ''' Sequenced Audio Segment synched linear effects
+        """ Sequenced Audio Segment synched linear effects
             imgSeqArray - array of sequential images
             xFrames     - number of frames for segment
             ctrl        - 0 = no index offset, 1 = randomize index offset
             n_offset    - offset for output frame index
-            n_digits    - number of digits for frame index
-            imgOutDir   - full path output directory '''
+            n_digits    - number of digits for output frame index
+            imgOutDir   - full path output directory """
 
         # effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
         #                           3 = cRotate ; 4 = sobelXY ; 5 sobelZ
@@ -293,6 +292,7 @@ class XodEYEv:
         """ x-fades from clean <-> effx over numFrames
             imgFileList   - list of full path file names, .jpg
             numFrames     - length of output sequence written to out dir
+            ctrl          - 0: linearly progress src images; 1: randomize offset src images
             srcReshape    - crop Source Images to Output dimensions
             effx          - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
                                           3 = cRotate ; 4 = sobelXY ; 5 sobelZ
@@ -366,7 +366,8 @@ class XodEYEv:
                 resImg = resImg.astype(np.uint8)
 
             elif effx == 4:
-                imgSmooth = eyeutil.median_filter_rgb(imgPIL1, 8)
+                imgNP1 = np.asarray(imgPIL1)
+                imgSmooth = eyeutil.median_filter_rgb(imgNP1, 8)
                 sobelXY = eyeutil.eyeSobelXY(imgSmooth)
                 imgPIL2 = Image.fromarray(sobelXY)
 
@@ -378,7 +379,8 @@ class XodEYEv:
                 resImg = np.array(alphaB)
 
             elif effx == 5:
-                imgSmooth = eyeutil.median_filter_rgb(imgPIL1, 16)
+                imgNP1 = np.asarray(imgPIL1)
+                imgSmooth = eyeutil.median_filter_rgb(imgNP1, 16)
                 sobelXY = eyeutil.eyeSobelXY(imgSmooth)
                 imgPIL2 = Image.fromarray(sobelXY)
 
@@ -405,17 +407,21 @@ class XodEYEv:
         # // *---::XODMKEYE - Image Segmentation Effects ::---*
         # // *--------------------------------------------------------------* //
 
-    def xodSegmentEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, effx,
+    def xodSegmentEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, ctrl, effx, srcReshape,
                        fadeInOut, fwdRev, n_digit, eyeOutDir, maskSrcArrList='None', eyeOutFileNm='None'):
 
-        ''' Tempo based linear effects
-            numFrames - total video output frames
-            xFrames - frames per beat
-            effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+        """ Tempo based Segmentation effects
+            numFrames       - total video output frames
+            xFrames         - Number of frames per xBeats
+            ctrl            - Offset Ctrl: 0 = linear process src images; 1: randomize offset src images
+            effx            - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
                                       3 = cRotate ; 4 = sobelXY ; 5 sobelZ
-            fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-            fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 0 = rev
-            imgOutDir - full path output directory '''
+            srcReshape      - crop Source Images to Output dimensions
+            fadeInOut       - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+            fwdRrev         - frame direction: 0 = random ; 1 = fwd ; 0 = rev
+            n_digits        - number of digits for output frame index
+            imgOutDir       - full path output directory
+            maskSrcArrList  -   """
 
         numFrames = int(ceil(xLength * framesPerSec))
         n_offset = 0
@@ -423,31 +429,35 @@ class XodEYEv:
         xBeats = int(np.floor(numFrames / xFrames))
         xTail = int(np.floor(numFrames - xBeats * xFrames))
 
-        ctrl = 0  # linearly progress through src images
-
         # process each Beat in sequence
         for i in range(xBeats):
             offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
-            self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, xFrames, ctrl, effx,
+            self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, xFrames, ctrl, effx, srcReshape,
                                    fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, maskSrcArrList, eyeOutFileNm)
         # finally process 'tail' (leftover samples when xLength is not evenly divisible by xBeats)
         offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
-        self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, xFrames, ctrl, effx,
+        self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, xFrames, ctrl, effx, srcReshape,
                                fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, maskSrcArrList, eyeOutFileNm)
 
         return
 
-    def xodImgSegmentEFFX(self, imgFileList, numFrames, xFrames, ctrl, effx, fadeInOut, fwdRev,
+    def xodImgSegmentEFFX(self, imgFileList, numFrames, xFrames, ctrl, effx, srcReshape, fadeInOut, fwdRev,
                           n_offset, n_digits, imgOutDir, maskSrcArrList='None', imgOutNm='None'):
 
         """ x-fades from clean <-> effx over numFrames
-            imgFileList - list of full path file names, .jpg
-            numFrames - length of output sequence written to out dir
-            effx      - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                      3 = cRotate ; 4 = sobelXY ; 5 sobelZ
-            fadeInOut - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-            fwdRrev   - frame direction: 0 = random ; 1 = fwd ; 2 = rev
-            imgOutDir - full path output directory """
+            imgFileList     - list of full path file names, .jpg
+            numFrames       - length of output sequence written to out dir
+            xFrames         - Number of frames per xBeats
+            ctrl            - Offset Ctrl: 0 = linear process src images; 1: randomize offset src images
+            srcReshape      - crop Source Images to Output dimensions
+            effx            - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
+                                            3 = cRotate ; 4 = sobelXY ; 5 sobelZ
+            fadeInOut       - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
+            fwdRev          - frame direction: 0 = random ; 1 = fwd ; 2 = rev
+            n_offset        - offset for output frame index
+            n_digits        - number of digits for output frame index
+            imgOutDir       - full path output directory
+            maskSrcArrList  -   """
 
         # constant internal value equals number of implemented effects
         numEffx = 5
@@ -457,9 +467,9 @@ class XodEYEv:
         else:
             imgSegEFFXNm = 'imgSegEFFX'
 
-        numSegments = 0
-        # if maskSrcArrList != None:
-        if len(maskSrcArrList) > 11:
+        if maskSrcArrList is None:
+            numSegments = 0
+        elif len(maskSrcArrList) > 11:
             numSegments = 11
         else:
             numSegments = len(maskSrcArrList)
@@ -504,18 +514,22 @@ class XodEYEv:
             else:
                 img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
 
+            imgPIL1 = Image.fromarray(img1)
+            if srcReshape:
+                imgPIL1 = eyeutil.xodEyeReshape(imgPIL1, self.mstrSzX, self.mstrSzY, 0)
+
             # // *--------------------------------------------------------------* //
             # linear select (no-effx) fwd <-> back
             if effx == 1:
-                resImg = xodeyesg.segmentEYEhist(img1)
+                resImg = xodeyesg.segmentEYEhist(imgPIL1)
 
             elif effx == 2:
-                imgSegment = xodeyesg.segmentEYEhist(img1)
+                imgSegment = xodeyesg.segmentEYEhist(imgPIL1)
                 imgPIL2 = Image.fromarray(imgSegment)
                 if fadeInOut == 2:
-                    alphaB = Image.blend(img1, imgPIL2, alphaX[i])
+                    alphaB = Image.blend(imgPIL1, imgPIL2, alphaX[i])
                 else:
-                    alphaB = Image.blend(imgPIL2, img1, alphaX[i])
+                    alphaB = Image.blend(imgPIL2, imgPIL1, alphaX[i])
                 alphaB = ImageOps.autocontrast(alphaB, cutoff=0)
                 resImg = np.array(alphaB)
 
@@ -535,10 +549,15 @@ class XodEYEv:
                         # forward index linear
                         maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx(i + offset,
                                                                                     len(maskSrcArrList[j]))])
-                    maskSrcArr.append(maskImgTmp)
+                    maskPILtmp = Image.fromarray(maskImgTmp)
+                    if srcReshape:
+                        maskPILtmp = eyeutil.xodEyeReshape(maskPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                    maskArrtmp = np.asarray(maskPILtmp)
+                    maskSrcArr.append(maskArrtmp)
 
+                # ??? check if needed... extra np conversion??
                 maskSrcArr = np.asarray(maskSrcArr)
-                resImg = xodeyesg.segmentEYEmask_FourSg(img1, maskSrcArr)
+                resImg = xodeyesg.segmentEYEmask_FourSg(imgPIL1, maskSrcArr)
 
             elif effx == 4:
                 # reverse index linear
@@ -566,10 +585,18 @@ class XodEYEv:
                         #                                                 len(maskSrcArrList[scanIdx]))])
                         maskImgTmp = imio.imread(maskSrcArrList[int(scanIdxArr[j])][eyeutil.circ_idx(i + offset,
                                                                                     len(maskSrcArrList[int(scanIdxArr[j])]))])
-                    maskSrcArr.append(maskImgTmp)
+
+                    maskPILtmp = Image.fromarray(maskImgTmp)
+                    if srcReshape:
+                        maskPILtmp = eyeutil.xodEyeReshape(maskPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                    maskArrtmp = np.asarray(maskPILtmp)
+                    maskSrcArr.append(maskArrtmp)
+
+                # ??? check if needed... extra np conversion??
+                maskSrcArr = np.asarray(maskSrcArr)
 
                 maskSrcArr = np.asarray(maskSrcArr)
-                resImg = xodeyesg.segmentEYEmask_FourSg(img1, maskSrcArr)
+                resImg = xodeyesg.segmentEYEmask_FourSg(imgPIL1, maskSrcArr)
 
             elif effx == 5:
                 # reverse index linear
@@ -592,7 +619,11 @@ class XodEYEv:
                         maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx(i + offset,
                                                                                     len(maskSrcArrList[j]))])
 
-                    maskImg_rotB = ndimage.rotate(maskImgTmp, angArr[j], reshape=False)
+                    maskPILtmp = Image.fromarray(maskImgTmp)
+                    if srcReshape:
+                        maskPILtmp = eyeutil.xodEyeReshape(maskPILtmp, self.mstrSzX, self.mstrSzY, 0)
+
+                    maskImg_rotB = ndimage.rotate(maskPILtmp, angArr[j], reshape=False)
                     maskImg_rotZ = eyeutil.cropZoom(maskImg_rotB, 2)
                     # maskImg_rot = Image.fromarray(maskImg_rotZ)
 

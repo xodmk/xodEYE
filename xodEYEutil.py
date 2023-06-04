@@ -277,7 +277,6 @@ def convertBMPtoJPG(srcDir, outDir, reName='None'):
     return
 
 
-
 # // *--------------------------------------------------------------* //
 # // *---:: XODEYE Utility Reshaping Functions ::---*
 # // *--------------------------------------------------------------* //
@@ -370,48 +369,73 @@ def xodEyeReshape(img, SzX, SzY, high):
     srcWidth = img.width
     srcHeight = img.height
 
+    if srcWidth == SzX and srcHeight == SzY:
+        return img
+
     expandX = 0
     expandY = 0
     compressX = 0
     compressY = 0
     xdiff = 0
     ydiff = 0
+    cropLeft = 0
+    cropTop = 0
 
     # Find minimum dimension difference
     if srcWidth < SzX:
         expandX = 1
-        xdiff = SzX - srcWidth
+        xdiff = np.abs(SzX - srcWidth)
     elif srcWidth > SzX:
         compressX = 1
-        xdiff = SzX - srcWidth
-        cropLeft = floor((srcWidth - SzX) / 2)
+        xdiff = np.abs(SzX - srcWidth)
 
     if srcHeight < SzY:
-        pexpandY = 1
-        ydiff = SzY - srcHeight
-    elif srcHeight > SzY and high == 0:
+        expandY = 1
+        ydiff = np.abs(SzY - srcHeight)
+    elif srcHeight > SzY:
         compressY = 1
-        ydiff = SzY - srcHeight
-        cropTop = floor((srcHeight - SzY) / 2)
-    elif srcHeight > SzY and high == 1:
-        compressY = 1
-        ydiff = SzY - srcHeight
-        cropTop = 0
-    else:
-        cropTop = 0
+        ydiff = np.abs(SzY - srcHeight)
 
+    # ** Resize if necessary **
+    # calculate aspect ratio of src (X / Y):
+    srcAspect = srcWidth / srcHeight
 
+    # Expand: if either dimension is smaller than target, expand by the largest difference
+    if expandX or expandY:
+        if xdiff >= ydiff:
+            newWidth = SzX
+            newHeight = int(SzX / srcAspect)
+            # crop vertical dimension
+            cropTop = floor((newHeight - SzY) / 2)
+        else:
+            newWidth = int(SzY * srcAspect)
+            # crop horizontal dimension
+            cropLeft = floor((newWidth - SzX) / 2)
+            newHeight = SzY
+        imgResized = img.resize((newWidth, newHeight), Image.BICUBIC)
 
+    # Compress: if either dimension is smaller than target, expand by the largest difference
+    elif compressX or compressY:
+        if xdiff <= ydiff:
+            newWidth = SzX
+            newHeight = int(SzX / srcAspect)
+            # crop vertical dimension
+            cropTop = floor((newHeight - SzY) / 2)
+        else:
+            newWidth = int(SzY * srcAspect)
+            # crop horizontal dimension
+            cropLeft = floor((newWidth - SzX) / 2)
+            newHeight = SzY
+        imgResized = img.resize((newWidth, newHeight), Image.BICUBIC)
 
+    # ** Crop if necessary **
     # box=(left, upper, right, lower)
     if high == 1:
-        imgReshape = img.crop((cropLeft, 0, cropLeft + SzX, SzY))
+        imgReshape = imgResized.crop((cropLeft, 0, cropLeft + SzX, SzY))
     else:
-        imgReshape = img.crop((cropLeft, cropTop, cropLeft + SzX, cropTop + SzY))
+        imgReshape = imgResized.crop((cropLeft, cropTop, cropLeft + SzX, cropTop + SzY))
 
     return imgReshape
-
-
 
 
 # // *********************************************************************** //
@@ -769,8 +793,7 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
 # // *********************************************************************** //
 # // *********************************************************************** //
 
-
-def createImgSeqArray(xodEyeDir, inputSrcDir):
+def createLinearSeqArray(xodEyeDir, inputSrcDir):
     for sd in inputSrcDir:
         # print(str(i))
         p = lambda i: os.path.isdir(xodEyeDir + sd)
@@ -779,13 +802,31 @@ def createImgSeqArray(xodEyeDir, inputSrcDir):
             print("Found src dir: " + xodEyeDir + sd)
         else:
             print("Error Source Dir doesn't exist: " + xodEyeDir + sd)
-    imgSeqArray, imgSeqDir = createSrcArray(xodEyeDir, inputSrcDir)
-    print('\nCreated imgSeqArray: - Array of .jpg file paths\n')
-    # pdb.set_trace()
-    for q in range(len(imgSeqDir)):
-        print(imgSeqDir[q])
-        print("# of images in directory: " + str(len(imgSeqArray[q])))
+    imgSeqArray, imgSeqDir = createLinearSrcArray(xodEyeDir, inputSrcDir)
+
+    print('\nCreated linear imgSeqArray: - Array of .jpg file paths\n')
+    print("# of images in Array: " + str(len(imgSeqArray)))
+
+    pdb.set_trace()
+
+    print('\nCreated "imgSeqArray, imgSeqDir" => Array of .jpg file paths in source dir\n')
     return imgSeqArray, imgSeqDir
+
+
+def createLinearSrcArray(eyeRootDir, sourceDir):
+    srcDir = []
+    imgSrcArray = []
+
+    for d in range(len(sourceDir)):
+        imgSeqArray = []
+        sDirTmp = eyeRootDir + sourceDir[d]
+        srcDir.append(sDirTmp)
+        sortedDir = sorted(glob.glob(sDirTmp + '*'))
+        for s in sortedDir:
+            imgSeqArray.append(s.replace('\\', '/'))
+        imgSrcArray.extend(imgSeqArray)
+
+    return imgSrcArray, srcDir
 
 
 def createMultiImgSeqArray(xodEyeDir, inputSrcDir):
@@ -802,24 +843,8 @@ def createMultiImgSeqArray(xodEyeDir, inputSrcDir):
     # pdb.set_trace()
     for q in range(len(multiSeqDir)):
         print(multiSeqDir[q])
-        print("# of images in directory: " + str(len(multiSeqArray[q])))
+        print("# of images in Multi Array: " + str(len(multiSeqArray[q])))
     return multiSeqArray, multiSeqDir
-
-
-def createSrcArray(eyeRootDir, sourceDir):
-    srcDir = []
-    imgSrcArray = []
-
-    for d in range(len(sourceDir)):
-        imgSeqArray = []
-        sDirTmp = eyeRootDir + sourceDir[d]
-        srcDir.append(sDirTmp)
-        sortedDir = sorted(glob.glob(sDirTmp + '*'))
-        for s in sortedDir:
-            imgSeqArray.append(s.replace('\\', '/'))
-        imgSrcArray.extend(imgSeqArray)
-
-    return imgSrcArray, srcDir
 
 
 def createMultiSrcArray(eyeRootDir, sourceDir):
@@ -935,7 +960,7 @@ def xodColorRotate(img, rotateStep):
             print('ERROR: rotateStep must be in range [0:1]')
             return 1
 
-        r,g,b = img.split()
+        r, g, b = img.split()
         
         # case: 0% -> 33%
         if rotateStep < 0.333:
@@ -948,7 +973,7 @@ def xodColorRotate(img, rotateStep):
             newB = Image.blend(b, r, mixVal)
             
         # case: 33% -> 66%
-        elif rotateStep >= 0.333 and rotateStep < 0.666:
+        elif 0.333 <= rotateStep < 0.666:
             mixVal = (rotateStep - 0.333) * (2/0.666)
             if mixVal > 1.0:
                 mixVal = 1.0
@@ -983,14 +1008,14 @@ def xodColorRotate(img, rotateStep):
 
 def xodFrameInterpolate(imgFileList, xfadeFrames, ctrl, n_digits,
                         imgOutDir, imgOutNm):
-    ''' Interpolate (blend) between frames in directory
+    """ Interpolate (blend) between frames in directory
         imgFileList - image source directory
         xfadeFrames - number of frames per xfade
         effx: 0 = linear fade, 1 = cosine fade
-    '''
+    """
     print('// __xodFrameInterpolate__ ')
         
-    #if (???check for valid images in dir???):
+    # if (???check for valid images in dir???):
     #    print('ERROR: directory does not contain valid images')
     #    return 1
 
@@ -1031,16 +1056,16 @@ def xodFrameInterpolate(imgFileList, xfadeFrames, ctrl, n_digits,
 # // *--------------------------------------------------------------* //
     
 def xodStrideInterpolate(imgFileList, xfadeFrames, effx, n_digits,
-                        imgOutDir, imgOutNm):
-    ''' Interpolate (blend) between Strided frames in directory
+                         imgOutDir, imgOutNm):
+    """ Interpolate (blend) between Strided frames in directory
         (stride - skips n frames each step)
         imgFileList - image source directory
         xfadeFrames - number of frames per xfade
         effx=>Stride: 2 or greater - use every stride frames
-    '''
+    """
     print('// __xodFrameInterpolate__ ')
         
-    #if (???check for valid images in dir???):
+    # if (???check for valid images in dir???):
     #    print('ERROR: directory does not contain valid images')
     #    return 1
 
@@ -1062,8 +1087,7 @@ def xodStrideInterpolate(imgFileList, xfadeFrames, effx, n_digits,
     frameCnt = 0
     idx = 0
     for j in range(numImg - 1):
-        
-        
+
         imgPIL1 = Image.open(imgFileList[circ_idx(idx, numImg)])
         imgPIL2 = Image.open(imgFileList[circ_idx(idx + stride, numImg)])
 
@@ -1089,10 +1113,8 @@ def xodStrideInterpolate(imgFileList, xfadeFrames, effx, n_digits,
 # // *********************************************************************** //
 # // *********************************************************************** //
 
-
-
 def eyeSubInsert(imgBase1, imgBase2, imgSub1, imgSub2, SzX, SzY, nDimX, nDimY, alphaX):
-    ''' inserts subframe images into base images & blends '''
+    """ inserts subframe images into base images & blends """
 
     # region = (left, upper, right, lower)
     # subbox = (i + 1, i + 1, newDimX, newDimY)
@@ -1101,10 +1123,10 @@ def eyeSubInsert(imgBase1, imgBase2, imgSub1, imgSub2, SzX, SzY, nDimX, nDimY, a
         s = 0
         for k in range(SzX):
 
-           
-            if ( (j >= ((SzY-1)-nDimY)/2) and (j < ((SzY-1) - ((SzY-1)-nDimY)/2)) and (k >= ((SzX-1)-nDimX)/2) and (k < ((SzX-1) - ((SzX-1)-nDimX)/2)) ):
+            if (j >= ((SzY - 1) - nDimY) / 2) and (j < ((SzY - 1) - ((SzY - 1) - nDimY) / 2)) \
+                    and (k >= ((SzX - 1) - nDimX) / 2) and (k < ((SzX - 1) - ((SzX - 1) - nDimX) / 2)):
                                                 
-                #if (j==1058 or r==1058):
+                # if (j==1058 or r==1058):
                 #    print('*****j = '+str(j)+'; k = '+str(k)+'; r = '+str(r)+'; s = '+str(s))
                 #    pdb.set_trace()                                                                
                                                 
@@ -1117,38 +1139,17 @@ def eyeSubInsert(imgBase1, imgBase2, imgSub1, imgSub2, SzX, SzY, nDimX, nDimY, a
             r += 1
 
     imgModOut = Image.blend(Image.fromarray(imgBase1), Image.fromarray(imgBase2), alphaX)
-    #imgBpTscOut = self.eyePhiFrame1(Image.fromarray(imgBpTsc1), Image.fromarray(imgBpTsc2))
+    # imgBpTscOut = self.eyePhiFrame1(Image.fromarray(imgBpTsc1), Image.fromarray(imgBpTsc2))
     imgModOut = ImageOps.autocontrast(imgModOut, cutoff=0)
     
     return imgModOut
 
 
-# *---FIXIT---*
-
-
-#def odmkHelixPxl(vLength, theta):
-#    helixPxlArray = []
-#    # generate a vector of 'center pixels' moving around unit circle
-#    # quantized cyclicZn coordinates!
-#    # theta = angle of rotation per increment
-#    return helixPxlArray
-#
-#
-#def odmkFiboPxl(vLength, theta):
-#    fiboPxlArray = []
-#    # generate a vector of 'center pixels' tracing a fibonnaci spiral
-#    # quantized fibonnaci coordinates!
-#    # theta = angle of rotation per increment
-#    return fiboPxlArray
-
-
-
 def eyeBox1(img1, img2, boxSzX, boxSzY, pxlLoc, alpha):
-    ''' alpha blends random box from img2 onto img1
+    """ alpha blends random box from img2 onto img1
         sub dimensions defined by pxlLoc [x, y]
         img1: img4 PIL images
-        ctrl: toggle background - 0 = no background img (black), 1 = use img1 '''
-
+        ctrl: toggle background - 0 = no background img (black), 1 = use img1 """
 
     if img1.size != img2.size:
         print('ERROR: img1, img2 must be same Dim')
@@ -1157,7 +1158,6 @@ def eyeBox1(img1, img2, boxSzX, boxSzY, pxlLoc, alpha):
     SzX = img1.size[0]
     SzY = img1.size[1]
 
-    
     subDim_L = int(pxlLoc[0] - boxSzX//2)
     if subDim_L < 0:
         subDim_L = 0
@@ -1170,14 +1170,12 @@ def eyeBox1(img1, img2, boxSzX, boxSzY, pxlLoc, alpha):
     subDim_T = int(pxlLoc[1] + boxSzX//2)
     if subDim_T > SzY:
         subDim_T = SzY-1
-    
-    
+
     # coordinates = (left, lower, right, upper)
     boxCC = (subDim_L, subDim_B, subDim_R, subDim_T)
     
     if alpha == 1:
         eyeSubCC = img2.copy().crop(boxCC)       
-
 
     else:        
         eyeSub1 = img1.copy().crop(boxCC)
@@ -1186,8 +1184,8 @@ def eyeBox1(img1, img2, boxSzX, boxSzY, pxlLoc, alpha):
         eyeSubCC = Image.blend(eyeSub1, eyeSub2, alpha)
         eyeSubCC = ImageOps.autocontrast(eyeSubCC, cutoff=0)
 
-    #print('eyeSubCC X = '+str(eyeSubCC.shape[1])+', eyeSubCC Y = '+str(eyeSubCC.shape[0])+)
-    #pdb.set_trace()
+    # print('eyeSubCC X = '+str(eyeSubCC.shape[1])+', eyeSubCC Y = '+str(eyeSubCC.shape[0])+)
+    # pdb.set_trace()
 
     img1.paste(eyeSubCC, boxCC)
 
@@ -1200,24 +1198,22 @@ def eyeBox1(img1, img2, boxSzX, boxSzY, pxlLoc, alpha):
 
 
 def eyeMirrorLR(img, ctrl='LL', fullscl=0):
-    ''' Selects a quadrant from source image, mirrors H & V
+    """ Selects a quadrant from source image, mirrors H & V
         * img: PIL image object
         * ctrl: { UL, UR, LL, LR} - selects base quadrant
           Default output dimension = input dimension
-        * resizeX, resizeY: forces a new output image dimention 
-        * fullscl: if > 0 scales full image & repeats in 4 quadrants 
+        * resizeX, resizeY: forces a new output image dimention
+        * fullscl: if > 0 scales full image & repeats in 4 quadrants
           Default: crops image to base quadrant & repeats cropped image
         Usage:
         mirrorQuadTest1 = eyeutil.eyeMirrorQuad(eye5img)
         mirrorQuadTest2 = eyeutil.eyeMirrorQuad(eye5img, ctrl='LR')
         mirrorQuadTest5 = eyeutil.eyeMirrorQuad(eye5img, ctrl='UL', fullscl=1)
-    '''
-    
-    
+    """
+
     if not(ctrl=='UL' or ctrl=='UR' or ctrl=='LL' or ctrl=='LR'):
         print('ERROR: ctrl must be {UL, UR, LL, LR} <string>')
         return
-
 
     # calculate subDim as Quater frame of source image
     SzX = img.size[0]
@@ -1236,7 +1232,6 @@ def eyeMirrorLR(img, ctrl='LL', fullscl=0):
     boxLR = (SzXD2, SzYD2, SzX, SzY)
         
     mirrorImg = Image.new('RGB', imgDim)  # e.g. ('RGB', (640, 480))
-        
 
     if ctrl == 'LL':
         
@@ -1253,8 +1248,7 @@ def eyeMirrorLR(img, ctrl='LL', fullscl=0):
         eyeSubLL = ImageOps.flip(imgX)
         eyeSubLR = ImageOps.flip(imgX)
         eyeSubLR = ImageOps.mirror(eyeSubLR)        
-        
-        
+
     if ctrl == 'LR':
         
         if fullscl > 0:
@@ -1268,8 +1262,7 @@ def eyeMirrorLR(img, ctrl='LL', fullscl=0):
         eyeSubLL = ImageOps.flip(imgX)
         eyeSubLL = ImageOps.mirror(eyeSubLL)
         eyeSubLR = ImageOps.flip(imgX)
-        
-        
+
     if ctrl == 'UL':
         
         if fullscl > 0:
@@ -1283,7 +1276,6 @@ def eyeMirrorLR(img, ctrl='LL', fullscl=0):
         eyeSubUR = ImageOps.mirror(eyeSubUR)
         eyeSubLL = imgX
         eyeSubLR = ImageOps.mirror(imgX)
-
 
     if ctrl == 'UR':
         
@@ -1310,26 +1302,23 @@ def eyeMirrorLR(img, ctrl='LL', fullscl=0):
     return mirrorImg
 
 
-
 def eyeMirrorQuad(img, ctrl='LL', fullscl=0):
-    ''' Selects a quadrant from source image, mirrors H & V
+    """ Selects a quadrant from source image, mirrors H & V
         * img: PIL image object
         * ctrl: { UL, UR, LL, LR} - selects base quadrant
           Default output dimension = input dimension
-        * resizeX, resizeY: forces a new output image dimention 
-        * fullscl: if > 0 scales full image & repeats in 4 quadrants 
+        * resizeX, resizeY: forces a new output image dimention
+        * fullscl: if > 0 scales full image & repeats in 4 quadrants
           Default: crops image to base quadrant & repeats cropped image
         Usage:
         mirrorQuadTest1 = eyeutil.eyeMirrorQuad(eye5img)
         mirrorQuadTest2 = eyeutil.eyeMirrorQuad(eye5img, ctrl='LR')
         mirrorQuadTest5 = eyeutil.eyeMirrorQuad(eye5img, ctrl='UL', fullscl=1)
-    '''
-    
-    
+    """
+
     if not(ctrl=='UL' or ctrl=='UR' or ctrl=='LL' or ctrl=='LR'):
         print('ERROR: ctrl must be {UL, UR, LL, LR} <string>')
         return
-
 
     # calculate subDim as Quater frame of source image
     SzX = img.size[0]
@@ -1348,7 +1337,6 @@ def eyeMirrorQuad(img, ctrl='LL', fullscl=0):
     boxLR = (SzXD2, SzYD2, SzX, SzY)
         
     mirrorImg = Image.new('RGB', imgDim)  # e.g. ('RGB', (640, 480))
-        
 
     if ctrl == 'LL':
         
@@ -1365,8 +1353,7 @@ def eyeMirrorQuad(img, ctrl='LL', fullscl=0):
         eyeSubLL = ImageOps.flip(imgX)
         eyeSubLR = ImageOps.flip(imgX)
         eyeSubLR = ImageOps.mirror(eyeSubLR)        
-        
-        
+
     if ctrl == 'LR':
         
         if fullscl > 0:
@@ -1380,8 +1367,7 @@ def eyeMirrorQuad(img, ctrl='LL', fullscl=0):
         eyeSubLL = ImageOps.flip(imgX)
         eyeSubLL = ImageOps.mirror(eyeSubLL)
         eyeSubLR = ImageOps.flip(imgX)
-        
-        
+
     if ctrl == 'UL':
         
         if fullscl > 0:
@@ -1395,7 +1381,6 @@ def eyeMirrorQuad(img, ctrl='LL', fullscl=0):
         eyeSubUR = ImageOps.mirror(eyeSubUR)
         eyeSubLL = imgX
         eyeSubLR = ImageOps.mirror(imgX)
-
 
     if ctrl == 'UR':
         
@@ -1428,17 +1413,16 @@ def eyeMirrorQuad(img, ctrl='LL', fullscl=0):
 
 
 def eyePhiHorizFrame1(img1, img2, img3, ctrl=1):
-    ''' generates composite 4 frame resized images
+    """ generates composite 4 frame resized images
         sub dimensions defined by pxlLoc [x, y]
         img1: img4 PIL images
-        ctrl: toggle background - 0 = no background img (black), 1 = use img1 '''
-
+        ctrl: toggle background - 0 = no background img (black), 1 = use img1 """
 
     if (img1.size != img2.size != img3.size):
         print('ERROR: img1, img2 must be same Dim')
         return        
 
-    #phi = 1.6180339887
+    # phi = 1.6180339887
     phiInv = 0.6180339887
     oneMphiInv = 0.38196601129
    
@@ -1462,8 +1446,7 @@ def eyePhiHorizFrame1(img1, img2, img3, ctrl=1):
     dimCC_R = SzX - int(dimH_L/2)
     dimCC_B = int(dimC_B/2)
     dimCC_T = SzY - int(dimC_B/2)    
-    
-    
+
     # coordinates = (left, lower, right, upper)
 #    boxL = (0, 0, dimH_L, SzY)
 #    boxC = (dimH_L, 0, dimH_R, SzY)
@@ -1473,7 +1456,6 @@ def eyePhiHorizFrame1(img1, img2, img3, ctrl=1):
 #    boxC_T = (dimH_L, 0, dimH_R, dimC_B)    
   
     boxCC = (dimCC_L, dimCC_B, dimCC_R, dimCC_T)
-    
 
     boxL_B = (0, dimC_T, dimH_L, SzY)
     boxL_T = (0, 0, dimH_L, dimC_B)
@@ -1481,16 +1463,14 @@ def eyePhiHorizFrame1(img1, img2, img3, ctrl=1):
     boxR_B = (dimH_R, dimC_T, SzX, SzY)
     boxR_T = (dimH_R, 0, SzX, dimC_B)
 
-
     eyeSubLT = img1.copy().crop(boxL_T)
     eyeSubLB = img2.copy().crop(boxL_B)
     
-    #eyeSubTC = img2.resize(subDim)
-    #eyeSubBC = img2.copy().crop(boxC_B)
+    # eyeSubTC = img2.resize(subDim)
+    # eyeSubBC = img2.copy().crop(boxC_B)
 
     eyeSubRT = img2.copy().crop(boxR_T)
     eyeSubRB = img1.copy().crop(boxR_B) 
-
 
     subDimCC = (dimCC_R - int(dimH_L/2), dimCC_T - int(dimC_B/2))
 
@@ -1498,7 +1478,6 @@ def eyePhiHorizFrame1(img1, img2, img3, ctrl=1):
     eyeSubCC2 = img2.copy().resize(subDimCC)
     eyeSubCC = Image.blend(eyeSubCC, eyeSubCC2, 0.5)
     eyeSubCC = ImageOps.autocontrast(eyeSubCC, cutoff=0)
-
 
     # left frame
     phiFrameImg.paste(eyeSubLT, boxL_T)
@@ -1509,32 +1488,30 @@ def eyePhiHorizFrame1(img1, img2, img3, ctrl=1):
     phiFrameImg.paste(eyeSubRB, boxR_B)
 
     # center frame
-    #phiFrameImg.paste(eyeSubTC, boxC_T)
-    #phiFrameImg.paste(eyeSubBC, boxC_B)
+    # phiFrameImg.paste(eyeSubTC, boxC_T)
+    # phiFrameImg.paste(eyeSubBC, boxC_B)
     
     # center center
     phiFrameImg.paste(eyeSubCC, boxCC)
 
-    
-    #eyeOutFileName = 'eyeMirrorHV4'
-    #eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeMirrorHV4Full, mirrorImg)
+    # eyeOutFileName = 'eyeMirrorHV4'
+    # eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
+    # misc.imsave(eyeMirrorHV4Full, mirrorImg)
     
     return phiFrameImg
 
 
 def eyePhiFrame1(img1, img2, ctrl=1):
-    ''' generates composite 4 frame resized images
+    """ generates composite 4 frame resized images
         sub dimensions defined by pxlLoc [x, y]
         img1: img4 PIL images
-        ctrl: toggle background - 0 = no background img (black), 1 = use img1 '''
-
+        ctrl: toggle background - 0 = no background img (black), 1 = use img1 """
 
     if img1.size != img2.size:
         print('ERROR: img1, img2 must be same Dim')
         return        
 
-    #phi = 1.6180339887
+    # phi = 1.6180339887
     phiInv = 0.6180339887
     oneMphiInv = 0.38196601129
    
@@ -1558,8 +1535,7 @@ def eyePhiFrame1(img1, img2, ctrl=1):
     dimCC_R = SzX - int(dimH_L/2)
     dimCC_B = int(dimC_B/2)
     dimCC_T = SzY - int(dimC_B/2)    
-    
-    
+
     # coordinates = (left, lower, right, upper)
 #    boxL = (0, 0, dimH_L, SzY)
 #    boxC = (dimH_L, 0, dimH_R, SzY)
@@ -1569,7 +1545,6 @@ def eyePhiFrame1(img1, img2, ctrl=1):
 #    boxC_T = (dimH_L, 0, dimH_R, dimC_B)    
   
     boxCC = (dimCC_L, dimCC_B, dimCC_R, dimCC_T)
-    
 
     boxL_B = (0, dimC_T, dimH_L, SzY)
     boxL_T = (0, 0, dimH_L, dimC_B)
@@ -1577,16 +1552,14 @@ def eyePhiFrame1(img1, img2, ctrl=1):
     boxR_B = (dimH_R, dimC_T, SzX, SzY)
     boxR_T = (dimH_R, 0, SzX, dimC_B)
 
-
     eyeSubLT = img1.copy().crop(boxL_T)
     eyeSubLB = img2.copy().crop(boxL_B)
     
-    #eyeSubTC = img2.resize(subDim)
-    #eyeSubBC = img2.copy().crop(boxC_B)
+    # eyeSubTC = img2.resize(subDim)
+    # eyeSubBC = img2.copy().crop(boxC_B)
 
     eyeSubRT = img2.copy().crop(boxR_T)
     eyeSubRB = img1.copy().crop(boxR_B) 
-
 
     subDimCC = (dimCC_R - int(dimH_L/2), dimCC_T - int(dimC_B/2))
 
@@ -1594,7 +1567,6 @@ def eyePhiFrame1(img1, img2, ctrl=1):
     eyeSubCC2 = img2.copy().resize(subDimCC)
     eyeSubCC = Image.blend(eyeSubCC, eyeSubCC2, 0.5)
     eyeSubCC = ImageOps.autocontrast(eyeSubCC, cutoff=0)
-
 
     # left frame
     phiFrameImg.paste(eyeSubLT, boxL_T)
@@ -1605,28 +1577,26 @@ def eyePhiFrame1(img1, img2, ctrl=1):
     phiFrameImg.paste(eyeSubRB, boxR_B)
 
     # center frame
-    #phiFrameImg.paste(eyeSubTC, boxC_T)
-    #phiFrameImg.paste(eyeSubBC, boxC_B)
+    # phiFrameImg.paste(eyeSubTC, boxC_T)
+    # phiFrameImg.paste(eyeSubBC, boxC_B)
     
     # center center
     phiFrameImg.paste(eyeSubCC, boxCC)
 
-    
-    #eyeOutFileName = 'eyeMirrorHV4'
-    #eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
-    #misc.imsave(eyeMirrorHV4Full, mirrorImg)
+    # eyeOutFileName = 'eyeMirrorHV4'
+    # eyeMirrorHV4Full = imgOutDir+eyeOutFileName+'.jpg'
+    # misc.imsave(eyeMirrorHV4Full, mirrorImg)
     
     return phiFrameImg
 
 
 def eyePhiFrame2(img1, img2, ctrl='UL'):
-    ''' generates subframes increasing by fibonacci sequence
+    """ generates subframes increasing by fibonacci sequence
         sub dimensions defined by pxlLoc [x, y]
         img1: img4 PIL images
-        ctrl: toggle background - 0 = no background img (black), 1 = use img1 '''
+        ctrl: toggle background - 0 = no background img (black), 1 = use img1 """
 
-
-    if not(ctrl=='UL' or ctrl=='UR' or ctrl=='LL' or ctrl=='LR'):
+    if not(ctrl == 'UL' or ctrl == 'UR' or ctrl == 'LL' or ctrl == 'LR'):
         print('ERROR: ctrl must be {UL, UR, LL, LR} <string>')
         return
 
@@ -1634,7 +1604,6 @@ def eyePhiFrame2(img1, img2, ctrl='UL'):
         print('ERROR: img1, img2 must be same Dim')
         return        
 
-   
     SzX = img1.size[0]
     SzY = img1.size[1]
     imgDim = [SzX, SzY]
@@ -1649,14 +1618,12 @@ def eyePhiFrame2(img1, img2, ctrl='UL'):
         boxQTR = (0, 0, int(SzX/2), int(SzY/2))
     elif ctrl == 'UR':
         boxQTR = (int(SzX/2), 0, SzX, int(SzY/2))
-        
-        
+
     phiFrameImg = img1.copy()
     phiSubImg1 = img1.copy().crop(boxQTR)
     phiSubImg1 = phiSubImg1.resize(imgDim)
     phiSubImg2 = img2.copy().crop(boxQTR)
     phiSubImg2 = phiSubImg2.resize(imgDim)
-
 
     dimXarray = []
     for xx in odmkFibonacci(SzX):
@@ -1668,10 +1635,9 @@ def eyePhiFrame2(img1, img2, ctrl='UL'):
     for yy in dimXarray:
         dimYarray.append(int(yy*SzY/SzX))
 
-   
     for bb in range(len(dimXarray)):
         
-        if bb%2==1:
+        if bb % 2 == 1:
             boxBB = (0, 0, dimXarray[len(dimXarray) - bb - 1], dimYarray[len(dimYarray) - bb - 1])
             eyeSub = phiSubImg1.copy().crop(boxBB)
             phiFrameImg.paste(eyeSub, boxBB)
@@ -1679,30 +1645,29 @@ def eyePhiFrame2(img1, img2, ctrl='UL'):
             boxBB = (0, 0, dimXarray[len(dimXarray) - bb - 1], dimYarray[len(dimYarray) - bb - 1])
             eyeSub = phiSubImg2.copy().crop(boxBB)
             phiFrameImg.paste(eyeSub, boxBB)
-           
-    
+
     return phiFrameImg
 
 
 def eyeSobelXY(img):
-    ''' 2D Convolution Sobel filter (edge detect) '''
+    """ 2D Convolution Sobel filter (edge detect) """
 
     sobel_x = np.c_[
-        [-1,0,1],
-        [-2,0,2],
-        [-1,0,1]
+        [-1, 0, 1],
+        [-2, 0, 2],
+        [-1, 0, 1]
     ]
     
     sobel_y = np.c_[
-        [1,2,1],
-        [0,0,0],
-        [-1,-2,-1]
+        [1, 2, 1],
+        [0, 0, 0],
+        [-1, -2, -1]
     ]
     
     ims = []
     for d in range(3):
-        sx = convolve2d(img[:,:,d], sobel_x, mode="same", boundary="symm")
-        sy = convolve2d(img[:,:,d], sobel_y, mode="same", boundary="symm")
+        sx = convolve2d(img[:, :, d], sobel_x, mode="same", boundary="symm")
+        sy = convolve2d(img[:, :, d], sobel_y, mode="same", boundary="symm")
         ims.append(np.sqrt(sx*sx + sy*sy))
     
     im_conv = np.stack(ims, axis=2).astype("uint8")
@@ -1711,12 +1676,10 @@ def eyeSobelXY(img):
 
 
 def median_filter_rgb(im_small, window_size):
-    """
-    Applies a median filer to all colour channels
-    """
+    """ Applies a median filer to all colour channels """
     ims = []
     for d in range(3):
-        im_conv_d = ndimage.median_filter(im_small[:,:,d], size=(window_size,window_size))
+        im_conv_d = ndimage.median_filter(im_small[:, :, d], size=(window_size, window_size))
         ims.append(im_conv_d)
 
     im_conv = np.stack(ims, axis=2).astype("uint8")
@@ -1730,14 +1693,13 @@ def median_filter_rgb(im_small, window_size):
 
 
 def eyeMask2Ch(mask, img1, img2):
-    ''' mask multiplexor: pos/neg mask region mux 
+    """ mask multiplexor: pos/neg mask region mux
         inputs are numpy 2D array RGB stackd
-        works clean with black/white mask, 
-        also produces funk results with random color image for mask '''
+        works clean with black/white mask,
+        also produces funk results with random color image for mask """
 
-        
-    if not( img1.shape[0]==img2.shape[0] and img1.shape[1]==img2.shape[1] and 
-            img1.shape[0]==mask.shape[0] and img1.shape[1]==mask.shape[1] ):
+    if not(img1.shape[0] == img2.shape[0] and img1.shape[1] == img2.shape[1] and
+           img1.shape[0] == mask.shape[0] and img1.shape[1] == mask.shape[1]):
         print('ERROR: image & mask sizes must be equl')
         return
     
