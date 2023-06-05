@@ -807,7 +807,7 @@ def createLinearSeqArray(xodEyeDir, inputSrcDir):
     print('\nCreated linear imgSeqArray: - Array of .jpg file paths\n')
     print("# of images in Array: " + str(len(imgSeqArray)))
 
-    pdb.set_trace()
+    # pdb.set_trace()
 
     print('\nCreated "imgSeqArray, imgSeqDir" => Array of .jpg file paths in source dir\n')
     return imgSeqArray, imgSeqDir

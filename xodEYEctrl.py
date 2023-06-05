@@ -260,7 +260,7 @@ elif EYE_MODE == 'XEYE_V':
     # cntrlEYE = eyedata.xodEYEv_dict["AutoSeq"]
     # cntrlEYE = eyedata.xodEYEv_dict["ChainSeq"]
 
-    srcSequence = 0     # 0: direct
+    srcSequence = 1     # 0 = linear array ; 1 = Multi Array
     srcReshape = 1
     xfadeSel = 0
     ctrlSel = 1
@@ -555,7 +555,7 @@ if srcSequence == 1:
     print('// *---:: XODMKEYE - Create Multi Source Sequence [Basic] ::---*')
     print('// *--------------------------------------------------------------* //')
 
-    imgMultiSeqArray, imgMultiSeqDir = eyeutil.createMultiImgSeqArray(xodEyeDir, sourceDir)
+    imgSeqArray, imgSeqDir = eyeutil.createMultiImgSeqArray(xodEyeDir, sourceDir)
     # print('\nCreated "imgSeqArray, imgSeqDir" => Array of .jpg file paths in source dir\n')
 
 
@@ -703,11 +703,12 @@ if cntrlEYE == 'xodSegmentEFFX':
         # for p in range(len(maskSrcDataDir)):
         #     print(maskSrcDataDir[p])
         #     print("# of images in directory: " + str(len(maskSrcDataArray[p])))
-        pdb.set_trace()
         maskSrcDataArray, maskSrcDataDir = eyeutil.createMultiImgSeqArray(xodEyeDir, maskDir)
 
     else:
         maskSrcDataArray = None
+
+    # pdb.set_trace()
 
     print('\nBegin Processing frames...')
     eyev.xodSegmentEFFX(imgSeqArray, xLength, framesPerSec, xFrames, srcReshape, ctrl, effx,
