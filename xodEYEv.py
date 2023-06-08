@@ -311,7 +311,7 @@ class XodEYEv:
         if n_offset != 0:
             nextInc = n_offset
         else:
-            f_idx = eyeutil.getLatestIdx(imgOutDir, imgLinEFFXNm)
+            f_idx = eyeutil.getLargestIdx(imgOutDir, imgLinEFFXNm)
             nextInc = 1 + f_idx
 
         if ctrl == 1:
@@ -407,230 +407,276 @@ class XodEYEv:
         # // *---::XODMKEYE - Image Segmentation Effects ::---*
         # // *--------------------------------------------------------------* //
 
-    def xodSegmentEFFX(self, imgSeqArray, xLength, framesPerSec, xFrames, ctrl, effx, srcReshape,
-                       fadeInOut, fwdRev, n_digit, eyeOutDir, maskSrcArrList='None', eyeOutFileNm='None'):
+    def xodSegmentEFFX(self, segSeqArray, imgSeqArray, numFrames, xFrames, effx,
+                       srcReshape, n_offset, n_digits, eyeOutDir, eyeOutFileNm='None'):
 
-        """ Tempo based Segmentation effects
-            numFrames       - total video output frames
-            xFrames         - Number of frames per xBeats
-            ctrl            - Offset Ctrl: 0 = linear process src images; 1: randomize offset src images
-            effx            - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                      3 = cRotate ; 4 = sobelXY ; 5 sobelZ
-            srcReshape      - crop Source Images to Output dimensions
-            fadeInOut       - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-            fwdRrev         - frame direction: 0 = random ; 1 = fwd ; 0 = rev
-            n_digits        - number of digits for output frame index
-            imgOutDir       - full path output directory
-            maskSrcArrList  -   """
-
-        numFrames = int(ceil(xLength * framesPerSec))
-        n_offset = 0
-
-        xBeats = int(np.floor(numFrames / xFrames))
-        xTail = int(np.floor(numFrames - xBeats * xFrames))
-
-        # process each Beat in sequence
-        for i in range(xBeats):
-            offsetIdx = eyeutil.circ_idx(i * xFrames, len(imgSeqArray))
-            self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xFrames, xFrames, ctrl, effx, srcReshape,
-                                   fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, maskSrcArrList, eyeOutFileNm)
-        # finally process 'tail' (leftover samples when xLength is not evenly divisible by xBeats)
-        offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
-        self.xodImgSegmentEFFX(imgSeqArray[offsetIdx:len(imgSeqArray)], xTail, xFrames, ctrl, effx, srcReshape,
-                               fadeInOut, fwdRev, n_offset, n_digit, eyeOutDir, maskSrcArrList, eyeOutFileNm)
-
-        return
-
-    def xodImgSegmentEFFX(self, imgFileList, numFrames, xFrames, ctrl, effx, srcReshape, fadeInOut, fwdRev,
-                          n_offset, n_digits, imgOutDir, maskSrcArrList='None', imgOutNm='None'):
-
-        """ x-fades from clean <-> effx over numFrames
-            imgFileList     - list of full path file names, .jpg
+        """ Tempo based Segmentation effects (4 Segmentation Channels)
+            segSeqArray     - 'Segmentation Source Array' = image sequence used for segmentation
+            imgSeqArray     - 'Source Array' = Array of 4 image sequences
             numFrames       - length of output sequence written to out dir
             xFrames         - Number of frames per xBeats
-            ctrl            - Offset Ctrl: 0 = linear process src images; 1: randomize offset src images
+            effx            - effects type:
+                                0 = Linear 4 Channel Segmentation Masking
+                                1 = Frame synced Random Source Offsets
+                                2 = xFrame synced Random Offsets & Random FWD/REV
+                                3 = xFrame synced Random Mask Source & Offsets & Random FWD/REV
+                                Rotation EFFX: rotation rates => 3xFrames, 4xFrames, 6xFrames, 8xFrames
+                                4 = Linear rotation: alternating rotations
+                                5 = Random Rotation: alternating rotations, Random Offsets & Random FWD/REV
+                                6 = xFrame synced Random Mask Source, alternating rotations, Random Offsets
             srcReshape      - crop Source Images to Output dimensions
-            effx            - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                            3 = cRotate ; 4 = sobelXY ; 5 sobelZ
-            fadeInOut       - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-            fwdRev          - frame direction: 0 = random ; 1 = fwd ; 2 = rev
-            n_offset        - offset for output frame index
+            n_offset        - Next increment offset (used when chaining effects)
             n_digits        - number of digits for output frame index
             imgOutDir       - full path output directory
             maskSrcArrList  -   """
 
         # constant internal value equals number of implemented effects
-        numEffx = 5
+        # numEffx = 5
+        # if effx == 0:
+        #     effx = round((numEffx - 1) * random.random()) + 1
+
+        if effx > 3:
+            # extend xFrames for rotation effects
+            xFramesAlt = 8 * xFrames
+        else:
+            xFramesAlt = xFrames
+        xBeats = int(np.floor(numFrames / xFramesAlt))
+        xTail = int(np.floor(numFrames - xBeats * xFramesAlt))
+
+        # process each Beat in sequence
+        for i in range(xBeats):
+
+            n_offset = n_offset + i * xFramesAlt
+
+            if effx == 2 or effx == 3 or effx == 5 or effx == 6:
+                # use randomized offsets for each beat
+                offsetIdx = round((numFrames - 1) * random.random()) + 1
+            else:
+                offsetIdx = 0
+
+            self.xodImgSegmentEFFX(segSeqArray, imgSeqArray, xFramesAlt, xFramesAlt, effx,
+                                   srcReshape, offsetIdx, n_offset, n_digits, eyeOutDir, eyeOutFileNm)
+
+        # finally process 'tail' (leftover samples when xLength is not evenly divisible by xBeats)
+        offsetIdx = eyeutil.circ_idx(xBeats * xFrames, len(imgSeqArray))
+        self.xodImgSegmentEFFX(segSeqArray, imgSeqArray, xTail, xFramesAlt, effx,
+                               srcReshape, offsetIdx, n_offset, n_digits, eyeOutDir, eyeOutFileNm)
+
+        return
+
+    def xodImgSegmentEFFX(self, segSeqArray, imgSeqArray, numFrames, xFrames, effx,
+                          srcReshape, offsetIdx, n_offset, n_digits, imgOutDir, imgOutNm='None'):
+
+        """ Tempo based Segmentation effects (4 Segmentation Channels)
+            segSeqArray     - 'Segmentation Source Array' = image sequence used for segmentation
+            imgSeqArray     - 'Source Array' = Array of 4 image sequences
+            numFrames       - length of output sequence written to out dir
+            xFrames         - Number of frames per xBeats
+            effx            - effects type:
+                                0 = Linear 4 Channel Segmentation Masking
+                                1 = Frame synced Random Source Offsets
+                                2 = xFrame synced Random Offsets & Random FWD/REV
+                                3 = xFrame synced Random Mask Source & Offsets & Random FWD/REV
+                                Rotation EFFX: rotation rates => 3xFrames, 4xFrames, 6xFrames, 8xFrames
+                                4 = Linear rotation: alternating rotations
+                                5 = Random Rotation: alternating rotations, Random Offsets & Random FWD/REV
+                                6 = xFrame synced Random Mask Source, alternating rotations, Random Offsets
+            srcReshape      - crop Source Images to Output dimensions
+            offsetIdx       - offset for output frame index
+            n_offset        - Next increment offset (used when chaining effects)
+            n_digits        - number of digits for output frame index
+            imgOutDir       - full path output directory
+            maskSrcArrList  -   """
+
+        # // *--------------------------------------------------------------* //
 
         if imgOutNm != 'None':
             imgSegEFFXNm = imgOutNm
         else:
             imgSegEFFXNm = 'imgSegEFFX'
 
-        if maskSrcArrList is None:
-            numSegments = 0
-        elif len(maskSrcArrList) > 11:
-            numSegments = 11
-        else:
-            numSegments = len(maskSrcArrList)
-
+        # Controls output indexing when using EFFX chaining
         if n_offset != 0:
             nextInc = n_offset
         else:
-            f_idx = eyeutil.getLatestIdx(imgOutDir, imgSegEFFXNm)
+            # FIXIT FIXIT - latestIdx will be off when reverse indexing ?
+            f_idx = eyeutil.getLargestIdx(imgOutDir, imgSegEFFXNm)
             nextInc = 1 + f_idx
 
-        if ctrl == 1:
-            offset = round((len(imgFileList) - 1) * random.random()) + 1
-        else:
-            offset = 0
+        numSegments = 4
 
         # // *--------------------------------------------------------------* //
-        if effx == 0:
-            effx = round((numEffx - 1) * random.random()) + 1
 
-        if effx == 1:
-            solarX = np.linspace(5.0, 255.0, numFrames)
-        elif effx == 2:
-            alphaX = np.linspace(0.0001, 1.0, numFrames)
+        if effx == 2 or effx == 5:
+            fwdRev = round(random.random()) + 1
+        else:
+            fwdRev = 1
 
-        if effx == 5:
+        if effx == 3 or effx == 6:
+            # * index 1 - numSegments, then subtract 1 when using as Idx
+            maskSel = int(round((numSegments - 1) * random.random()) + 1)
+        else:
+            maskSel = 0
+
+        # for rotation EFFX, define cyclicZn rotation angles
+        if effx > 3:
             znArr = []
-            mxFrames = np.zeros(numSegments)
+            mxFrames = np.array([3 * xFrames, 4 * xFrames, 6 * xFrames, 8 * xFrames])
             for ii in range(numSegments):
                 mxFrames[ii] = xFrames * (round((numSegments - 1) * random.random()) + 1)
-                # znArr.append(eyeutil.cyclicZn(int(mxFrames[ii])))      # less one, then repeat zn[0] for full 360
+                znArr.append(eyeutil.cyclicZn(int(mxFrames[ii]) - 1))      # less one, then repeat zn[0] for full 360
+
         # // *--------------------------------------------------------------* //
 
-        if fadeInOut == 0:
-            fadeInOut = round(random.random()) + 1
-
-        if fwdRev == 0:
-            fwdRev = round(random.random()) + 1
-
         for i in range(numFrames):
-            if fwdRev == 2:
-                img1 = imio.imread(imgFileList[eyeutil.circ_idx((numFrames - 1 - i) + offset, len(imgFileList))])
+
+            if maskSel == 0:
+                # maskSrc = imio.imread(
+                #     '/home/eschei/xodmk/xodCode/xodPython/data/src/mov/candyGirl1080/candyGirl108002260.jpg')
+                maskSrc = imio.imread(segSeqArray[eyeutil.circ_idx(i + offsetIdx + n_offset, len(segSeqArray))])
+                # print(segSeqArray[eyeutil.circ_idx(i + offsetIdx + n_offset, len(segSeqArray))])
             else:
-                img1 = imio.imread(imgFileList[eyeutil.circ_idx(i + offset, len(imgFileList))])
+                maskSrc = imio.imread(imgSeqArray[maskSel - 1][eyeutil.circ_idx(i + offsetIdx + n_offset,
+                                                                                len(imgSeqArray[maskSel - 1]))])
+                # print(imgSeqArray[maskSel - 1][eyeutil.circ_idx(i + offsetIdx + n_offset,
+                #                                len(imgSeqArray[maskSel - 1]))])
 
-            imgPIL1 = Image.fromarray(img1)
             if srcReshape:
-                imgPIL1 = eyeutil.xodEyeReshape(imgPIL1, self.mstrSzX, self.mstrSzY, 0)
+                maskTmp = Image.fromarray(maskSrc)
+                maskTmp = eyeutil.xodEyeReshape(maskTmp, self.mstrSzX, self.mstrSzY, 0)
+                maskSrc = np.asarray(maskTmp)
 
-            # // *--------------------------------------------------------------* //
-            # linear select (no-effx) fwd <-> back
-            if effx == 1:
-                resImg = xodeyesg.segmentEYEhist(imgPIL1)
+            # pdb.set_trace()
+
+            if effx == 0:
+                # Linear 4 Channel Segmentation Masking
+                eyeSrcArray = []
+                for j in range(numSegments):
+                    imgTmp = imio.imread(imgSeqArray[j][eyeutil.circ_idx(i + offsetIdx + n_offset, len(imgSeqArray[j]))])
+                    # print(imgSeqArray[j][eyeutil.circ_idx(i + offsetIdx + n_offset, len(imgSeqArray[j]))])
+                    if srcReshape:
+                        imgPILtmp = Image.fromarray(imgTmp)
+                        imgPILtmp = eyeutil.xodEyeReshape(imgPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                        imgTmp = np.asarray(imgPILtmp)
+                    eyeSrcArray.append(imgTmp)
+                resImg = xodeyesg.segmentEYEmaskFour(maskSrc, eyeSrcArray)
+
+            elif effx == 1:
+                # xFrame synced Random Source Offsets
+                eyeSrcArray = []
+                for j in range(numSegments):
+                    imgTmp = imio.imread(imgSeqArray[j][eyeutil.circ_idx(i + offsetIdx + n_offset,
+                                                                         len(imgSeqArray[j]))])
+                    if srcReshape:
+                        imgPILtmp = Image.fromarray(imgTmp)
+                        imgPILtmp = eyeutil.xodEyeReshape(imgPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                        imgTmp = np.asarray(imgPILtmp)
+                    eyeSrcArray.append(imgTmp)
+                resImg = xodeyesg.segmentEYEmaskFour(maskSrc, eyeSrcArray)
 
             elif effx == 2:
-                imgSegment = xodeyesg.segmentEYEhist(imgPIL1)
-                imgPIL2 = Image.fromarray(imgSegment)
-                if fadeInOut == 2:
-                    alphaB = Image.blend(imgPIL1, imgPIL2, alphaX[i])
-                else:
-                    alphaB = Image.blend(imgPIL2, imgPIL1, alphaX[i])
-                alphaB = ImageOps.autocontrast(alphaB, cutoff=0)
-                resImg = np.array(alphaB)
+                # xFrame synced Random Offsets & Random FWD/REV
+                eyeSrcArray = []
+                for j in range(numSegments):
+                    if fwdRev == 2:
+                        imgTmp = imio.imread(
+                            imgSeqArray[j][eyeutil.circ_idx((numFrames - 1 - i) + offsetIdx + n_offset,
+                                                            len(imgSeqArray[j]))])
+                    else:
+                        imgTmp = imio.imread(imgSeqArray[j][eyeutil.circ_idx(i + offsetIdx + n_offset,
+                                                                             len(imgSeqArray[j]))])
+                    if srcReshape:
+                        imgPILtmp = Image.fromarray(imgTmp)
+                        imgPILtmp = eyeutil.xodEyeReshape(imgPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                        imgTmp = np.asarray(imgPILtmp)
+                    eyeSrcArray.append(imgTmp)
+                resImg = xodeyesg.segmentEYEmaskFour(maskSrc, eyeSrcArray)
 
             elif effx == 3:
-                # reverse index linear
-                maskSrcArr = []
-
-                # pdb.set_trace()
+                # xFrame synced Random Mask Source & Offsets & Random FWD/REV
+                eyeSrcArray = []
                 for j in range(numSegments):
                     if fwdRev == 2:
-                        # reverse index linear
-                        # maskImgTmp = Image.open(maskSrcArrList[scanIdx][eyeutil.circ_idx((numFrames - 1 - i) + offset,
-                        #                                                 len(maskSrcArrList[scanIdx]))])
-                        maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx((numFrames - 1 - i) + offset,
-                                                                                    len(maskSrcArrList[j]))])
+                        imgTmp = imio.imread(
+                            imgSeqArray[j][eyeutil.circ_idx((numFrames - 1 - i) + offsetIdx + n_offset,
+                                                            len(imgSeqArray[j]))])
                     else:
-                        # forward index linear
-                        maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx(i + offset,
-                                                                                    len(maskSrcArrList[j]))])
-                    maskPILtmp = Image.fromarray(maskImgTmp)
+                        imgTmp = imio.imread(imgSeqArray[j][eyeutil.circ_idx(i + offsetIdx + n_offset,
+                                                                             len(imgSeqArray[j]))])
                     if srcReshape:
-                        maskPILtmp = eyeutil.xodEyeReshape(maskPILtmp, self.mstrSzX, self.mstrSzY, 0)
-                    maskArrtmp = np.asarray(maskPILtmp)
-                    maskSrcArr.append(maskArrtmp)
-
-                # ??? check if needed... extra np conversion??
-                maskSrcArr = np.asarray(maskSrcArr)
-                resImg = xodeyesg.segmentEYEmask_FourSg(imgPIL1, maskSrcArr)
+                        imgPILtmp = Image.fromarray(imgTmp)
+                        imgPILtmp = eyeutil.xodEyeReshape(imgPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                        imgTmp = np.asarray(imgPILtmp)
+                    eyeSrcArray.append(imgTmp)
+                resImg = xodeyesg.segmentEYEmaskFour(maskSrc, eyeSrcArray)
 
             elif effx == 4:
-                # reverse index linear
-                maskSrcArr = []
-
-                scanIdxArr = np.zeros(numSegments)
-                if i % xFrames == 0:
-                    print('xodEYEv.py - scanIdxArr[]:')
-                    for ii in range(numSegments):
-                        scanIdxArr[ii] = round((numSegments - 1) * random.random())
-                        print('scanIdxArr[' + str(ii) + '] = ' + str(scanIdxArr[ii]))
-
-                # pdb.set_trace()
+                # Linear 4 Channel Segmentation Masking
+                eyeSrcArray = []
                 for j in range(numSegments):
-                    if fwdRev == 2:
-                        # reverse index linear
-                        # maskImgTmp = Image.open(maskSrcArrList[scanIdx][eyeutil.circ_idx((numFrames - 1 - i) + offset,
-                        #                                                 len(maskSrcArrList[scanIdx]))])
-                        maskImgTmp = imio.imread(
-                            maskSrcArrList[int(scanIdxArr[j])][eyeutil.circ_idx((numFrames - 1 - i) + offset,
-                                                                                len(maskSrcArrList[int(scanIdxArr[j])]))])
-                    else:
-                        # forward index linear
-                        # maskImgTmp = Image.open(maskSrcArrList[scanIdx][eyeutil.circ_idx(i + offset,
-                        #                                                 len(maskSrcArrList[scanIdx]))])
-                        maskImgTmp = imio.imread(maskSrcArrList[int(scanIdxArr[j])][eyeutil.circ_idx(i + offset,
-                                                                                    len(maskSrcArrList[int(scanIdxArr[j])]))])
-
-                    maskPILtmp = Image.fromarray(maskImgTmp)
+                    imgTmp = imio.imread(imgSeqArray[j][eyeutil.circ_idx(i + offsetIdx + n_offset,
+                                                                         len(imgSeqArray[j]))])
+                    imgPILtmp = Image.fromarray(imgTmp)
                     if srcReshape:
-                        maskPILtmp = eyeutil.xodEyeReshape(maskPILtmp, self.mstrSzX, self.mstrSzY, 0)
-                    maskArrtmp = np.asarray(maskPILtmp)
-                    maskSrcArr.append(maskArrtmp)
-
-                # ??? check if needed... extra np conversion??
-                maskSrcArr = np.asarray(maskSrcArr)
-
-                maskSrcArr = np.asarray(maskSrcArr)
-                resImg = xodeyesg.segmentEYEmask_FourSg(imgPIL1, maskSrcArr)
+                        imgPILtmp = eyeutil.xodEyeReshape(imgPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                    znReal = znArr[j][eyeutil.circ_idx(i, len(znArr[j]))].real
+                    znImag = znArr[j][eyeutil.circ_idx(i, len(znArr[j]))].imag
+                    ang = (atan2(znImag, znReal)) * 180 / np.pi
+                    if rotDir % 2 == 1:
+                        ang = -ang
+                    imgPILtmp_rot = ndimage.rotate(imgPILtmp, ang, reshape=False)
+                    imgPILtmp_rotZ = eyeutil.cropZoom(imgPILtmp_rot, 2)
+                    imgTmp_rot = np.asarray(imgPILtmp_rotZ)
+                    eyeSrcArray.append(imgTmp_rot)
+                resImg = xodeyesg.segmentEYEmaskFour(maskSrc, eyeSrcArray)
 
             elif effx == 5:
-                # reverse index linear
-                maskSrcArr = []
-                angArr = []
-
-                # pdb.set_trace()
+                # xFrame synced Random Source Offsets
+                eyeSrcArray = []
+                rotDir = 0
                 for j in range(numSegments):
-                    angArr[j] = (atan2(znArr[j][i % (mxFrames[j] - 1)].imag,
-                                       znArr[j][i % (mxFrames[j] - 1)].real)) * 180 / np.pi
-                    if int(round(random.random())):
-                        angArr[j] = -angArr[j]
-
-                    if fwdRev == 2:
-                        # reverse index linear
-                        maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx((numFrames - 1 - i) + offset,
-                                                                                    len(maskSrcArrList[j]))])
-                    else:
-                        # forward index linear
-                        maskImgTmp = imio.imread(maskSrcArrList[j][eyeutil.circ_idx(i + offset,
-                                                                                    len(maskSrcArrList[j]))])
-
-                    maskPILtmp = Image.fromarray(maskImgTmp)
+                    imgTmp = imio.imread(imgSeqArray[j][eyeutil.circ_idx(i + offsetIdx + n_offset,
+                                                                         len(imgSeqArray[j]))])
+                    imgPILtmp = Image.fromarray(imgTmp)
                     if srcReshape:
-                        maskPILtmp = eyeutil.xodEyeReshape(maskPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                        imgPILtmp = eyeutil.xodEyeReshape(imgPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                    znReal = znArr[j][eyeutil.circ_idx(i, len(znArr[j]))].real
+                    znImag = znArr[j][eyeutil.circ_idx(i, len(znArr[j]))].imag
+                    ang = (atan2(znImag, znReal)) * 180 / np.pi
+                    if rotDir % 2 == 1:
+                        ang = -ang
+                    imgPILtmp_rot = ndimage.rotate(imgPILtmp, ang, reshape=False)
+                    imgPILtmp_rotZ = eyeutil.cropZoom(imgPILtmp_rot, 2)
+                    imgTmp_rot = np.asarray(imgPILtmp_rotZ)
+                    eyeSrcArray.append(imgTmp_rot)
 
-                    maskImg_rotB = ndimage.rotate(maskPILtmp, angArr[j], reshape=False)
-                    maskImg_rotZ = eyeutil.cropZoom(maskImg_rotB, 2)
-                    # maskImg_rot = Image.fromarray(maskImg_rotZ)
+                resImg = xodeyesg.segmentEYEmaskFour(maskSrc, eyeSrcArray)
 
-                    maskSrcArr.append(maskImg_rotZ)
+            elif effx == 6:
+                # xFrame synced Random Mask Source & Offsets & Random FWD/REV
+                eyeSrcArray = []
+                for j in range(numSegments):
+                    if fwdRev == 2:
+                        imgTmp = imio.imread(
+                            imgSeqArray[j][eyeutil.circ_idx((numFrames - 1 - i) + offsetIdx + n_offset,
+                                                            len(imgSeqArray[j]))])
+                    else:
+                        imgTmp = imio.imread(imgSeqArray[j][eyeutil.circ_idx(i + offsetIdx + n_offset,
+                                                                             len(imgSeqArray[j]))])
+                    imgPILtmp = Image.fromarray(imgTmp)
+                    if srcReshape:
+                        imgPILtmp = eyeutil.xodEyeReshape(imgPILtmp, self.mstrSzX, self.mstrSzY, 0)
+                    znReal = znArr[j][eyeutil.circ_idx(i, len(znArr[j]))].real
+                    znImag = znArr[j][eyeutil.circ_idx(i, len(znArr[j]))].imag
+                    ang = (atan2(znImag, znReal)) * 180 / np.pi
+                    if rotDir % 2 == 1:
+                        ang = -ang
+                    imgPILtmp_rot = ndimage.rotate(imgPILtmp, ang, reshape=False)
+                    imgPILtmp_rotZ = eyeutil.cropZoom(imgPILtmp_rot, 2)
+                    imgTmp_rot = np.asarray(imgPILtmp_rotZ)
+                    eyeSrcArray.append(imgTmp_rot)
+                resImg = xodeyesg.segmentEYEmaskFour(maskSrc, eyeSrcArray)
 
-                maskSrcArr = np.asarray(maskSrcArr)
-                resImg = xodeyesg.segmentEYErotation_FourSg(img1, maskSrcArr)
             # // *--------------------------------------------------------------* //
 
             zr = ''

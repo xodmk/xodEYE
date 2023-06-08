@@ -16,7 +16,7 @@
 # *****************************************************************************
 
 import os
-# import sys
+import sys
 import glob
 import shutil
 from math import floor, ceil
@@ -31,7 +31,7 @@ from PIL import ImageOps
 # from PIL import ImageEnhance
 
 
-# temp python debugger - use >>>pdb.set_trace() to set break
+# temp python debugger - use >>> pdb.set_trace() to set break
 import pdb
 
 
@@ -44,11 +44,10 @@ import pdb
 
 def cyclicZn(n):
     """ calculates the Zn roots of unity """
-    cZn = np.zeros((n, 1))*(0+0j)    # column vector of zero complex values
+    cZn = np.zeros((n, 1)) * (0+0j)    # column vector of zero complex values
     for k in range(n):
         # z(k) = e^(((k)*2*pi*1j)/n)        # Define cyclic group Zn points
-        cZn[k] = np.cos(((k)*2*np.pi)/n) + np.sin(((k)*2*np.pi)/n)*1j   # Euler's identity
-
+        cZn[k] = np.cos((k * 2 * np.pi) / n) + np.sin((k * 2 * np.pi) / n) * 1j   # Euler's identity
     return cZn
 
 
@@ -126,7 +125,18 @@ def genFileList(dirList):
     return imgFileList
 
 
-def getLatestIdx(imgDir, imgNm):
+def getLargestIdx(imgDir, imgNm):
+    imgFileList = []
+    imgFileList.extend(sorted(glob.glob(imgDir + '/*.jpg')))
+    f_largest = imgFileList[-1]
+    f_fname = os.path.split(f_largest)[1]
+    f_idx = f_fname.replace(imgNm, '')
+    f_idx = int(f_idx.replace('.jpg', ''))
+
+    return f_idx
+
+
+def getLatestTimeIdx(imgDir, imgNm):
     f_list = []
     imagelist = glob.glob(imgDir+'/*.jpg')
     for s in imagelist:
@@ -402,7 +412,18 @@ def xodEyeReshape(img, SzX, SzY, high):
 
     # Expand: if either dimension is smaller than target, expand by the largest difference
     if expandX or expandY:
-        if xdiff >= ydiff:
+        if expandX and expandY:
+            if xdiff >= ydiff:
+                newWidth = SzX
+                newHeight = int(SzX / srcAspect)
+                # crop vertical dimension
+                cropTop = floor((newHeight - SzY) / 2)
+            else:
+                newWidth = int(SzY * srcAspect)
+                # crop horizontal dimension
+                cropLeft = floor((newWidth - SzX) / 2)
+                newHeight = SzY
+        elif expandX:
             newWidth = SzX
             newHeight = int(SzX / srcAspect)
             # crop vertical dimension
@@ -416,12 +437,23 @@ def xodEyeReshape(img, SzX, SzY, high):
 
     # Compress: if either dimension is smaller than target, expand by the largest difference
     elif compressX or compressY:
-        if xdiff <= ydiff:
+        if compressX and compressY:
+            if xdiff <= ydiff:
+                newWidth = SzX
+                newHeight = int(SzX / srcAspect)
+                # crop vertical dimension
+                cropTop = floor((newHeight - SzY) / 2)
+            else:
+                newWidth = int(SzY * srcAspect)
+                # crop horizontal dimension
+                cropLeft = floor((newWidth - SzX) / 2)
+                newHeight = SzY
+        elif compressX:
             newWidth = SzX
             newHeight = int(SzX / srcAspect)
             # crop vertical dimension
             cropTop = floor((newHeight - SzY) / 2)
-        else:
+        elif compressY:
             newWidth = int(SzY * srcAspect)
             # crop horizontal dimension
             cropLeft = floor((newWidth - SzX) / 2)
@@ -794,22 +826,16 @@ def imgInterLaceBpmDir(self, dir1, dir2, interlaceDir, xfadeFrames, reName):
 # // *********************************************************************** //
 
 def createLinearSeqArray(xodEyeDir, inputSrcDir):
+    print("\nRun createLinearSeqArray...")
     for sd in inputSrcDir:
-        # print(str(i))
-        p = lambda i: os.path.isdir(xodEyeDir + sd)
-        if p:
-            # print("Found src dir: " + xodEyeDir + sourceDir[i])
+        if os.path.isdir(xodEyeDir + sd):
             print("Found src dir: " + xodEyeDir + sd)
         else:
-            print("Error Source Dir doesn't exist: " + xodEyeDir + sd)
+            print("\nError Source Dir doesn't exist: " + xodEyeDir + sd)
+            sys.exit()
     imgSeqArray, imgSeqDir = createLinearSrcArray(xodEyeDir, inputSrcDir)
-
-    print('\nCreated linear imgSeqArray: - Array of .jpg file paths\n')
-    print("# of images in Array: " + str(len(imgSeqArray)))
-
-    # pdb.set_trace()
-
-    print('\nCreated "imgSeqArray, imgSeqDir" => Array of .jpg file paths in source dir\n')
+    print('Created "imgSeqArray, imgSeqDir" => Array of .jpg file paths')
+    print(" - Number of images in imgSeqArray: " + str(len(imgSeqArray)))
     return imgSeqArray, imgSeqDir
 
 
@@ -830,20 +856,18 @@ def createLinearSrcArray(eyeRootDir, sourceDir):
 
 
 def createMultiImgSeqArray(xodEyeDir, inputSrcDir):
+    print("\nRun createMultiImgSeqArray...")
     for sd in inputSrcDir:
-        # print(str(i))
-        p = lambda i: os.path.isdir(xodEyeDir + sd)
-        if p:
+        if os.path.isdir(xodEyeDir + sd):
             # print("Found src dir: " + xodEyeDir + sourceDir[i])
             print("Found src dir: " + xodEyeDir + sd)
         else:
-            print("Error Source Dir doesn't exist: " + xodEyeDir + sd)
+            print("\nError Source Dir doesn't exist: " + xodEyeDir + sd)
+            sys.exit()
     multiSeqArray, multiSeqDir = createMultiSrcArray(xodEyeDir, inputSrcDir)
-    print('\nCreated imgSrcArray: - Array of .jpg file paths\n')
-    # pdb.set_trace()
+    print('Created "multiSeqArray, multiSeqDir" => Array of Arrays of .jpg file paths')
     for q in range(len(multiSeqDir)):
-        print(multiSeqDir[q])
-        print("# of images in Multi Array: " + str(len(multiSeqArray[q])))
+        print(" - Number of images in multiSeqArray[" + str(q) + "]: " + str(len(multiSeqArray[q])))
     return multiSeqArray, multiSeqDir
 
 
@@ -858,7 +882,6 @@ def createMultiSrcArray(eyeRootDir, sourceDir):
         sortedDir = sorted(glob.glob(sDirTmp + '*'))
         for s in sortedDir:
             tempSeqArray.append(s.replace('\\', '/'))
-        tempSeqArray.extend(tempSeqArray)
         multiSeqArray.append(tempSeqArray)
 
     return multiSeqArray, multiSrcDir

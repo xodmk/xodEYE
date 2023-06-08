@@ -106,7 +106,6 @@ import xodEYEdata as eyedata
 import xodEYEutil as eyeutil
 import xodEYEu as xodeyeu
 import xodEYEv as xodeyev
-import xodEYEsegment as xodeyesg
 import xodFFmpeg as xodffm
 # import xodEYEx as xodeyex
 
@@ -132,7 +131,7 @@ import xodmaAudioTools as xodaudio
 
 print('')
 print('// //////////////////////////////////////////////////////////////// //')
-print('// *---:: XODMK EYE ESP ::---*')
+print('// *---:: XODMK THEE CRYPT RESONATOR ::---*\n')
 print('// //////////////////////////////////////////////////////////////// //')
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -170,11 +169,16 @@ imgFormat = 'fjpg'
 # // *--------------------------------------------------------------* //
 
 # earSrcNm = 'electroCrypt_bshhx01.wav'                 # ~7  sec = ? frames
-earSrcNm = 'astroman2020_bts136bpmx03.wav'            # ~14 sec = 434 frames
+# earSrcNm = 'astroman2020_bts136bpmx03.wav'            # ~14 sec = 434 frames
+# earSrcNm = 'antimatterbk06.wav'                         # ~14
 # earSrcNm = 'mescaQuetzalcoatl135x002.wav'             # ~28
 # earSrcNm = 'glamourgoat014_93bpm.wav'                 # 31
-
+# earSrcNm = 'machinekoenji_beat02.wav'                 # ~31
 # earSrcNm = 'cabalisk_abstract.wav'                    # ~53
+
+# earSrcNm = 'heil-kitty-noizz.wav                      # ~57
+earSrcNm = 'kingOvSnailsCutx1.wav'                      # 1.00
+# earSrcNm = 'tonzuraFiveSix133_cut_u.wav               # ~1.26
 # earSrcNm = 'cabalisk_spaced.wav'                      # ~1.49
 # earSrcNm = 'The_Amen_Break_48K.wav'
 
@@ -217,7 +221,7 @@ elif EYE_MODE == 'XEYE_U':
     # // *--------------------------------------------------------------* //
     cntrlEYE = eyedata.xodEYEu_dict["MskDualESP"]
 
-    srcSequence = 0     # 0: direct
+    srcSequence = 0     # 0 = NA ;1 = linear array ; 2 = Multi Array
     srcReshape = 0
     xfadeSel = 0
     ctrlSel = 0
@@ -237,9 +241,8 @@ elif EYE_MODE == 'XEYE_U':
     # Set Image Source Directory (/eyeSrcDir + ...)
     sourceDir = ['/8018x/xodMetalSphynxEye8018x/']
 
-    # Set EYE Mask Directory (black & white high contrast img)
-    maskDir = eyeSrcDir + '/8018x/mask8018x/'
-    maskArray = sorted(glob.glob(maskDir + '*'))
+    # Optional - Set EYE Mask Directory (black & white high contrast img)
+    maskDir = ['/8018x/mask8018x/']
 
     # Set EYE Res Image Name
     # ex: eyeOutFileName = 'metalwitch8018xI_'
@@ -260,11 +263,11 @@ elif EYE_MODE == 'XEYE_V':
     # cntrlEYE = eyedata.xodEYEv_dict["AutoSeq"]
     # cntrlEYE = eyedata.xodEYEv_dict["ChainSeq"]
 
-    srcSequence = 1     # 0 = linear array ; 1 = Multi Array
+    srcSequence = 0     # 0 = NA ;1 = linear array ; 2 = Multi Array
     srcReshape = 1
     xfadeSel = 0
-    ctrlSel = 1
-    effxSel = 0
+    ctrlSel = 0
+    effxSel = 3
     cntrlOnsetDet = 0
     postProcess = 0
     cntrlRender = 1
@@ -282,25 +285,28 @@ elif EYE_MODE == 'XEYE_V':
 
     # sourceDir = ['/spiceIndicator1080/']
 
-    # auxSrcDir = ['/bananaSkanks1080/', '/wutangKungFuSrc1080/',
-    #              '/greenInfernoSrc1080/', '/baliBarong1080/']
+    # sourceDir = ['/imgSeqHumanEyeEsp/', '/imgSeqMescal/', '/candyGirl1080/',
+    #              '/missiledeathcult1080/', '/metalwitch8018xIII/']
 
-    # sourceDir = ['/spiceIndicator1080/', '/wizardOvMirrorsSrc/', '/imgSeqMescal/',
-    #              '/metalwitch8018xVII/', '/metalwitch8018xVIII/']
+    sourceDir = ['/candyGirl1080/', '/imgSeqMescal/',
+                 '/missiledeathcult1080/', '/metalwitch8018xIII/']
 
-    sourceDir = ['/spiceIndicator1080/', '/wutangKungFuSrc1080/',
-                 '/missiledeathcult1080/', '/bananaSkanks1080/']
+    # sourceDir = ['/spiceIndicator1080/', '/wutangKungFuSrc1080/',
+    #              '/missiledeathcult1080/', '/bananaSkanks1080/']
 
-    # Set EYE Mask Directory (black & white high contrast img)
-    maskDir = eyeSrcDir + '/8018x/mask8018x/'
-    maskArray = sorted(glob.glob(maskDir + '*'))
+    # Optional - Set EYE Mask Directory (black & white high contrast img)
+    maskDir = ['/8018x/mask8018x/']
+
+    # Optional - Set Auxiliary Directory (ex: Segmentation Sequence Source, etc..)
+    # auxDir = ['/spiceIndicator1080/']
+    auxDir = ['/candyGirl1080/']
 
     # Set EYE Res Image Name
     # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
-    eyeOutFileName = 'segmentedWitch_EXP01_'
+    eyeOutFileName = 'segmentedWitch_EXP03_'
 
     # *** must have / at end of variable ***
-    outDir = '/testout/segmentedWitch_EXP01/'
+    outDir = '/testout/segmentedWitch_EXP03/'
     eyeOutDir = dataOutDir + outDir
     os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
@@ -350,14 +356,11 @@ if cntrlRender == 1:
     os.makedirs(eyeOutMvDir, exist_ok=True)  # If Dir does not exist, makedir
 
 
-# *---------------------------------------------------------------------------*
-
 # /////////////////////////////////////////////////////////////////////////////
+# *--- UI CTRL Summary --*
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-firstSourceDir = xodEyeDir + sourceDir[0]
-print('\nImg Source Directory (first if array):\n' + firstSourceDir + '\n')
-print('Img Output Directory:\n' + eyeOutDir + '\n')
+print('EYE Sequence Output Directory:\n' + eyeOutDir + '\n')
 if cntrlRender == 1:
     print('Movie Output Directory:\n' + eyeOutMvDir + '\n')
 print('Wav Source Directory:\n' + earSrc + '\n')
@@ -542,21 +545,19 @@ if cntrlEYE == 'convBMPtoJPG':
 # #############################################################################
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-if srcSequence == 0:
+if srcSequence == 1:
     print('\n// *--------------------------------------------------------------* //')
     print('// *---:: XODMKEYE - Create Linear Source Sequence [Basic] ::---*')
     print('// *--------------------------------------------------------------* //')
 
     imgSeqArray, imgSeqDir = eyeutil.createLinearSeqArray(xodEyeDir, sourceDir)
-    # print('\nCreated "imgSeqArray, imgSeqDir" => Array of .jpg file paths in source dir\n')
 
-if srcSequence == 1:
+if srcSequence == 2:
     print('\n// *--------------------------------------------------------------* //')
     print('// *---:: XODMKEYE - Create Multi Source Sequence [Basic] ::---*')
     print('// *--------------------------------------------------------------* //')
 
     imgSeqArray, imgSeqDir = eyeutil.createMultiImgSeqArray(xodEyeDir, sourceDir)
-    # print('\nCreated "imgSeqArray, imgSeqDir" => Array of .jpg file paths in source dir\n')
 
 
 # FIXIT FIXIT
@@ -618,7 +619,7 @@ elif srcSequence == 5:
 if cntrlEYE == 'xodLinEFFX':
 
     print('\n// *--------------------------------------------------------------* //')
-    print('// *---::XODMKVIDEOu - Image Linear EFFX xFade Algorithm::---*')
+    print('// *---:: XODMK VFX - Image Linear EFFX xFade Algorithm ::---*')
     print('// *--------------------------------------------------------------* //')
 
     """ Tempo based linear effects
@@ -643,7 +644,7 @@ if cntrlEYE == 'xodLinEFFX':
     # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
 
     # pdb.set_trace()
-    # imgSeqArray = imgSrcArray[0]
+    imgSeqArray, imgSeqDir = eyeutil.createLinearSeqArray(xodEyeDir, sourceDir)
 
     print('\nBegin Processing frames...')
 
@@ -660,18 +661,25 @@ if cntrlEYE == 'xodLinEFFX':
 if cntrlEYE == 'xodSegmentEFFX':
 
     print('\n// *--------------------------------------------------------------* //')
-    print('// *---::XODMKVIDEOu - Image Segment EFFX xFade Algorithm::---*')
+    print('// *---:: XODMK VFX - Image Segment EFFX xFade Algorithm ::---*')
     print('// *--------------------------------------------------------------* //')
 
-    """ Tempo based Segmentation effects
-        numFrames       - total video output frames
-        xFrames         - Number of frames per xBeats
-        ctrl            - Offset Ctrl: 0 = linear process src images; 1: randomize offset src images
-        effx            - effects type: 0 = random ; 1 = fwd/rev ; 2 = solarize ;
-                                  3 = cRotate ; 4 = sobelXY ; 5 sobelZ
+    """ Tempo based Segmentation effects (4 Segmentation Channels)
+        segSeqArray    - 'Segmentation Source Array' = image sequence used for segmentation
+        imgSeqArray     - 'Source Array' = Array of 4 image sequences used for fill content
+        xLength         - length of video output sequence
+        framesPerSec    - Video frames per second
+        effx            - effects type:
+                            0 = Linear 4 Channel Segmentation Masking
+                            1 = Frame synced Random Source Offsets
+                            2 = xFrame synced Random Offsets & Random FWD/REV
+                            3 = xFrame synced Random Mask Source & Offsets & Random FWD/REV
+                            Rotation EFFX: rotation rates => 3xFrames, 4xFrames, 6xFrames, 8xFrames
+                            4 = Linear rotation: alternating rotations
+                            5 = Random Rotation: alternating rotations, Random Offsets & Random FWD/REV
+                            6 = xFrame synced Random Mask Source, alternating rotations, Random Offsets
         srcReshape      - crop Source Images to Output dimensions
-        fadeInOut       - effx direction: 0 = random ; 1 = clean->effx ; 2 = effx->clean
-        fwdRrev         - frame direction: 0 = random ; 1 = fwd ; 0 = rev
+        n_offset        - Next increment offset (used when chaining effects)
         n_digits        - number of digits for output frame index
         imgOutDir       - full path output directory
         maskSrcArrList  -   """
@@ -680,39 +688,21 @@ if cntrlEYE == 'xodSegmentEFFX':
 
     # If Dir does not exist, makedir:
     os.makedirs(eyeOutDir, exist_ok=True)
-    fadeInOut = 0
-    fwdRev = 0
-    ctrl = ctrlSel
     effx = effxSel
 
+    numFrames = int(ceil(xLength * framesPerSec))
+    numFrames = 372
     xFrames = int(np.ceil(eyeClks.framesPerBeat))
     # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
 
-    # imgSeqArray, imgSeqDir = createImgSeqArray(xodEyeDir, sourceDir)
+    n_offset = 0
 
-    if effx == 0 or effx >= 3:
-        # for d in auxSrcDir:
-        #     p = lambda i: os.path.isdir(xodEyeDir + d)
-        #     if p:
-        #         # print("Found src dir: " + xodEyeDir + sourceDir[i])
-        #         print("Found src dir: " + xodEyeDir + d)
-        #     else:
-        #         print("Error Source Dir doesn't exist: " + xodEyeDir + d)
-        # maskSrcDataArray, maskSrcDataDir = eyeutil.createSrcArray(xodEyeDir, auxSrcDir)
-        # print('\nCreated maskSrcDataArray: - Array of .jpg file paths\n')
-        # for p in range(len(maskSrcDataDir)):
-        #     print(maskSrcDataDir[p])
-        #     print("# of images in directory: " + str(len(maskSrcDataArray[p])))
-        maskSrcDataArray, maskSrcDataDir = eyeutil.createMultiImgSeqArray(xodEyeDir, maskDir)
-
-    else:
-        maskSrcDataArray = None
-
-    # pdb.set_trace()
+    segSeqArray, segSeqDir = eyeutil.createLinearSeqArray(xodEyeDir, auxDir)
+    imgSeqArray, imgSeqDir = eyeutil.createMultiImgSeqArray(xodEyeDir, sourceDir)
 
     print('\nBegin Processing frames...')
-    eyev.xodSegmentEFFX(imgSeqArray, xLength, framesPerSec, xFrames, srcReshape, ctrl, effx,
-                        fadeInOut, fwdRev, n_digits, eyeOutDir, maskSrcDataArray, eyeOutFileName)
+    eyev.xodSegmentEFFX(segSeqArray, imgSeqArray, numFrames, xFrames, effx,
+                        srcReshape, n_offset, n_digits, eyeOutDir, eyeOutFileName)
 
     print('\nProcessed images output to the following directory:')
     print(eyeOutDir)
@@ -1888,10 +1878,7 @@ if cntrlEYE == 'xodMskDualV':
     print('// *---:: XODMKEYE - EYE xodMskDualESP ::---*')
     print('// *--------------------------------------------------------------* //')
 
-    # srcXfadeDir = xodEyeDir+'eyeSrcExp23/'    # defined above
-    # eyeOutFileName = 'myOutputFileName'    # defined above
     xodMskDualESPNm = eyeOutFileName
-    # eyeOutDir = 'myOutputDirName'    # defined above
     xodMskDualESPDir = eyeOutDir
     os.makedirs(xodMskDualESPDir, exist_ok=True)
 
@@ -1903,12 +1890,19 @@ if cntrlEYE == 'xodMskDualV':
     inOut = 2       # 0: telescope out, 1: telescope in, 2: random per xfade
 
     sLength = xLength
+
+    # FIXIT FIXIT - TESTIT
+    # redo for consistency  (ex: maskDir = ['/mask8018x/'])
+    # maskDir = eyeSrcDir + 'maskDir[0]' # probably..
+    # maskDir = eyeSrcDir + '/8018x/mask8018x/'
+    # maskArray = sorted(glob.glob(maskDir + '*'))
+    maskSeqArray, maskSeqDir = eyeutil.createLinearSeqArray(xodEyeDir, maskDir)
     
     # pdb.set_trace()
 
-    eyev.xodMskDualV(imgSeqArray, maskArray, sLength, framesPerSec, xfadeFrames,
-                       n_digits, xodMskDualESPDir, imgOutNm=xodMskDualESPNm,
-                       effx=effxSel, inOrOut=inOut)
+    eyev.xodMskDualV(imgSeqArray, maskSeqArray, sLength, framesPerSec, xfadeFrames,
+                     n_digits, xodMskDualESPDir, imgOutNm=xodMskDualESPNm,
+                     effx=effxSel, inOrOut=inOut)
 
     print('\nProcessed images output to the following directory:')
     print(xodMskDualESPDir)
