@@ -128,10 +128,13 @@ def genFileList(dirList):
 def getLargestIdx(imgDir, imgNm):
     imgFileList = []
     imgFileList.extend(sorted(glob.glob(imgDir + '/*.jpg')))
-    f_largest = imgFileList[-1]
-    f_fname = os.path.split(f_largest)[1]
-    f_idx = f_fname.replace(imgNm, '')
-    f_idx = int(f_idx.replace('.jpg', ''))
+    if len(imgFileList) == 0:
+        f_idx = 0
+    else:
+        f_largest = imgFileList[-1]
+        f_fname = os.path.split(f_largest)[1]
+        f_idx = f_fname.replace(imgNm, '')
+        f_idx = int(f_idx.replace('.jpg', ''))
 
     return f_idx
 
@@ -162,7 +165,7 @@ def genNextFilename(imgFileList):
         if j == (len(imgFileList)):
             j = 0
         else:
-            j+=1
+            j += 1
         yield file_name
 
 

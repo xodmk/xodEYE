@@ -153,7 +153,7 @@ wavlength = 0
 # fs = 48000.0           # audio sample rate:
 framesPerSec = 30       # video frames per second:
 
-bpm = 133
+bpm = 135
 timeSig = 4             # time signature: 4 = 4/4; 3 = 3/4
 
 # set format of source img { fjpg, fbmp }
@@ -174,10 +174,13 @@ imgFormat = 'fjpg'
 # earSrcNm = 'mescaQuetzalcoatl135x002.wav'             # ~28
 # earSrcNm = 'glamourgoat014_93bpm.wav'                 # 31
 # earSrcNm = 'machinekoenji_beat02.wav'                 # ~31
+earSrcNm = 'noisefloor2021mvcut46sec.wav'               # 46
 # earSrcNm = 'cabalisk_abstract.wav'                    # ~53
+# earSrcNm = 'gedzealah_dtbx56sec.wav'                    # 56
 
 # earSrcNm = 'heil-kitty-noizz.wav                      # ~57
-earSrcNm = 'kingOvSnailsCutx1.wav'                      # 1.00
+# earSrcNm = 'kingOvSnailsCutx1.wav'                    # 1.00
+# earSrcNm = 'theTowerHoundsCutOneMin.wav'                # 1.00
 # earSrcNm = 'tonzuraFiveSix133_cut_u.wav               # ~1.26
 # earSrcNm = 'cabalisk_spaced.wav'                      # ~1.49
 # earSrcNm = 'The_Amen_Break_48K.wav'
@@ -195,6 +198,7 @@ earSrc = audioSrcDir + '/' + earSrcNm
 # EYE_MODE = 'XEYE_T'
 # EYE_MODE = 'XEYE_U'
 EYE_MODE = 'XEYE_V'
+# EYE_MODE = 'XEYE_R'     # render video only
 
 
 if EYE_MODE == 'XEYE_T':
@@ -267,7 +271,7 @@ elif EYE_MODE == 'XEYE_V':
     srcReshape = 1
     xfadeSel = 0
     ctrlSel = 0
-    effxSel = 3
+    effxSel = 6
     cntrlOnsetDet = 0
     postProcess = 0
     cntrlRender = 1
@@ -288,8 +292,9 @@ elif EYE_MODE == 'XEYE_V':
     # sourceDir = ['/imgSeqHumanEyeEsp/', '/imgSeqMescal/', '/candyGirl1080/',
     #              '/missiledeathcult1080/', '/metalwitch8018xIII/']
 
-    sourceDir = ['/candyGirl1080/', '/imgSeqMescal/',
-                 '/missiledeathcult1080/', '/metalwitch8018xIII/']
+    sourceDir = ['/wutangKungFuSrc1080/', '/enterTheeDragon_neurohedral1080/', '/wutangKungFuSrc1080/',
+                 '/mzgnaCII_astralCryptMeatIIx1080/', '/codeOfTheStreets1x1080/', '/russianSpaceWalk1080/',
+                 '/mzgnaCII_xodLolthDemonIIIx1080/', '/wizardOvMirror_lolthHydromaeda1080/', '/bananaSkanks1080/']
 
     # sourceDir = ['/spiceIndicator1080/', '/wutangKungFuSrc1080/',
     #              '/missiledeathcult1080/', '/bananaSkanks1080/']
@@ -299,14 +304,15 @@ elif EYE_MODE == 'XEYE_V':
 
     # Optional - Set Auxiliary Directory (ex: Segmentation Sequence Source, etc..)
     # auxDir = ['/spiceIndicator1080/']
-    auxDir = ['/candyGirl1080/']
+    auxDir = ['/candyGirl1080/', '/bananaSkanks1080/', '/missiledeathcult1080/', '/erdemKinay1080/',
+              '/wutangKungFuSrc1080/', '/tpopSpaceDancer1080/']
 
     # Set EYE Res Image Name
     # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
-    eyeOutFileName = 'segmentedWitch_EXP03_'
+    eyeOutFileName = 'noisefloorCSPHX46_'
 
     # *** must have / at end of variable ***
-    outDir = '/testout/segmentedWitch_EXP03/'
+    outDir = '/testout/noisefloorCSPHX46/'
     eyeOutDir = dataOutDir + outDir
     os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
@@ -320,6 +326,31 @@ elif EYE_MODE == 'XEYE_V':
         effxArray = ['xodLinSQFX_fwd', 'xodLinSQFX_fwd', 'xodLinSQFX_fwd', 'xodLinSQFX_fwd']
 
     # // *--------------------------------------------------------------* //
+
+elif EYE_MODE == 'XEYE_R':
+    # // *--------------------------------------------------------------* //
+    cntrlEYE = 0
+
+    srcSequence = 0     # 0: direct, 1: pre-scale
+    srcReshape = 0
+    xfadeSel = 0
+    ctrlSel = 0
+    effxSel = 0
+    cntrlOnsetDet = 0
+    postProcess = 0
+    cntrlRender = 1
+
+    SzX = 1920
+    SzY = 1080
+
+    # Set EYE Res Image Name
+    # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
+    eyeOutFileName = 'islandOvSkulls56'
+
+    # *** must have / at end of variable ***
+    outDir = '/testout/princessMantisCSPHX156/'
+    eyeOutDir = dataOutDir + outDir
+    os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
 else:
     # // *--------------------------------------------------------------* //
@@ -640,6 +671,7 @@ if cntrlEYE == 'xodLinEFFX':
     fwdRev = 0
     effx = effxSel
 
+    numFrames = int(ceil(xLength * framesPerSec))
     xFrames = int(np.ceil(eyeClks.framesPerBeat))
     # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
 
@@ -648,7 +680,7 @@ if cntrlEYE == 'xodLinEFFX':
 
     print('\nBegin Processing frames...')
 
-    eyev.xodLinEFFX(imgSeqArray, xLength, framesPerSec, xFrames, srcReshape, effx,
+    eyev.xodLinEFFX(imgSeqArray, numFrames, xFrames, srcReshape, effx,
                     fadeInOut, fwdRev, n_digits, eyeOutDir, eyeOutFileName)
 
     print('\nProcessed images output to the following directory:')
@@ -665,8 +697,8 @@ if cntrlEYE == 'xodSegmentEFFX':
     print('// *--------------------------------------------------------------* //')
 
     """ Tempo based Segmentation effects (4 Segmentation Channels)
-        segSeqArray    - 'Segmentation Source Array' = image sequence used for segmentation
-        imgSeqArray     - 'Source Array' = Array of 4 image sequences used for fill content
+        segSeqArray     - 'Segmentation Array' = Array of image sequences sequence used for segmentation
+        imgSeqArray     - 'Source Array' = Array of image sequences used for fill content
         xLength         - length of video output sequence
         framesPerSec    - Video frames per second
         effx            - effects type:
@@ -691,13 +723,15 @@ if cntrlEYE == 'xodSegmentEFFX':
     effx = effxSel
 
     numFrames = int(ceil(xLength * framesPerSec))
-    numFrames = 372
-    xFrames = int(np.ceil(eyeClks.framesPerBeat))
+
+    # Modify frames-per-beat
+    # xFrames = int(np.ceil(eyeClks.framesPerBeat)
+    xFrames = int(np.ceil(eyeClks.framesPerBeat) * 3)
     # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
 
     n_offset = 0
 
-    segSeqArray, segSeqDir = eyeutil.createLinearSeqArray(xodEyeDir, auxDir)
+    segSeqArray, segSeqDir = eyeutil.createMultiImgSeqArray(xodEyeDir, auxDir)
     imgSeqArray, imgSeqDir = eyeutil.createMultiImgSeqArray(xodEyeDir, sourceDir)
 
     print('\nBegin Processing frames...')

@@ -374,7 +374,7 @@ def segmentEYEmask_FourSg(eyeSrc, imgArr):
         all_segments_clean[segm3_closed] = maskEyeSrc3[segm3_closed]        # (0.86, 1, 0.0)
         all_segments_clean[segm4_closed] = maskEyeSrc4[segm4_closed]        # (0, 0, 0.2)
 
-        all_segments_clean = eyeutil.median_filter_rgb(all_segments_clean, 13)
+        # all_segments_clean = eyeutil.median_filter_rgb(all_segments_clean, 13)
 
     eyeRes = all_segments_clean
 
@@ -453,7 +453,7 @@ def segmentEYEmaskFour(maskSrc, eyeSrcArray):
 
     # print("Max Peak Locations" + str(maxPeaks))
     # print("Max Peak Values" + str(maxPeakVals))
-    print("peaks_hist" + str(peaks_hist) + ",    Max Peak Locations" + str(maxPeaks))
+    # print("peaks_hist" + str(peaks_hist) + ",    Max Peak Locations" + str(maxPeaks))
 
     # pdb.set_trace()
 
@@ -510,9 +510,7 @@ def segmentEYEmaskFour(maskSrc, eyeSrcArray):
         all_segments_clean[segm3_closed] = maskEyeSrc3[segm3_closed]        # (0.86, 1, 0.0)
         all_segments_clean[segm4_closed] = maskEyeSrc4[segm4_closed]        # (0, 0, 0.2)
 
-        all_segments_clean = eyeutil.median_filter_rgb(all_segments_clean, 13)
-
-    eyeRes = all_segments_clean
+    eyeRes = all_segments_clean.astype("uint8")
 
     # Debug / Inspection: Plot intermediate & final results
     if 0:
