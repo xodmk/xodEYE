@@ -441,7 +441,7 @@ class XodEYEv:
 
         if effx > 3:
             # extend xFrames for rotation effects
-            xFramesAlt = 8 * xFrames
+            xFramesAlt = 4 * xFrames
         else:
             xFramesAlt = xFrames
         xBeats = int(np.floor(numFrames / xFramesAlt))
@@ -521,6 +521,7 @@ class XodEYEv:
 
         # randomly select segmentation sequence
         maskSel = int(round((len(segSeqArray) - 1) * random.random()))
+        # pdb.set_trace()
 
         # Randomize selection of input source sequences
         seqSel = []
@@ -528,13 +529,12 @@ class XodEYEv:
             rndIdx = int(round((len(imgSeqArray) - 1) * random.random()))
             if rndIdx not in seqSel:
                 seqSel.append(rndIdx)
-        # pdb.set_trace()
 
         # for rotation EFFX, define cyclicZn rotation angles
         if effx > 3:
             rotXarr = []
             znArr = []
-            mxFrames = np.array([3 * xFrames, 4 * xFrames, 6 * xFrames, 8 * xFrames])
+            mxFrames = np.array([xFrames, 2 * xFrames, 3 * xFrames, 4 * xFrames])
             for ii in range(numSegments):
                 rotXarr.append(round(random.random()))
                 mxFrames[ii] = xFrames * (round((numSegments - 1) * random.random()) + 1)

@@ -153,7 +153,7 @@ wavlength = 0
 # fs = 48000.0           # audio sample rate:
 framesPerSec = 30       # video frames per second:
 
-bpm = 135
+bpm = 133
 timeSig = 4             # time signature: 4 = 4/4; 3 = 3/4
 
 # set format of source img { fjpg, fbmp }
@@ -170,22 +170,63 @@ imgFormat = 'fjpg'
 
 # earSrcNm = 'electroCrypt_bshhx01.wav'                 # ~7  sec = ? frames
 # earSrcNm = 'astroman2020_bts136bpmx03.wav'            # ~14 sec = 434 frames
-# earSrcNm = 'antimatterbk06.wav'                         # ~14
+# earSrcNm = 'antimatterbk06.wav'                       # ~14
 # earSrcNm = 'mescaQuetzalcoatl135x002.wav'             # ~28
 # earSrcNm = 'glamourgoat014_93bpm.wav'                 # 31
 # earSrcNm = 'machinekoenji_beat02.wav'                 # ~31
-earSrcNm = 'noisefloor2021mvcut46sec.wav'               # 46
+# earSrcNm = 'noisefloor2021mvcut46sec.wav'             # 46
 # earSrcNm = 'cabalisk_abstract.wav'                    # ~53
-# earSrcNm = 'gedzealah_dtbx56sec.wav'                    # 56
+# earSrcNm = 'gedzealah_dtbx56sec.wav'                  # 56
 
 # earSrcNm = 'heil-kitty-noizz.wav                      # ~57
 # earSrcNm = 'kingOvSnailsCutx1.wav'                    # 1.00
-# earSrcNm = 'theTowerHoundsCutOneMin.wav'                # 1.00
-# earSrcNm = 'tonzuraFiveSix133_cut_u.wav               # ~1.26
+# earSrcNm = 'theTowerHoundsCutOneMin.wav'              # 1.00
+# earSrcNm = 'tonzuraFiveSix133_cut_u.wav'              # ~1.26
+earSrcNm = 'noisefloor2021x133mvcut130.wav'             # 1.30
 # earSrcNm = 'cabalisk_spaced.wav'                      # ~1.49
 # earSrcNm = 'The_Amen_Break_48K.wav'
 
 earSrc = audioSrcDir + '/' + earSrcNm
+
+print('\n// *--------------------------------------------------------------* //')
+print('// *---:: Audio - Load .wav file ::---*')
+print('// *--------------------------------------------------------------* //')
+
+[wavSrc, numChannels, fs, xLength, xSamples] = xodaudio.load_wav(earSrc, wavlength)
+print('\nLoaded .wav file [ '+earSrc+' ]\n')
+
+if numChannels == 2:
+    wavSrc_ch1 = wavSrc[:, 0]
+    wavSrc_ch2 = wavSrc[:, 1]
+else:
+    wavSrc_ch1 = wavSrc
+    wavSrc_ch2 = 0
+
+# length of input signal - '0' => length of input .wav file
+print('Channel A Source Audio:')
+print('wavSrc Channels: --------------------- '+str(len(np.shape(wavSrc))))
+print('length of input signal in seconds: --- '+str(xLength))
+print('length of input signal in samples: --- '+str(xSamples))
+print('audio sample rate: ------------------- '+str(fs))
+print('wav file datatype: ------------------- '+str(sf.info(earSrc).subtype))
+
+period = 1.0 / fs
+
+
+print('\n// *--------------------------------------------------------------* //')
+print('// *---::Instantiate objects::---*')
+print('// *--------------------------------------------------------------* //')
+
+eyeClks = clks.XodClocks(xLength, fs, bpm, framesPerSec)
+print('\nCreated a xodClocks object')
+
+numFrames = int(ceil(xLength * framesPerSec))
+
+framesPerBeat = int(np.ceil(eyeClks.framesPerBeat))
+
+n_digits = int(ceil(np.log10(numFrames))) + 3
+
+# *---------------------------------------------------------------------------*
 
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
@@ -237,6 +278,16 @@ elif EYE_MODE == 'XEYE_U':
     SzX = 8018
     SzY = 8018
 
+    # // *---:: Create a XodEYEu object ::---*
+    eyeu = xodeyeu.XodEYEu(xLength, bpm, timeSig, SzX, SzY, imgFormat,
+                           framesPerSec=framesPerSec, fs=fs)
+    print('Created a XodEYEu object')
+
+    # // *---:: Modify frames-per-beat ::---*
+    # xFrames = int(np.ceil(eyeClks.framesPerBeat)
+    xFrames = int(np.ceil(eyeClks.framesPerBeat) * 3)
+    # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
+
     # // *---:: Set processing directories ::---*
 
     # Set top-level XEYE_U directory
@@ -282,6 +333,16 @@ elif EYE_MODE == 'XEYE_V':
     # SzX = 1080
     # SzY = 1920
 
+    # // *---:: Create a XodEYEv object ::---*
+    eyev = xodeyev.XodEYEv(xLength, bpm, timeSig, SzX, SzY, imgFormat,
+                           framesPerSec=framesPerSec, fs=fs)
+    print('Created a XodEYEv object')
+
+    # // *---:: Modify frames-per-beat ::---*
+    # xFrames = int(np.ceil(eyeClks.framesPerBeat)
+    xFrames = int(np.ceil(eyeClks.framesPerBeat) * 2)
+    # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
+
     # // *---:: Set processing directories ::---*
 
     # Set top-level XEYE_U directory
@@ -292,8 +353,9 @@ elif EYE_MODE == 'XEYE_V':
     # sourceDir = ['/imgSeqHumanEyeEsp/', '/imgSeqMescal/', '/candyGirl1080/',
     #              '/missiledeathcult1080/', '/metalwitch8018xIII/']
 
-    sourceDir = ['/wutangKungFuSrc1080/', '/enterTheeDragon_neurohedral1080/', '/wutangKungFuSrc1080/',
-                 '/mzgnaCII_astralCryptMeatIIx1080/', '/codeOfTheStreets1x1080/', '/russianSpaceWalk1080/',
+    sourceDir = ['/wizardOvMirror_cthulhuDeathRayLin5/', '/enterTheeDragon_neurohedral1080/', '/wutangKungFuSrc1080/',
+                 '/redSamurai_acidshark1080/', '/hardNeuralMizuguanaMx/', '/russianSpaceWalk1080/',
+                 '/necroFacilityCullorBlind/', '/mzgnaCII_astralCryptMeatIIx1080/', '/imgSeqHumanEyeEsp/',
                  '/mzgnaCII_xodLolthDemonIIIx1080/', '/wizardOvMirror_lolthHydromaeda1080/', '/bananaSkanks1080/']
 
     # sourceDir = ['/spiceIndicator1080/', '/wutangKungFuSrc1080/',
@@ -304,15 +366,15 @@ elif EYE_MODE == 'XEYE_V':
 
     # Optional - Set Auxiliary Directory (ex: Segmentation Sequence Source, etc..)
     # auxDir = ['/spiceIndicator1080/']
-    auxDir = ['/candyGirl1080/', '/bananaSkanks1080/', '/missiledeathcult1080/', '/erdemKinay1080/',
-              '/wutangKungFuSrc1080/', '/tpopSpaceDancer1080/']
+    auxDir = ['/candyGirl1080/', '/bananaSkanks1080/', '/missiledeathcult1080/', '/erdemKinay1080/', '/imgSeqMescal/',
+              '/wutangKungFuSrc1080/', '/tpopSpaceDancer1080/', '/russianSpaceWalk1080/']
 
     # Set EYE Res Image Name
     # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
-    eyeOutFileName = 'noisefloorCSPHX46_'
+    eyeOutFileName = 'noisefloorCSPHXmv_'
 
     # *** must have / at end of variable ***
-    outDir = '/testout/noisefloorCSPHX46/'
+    outDir = '/testout/noisefloorCSPHXmv/'
     eyeOutDir = dataOutDir + outDir
     os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
@@ -343,12 +405,16 @@ elif EYE_MODE == 'XEYE_R':
     SzX = 1920
     SzY = 1080
 
+    # // *---:: Modify frames-per-beat ::---*
+    xFrames = 0
+
     # Set EYE Res Image Name
     # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
-    eyeOutFileName = 'islandOvSkulls56'
+    eyeOutFileName = 'noisefloorCSPHXmv'
 
+    # Set the output directory that will be used as the srcDir (!input!) for FFmpeg
     # *** must have / at end of variable ***
-    outDir = '/testout/princessMantisCSPHX156/'
+    outDir = '/testout/noisefloorCSPHXmvcut130s/'
     eyeOutDir = dataOutDir + outDir
     os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
@@ -406,39 +472,15 @@ print('CTRL Eye-Algorithm = '+str(cntrlEYE))
 print('CTRL Post-Process  = '+str(postProcess))
 print('CTRL Render Video  = '+str(cntrlRender))
 
-print('\nXodEYE bpm: --------------------------- '+str(bpm))
-print('XodEYE timeSig: ----------------------- '+str(timeSig)+'/4')
-print('XodEYE Img Format: -------------------- '+imgFormat)
-print('XodEYE Img Dimensions [X, Y]: --------- '+str(SzX)+' x '+str(SzY))
-
+print('\nXodEYE bpm: --------------------------- ' + str(bpm))
+print('XodEYE timeSig: ----------------------- ' + str(timeSig) + '/4')
+print('XodEYE Img Format: -------------------- ' + imgFormat)
+print('XodEYE Img Dimensions [X, Y]: --------- ' + str(SzX) + ' x ' + str(SzY))
+print('XodEYE xFrames (frames-per-beat): ----- ' + str(xFrames))
 
 # /////////////////////////////////////////////////////////////////////////////
 # *--- End: USER INTERFACE --*
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-print('\n// *--------------------------------------------------------------* //')
-print('// *---:: Audio - Load .wav file ::---*')
-print('// *--------------------------------------------------------------* //')
-
-[wavSrc, numChannels, fs, xLength, xSamples] = xodaudio.load_wav(earSrc, wavlength)
-print('\nLoaded .wav file [ '+earSrc+' ]\n')
-
-if numChannels == 2:
-    wavSrc_ch1 = wavSrc[:, 0]
-    wavSrc_ch2 = wavSrc[:, 1]
-else:
-    wavSrc_ch1 = wavSrc
-    wavSrc_ch2 = 0
-
-# length of input signal - '0' => length of input .wav file
-print('Channel A Source Audio:') 
-print('wavSrc Channels: --------------------- '+str(len(np.shape(wavSrc))))
-print('length of input signal in seconds: --- '+str(xLength))
-print('length of input signal in samples: --- '+str(xSamples))
-print('audio sample rate: ------------------- '+str(fs))
-print('wav file datatype: ------------------- '+str(sf.info(earSrc).subtype))
-
-period = 1.0 / fs
 
 
 # /////////////////////////////////////////////////////////////////////////////
@@ -475,30 +517,6 @@ if cntrlOnsetDet == 1:
 # // *********************************************************************** //
 # // *********************************************************************** //
 
-
-print('\n// *--------------------------------------------------------------* //')
-print('// *---::Instantiate objects::---*')
-print('// *--------------------------------------------------------------* //')
-
-eyeClks = clks.XodClocks(xLength, fs, bpm, framesPerSec)
-print('\nCreated a xodClocks object')
-
-numFrames = int(ceil(xLength * framesPerSec))
-
-framesPerBeat = int(np.ceil(eyeClks.framesPerBeat))
-
-n_digits = int(ceil(np.log10(numFrames))) + 3
-
-eyeu = xodeyeu.XodEYEu(xLength, bpm, timeSig, SzX, SzY, imgFormat,
-                       framesPerSec=framesPerSec, fs=fs)
-print('Created a XodEYEu object')
-
-eyev = xodeyev.XodEYEv(xLength, bpm, timeSig, SzX, SzY, imgFormat,
-                       framesPerSec=framesPerSec, fs=fs)
-print('Created a XodEYEv object')
-
-
-# *---------------------------------------------------------------------------*
 
 print('\n// *--------------------------------------------------------------* //')
 print('// *---::system Parameters::---*')

@@ -411,7 +411,9 @@ def segmentEYEmaskFour(maskSrc, eyeSrcArray):
 
     denoise = denoise_nl_means(maskSrc, h=blurThresh * sigma_est, fast_mode=True, **patch_kw)
     denoise_ubyte = img_as_ubyte(denoise)
-    denoise_gray = eyeutil.grayConversion(denoise_ubyte)
+    denoise_gray_raw = eyeutil.grayConversion(denoise_ubyte)
+
+    denoise_gray = eyeutil.median_filter_gray(denoise_gray_raw, 11)
 
     # // *--------------------------------------------------------------* //
     # exp : compute histogram, find peaks in hist => major clusters of pixel data

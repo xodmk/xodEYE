@@ -1701,16 +1701,20 @@ def eyeSobelXY(img):
     return im_conv
 
 
-def median_filter_rgb(im_small, window_size):
+def median_filter_gray(imgSrc, window_size):
+    """ Applies a median filer to grayscale image """
+    imgConv = ndimage.median_filter(imgSrc, size=window_size)
+    return imgConv
+
+
+def median_filter_rgb(imgSrc, window_size):
     """ Applies a median filer to all colour channels """
     ims = []
     for d in range(3):
-        im_conv_d = ndimage.median_filter(im_small[:, :, d], size=(window_size, window_size))
+        im_conv_d = ndimage.median_filter(imgSrc[:, :, d], size=(window_size, window_size))
         ims.append(im_conv_d)
-
-    im_conv = np.stack(ims, axis=2).astype("uint8")
-    
-    return im_conv
+    imgConv = np.stack(ims, axis=2).astype("uint8")
+    return imgConv
 
 
 # // *********************************************************************** //
