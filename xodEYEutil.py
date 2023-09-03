@@ -27,8 +27,9 @@ from scipy.signal import convolve2d
 import imageio as imio
 from scipy import ndimage
 from PIL import Image
+from PIL import ImageFilter
 from PIL import ImageOps
-# from PIL import ImageEnhance
+from PIL import ImageEnhance
 
 
 # temp python debugger - use >>> pdb.set_trace() to set break
@@ -206,7 +207,7 @@ def isValidPIL(file_path):
         return False
 
 
-def xodRenameAll(srcDir, n_digits, dstName):
+def xodRenameAll(srcDir, outDir, n_digits, dstName):
 
     try:
         next(os.scandir(srcDir))
@@ -225,7 +226,7 @@ def xodRenameAll(srcDir, n_digits, dstName):
         newNm = dstName + '_' + strInc + '.jpg'
 
         src = f"{srcDir}/{filename}"  # foldername/filename, if .py file is outside folder
-        dst = f"{srcDir}/{newNm}"
+        dst = f"{outDir}/{newNm}"
 
         # rename() function will
         # rename all the files
@@ -1132,6 +1133,76 @@ def xodStrideInterpolate(imgFileList, xfadeFrames, effx, n_digits,
         
     return
 
+
+# // *********************************************************************** //
+# // *********************************************************************** //
+# // *---:: XODMK imgFileList Batch Processing ::---*
+# // *********************************************************************** //
+# // *********************************************************************** //
+
+def xodBatchPIL(srcDir, outDir, ctrl, imgOutNm='None'):
+    """ Batch process all .jpg files in srcDir using PIL functions
+        ctrl:
+            0 = Autocontrast
+            height = uses SzY & auto calculates X """
+
+    try:
+        next(os.scandir(srcDir))
+    except:
+        print('Soure directory is empty')
+        return False
+
+    try:
+        os.path.isdir(outDir)
+    except:
+        print('Output directory is does not exist')
+        return False
+
+    if imgOutNm != 'None':
+        imgProcOutNm = imgOutNm
+    else:
+        imgProcOutNm = 'xodBatchPILOut'
+
+    # CURRENT - use fixed values for Contrast & Sharpness
+    contrastVal = 1.5
+    SharpnessVal = 2
+
+    imgFileList = []
+    imgFileList.extend(sorted(glob.glob(srcDir + '*')))
+    imgCount = len(imgFileList)
+    # Find num digits required to represent max index
+    n_digits = int(ceil(np.log10(imgCount))) + 2
+    nextInc = 0
+    for k in range(imgCount):
+        srcImg = Image.open(imgFileList[k])
+
+        if ctrl == 0:
+            enhancer = ImageEnhance.Contrast(srcImg)
+            imgProc = enhancer.enhance(contrastVal)
+        elif ctrl == 1:
+            enhancer = ImageEnhance.Sharpness(srcImg)
+            imgProc = enhancer.enhance(SharpnessVal)
+        elif ctrl == 2:
+            enhancer = ImageEnhance.Contrast(srcImg)
+            imgTemp = enhancer.enhance(contrastVal)
+            enhancer = ImageEnhance.Sharpness(imgTemp)
+            imgProc = enhancer.enhance(SharpnessVal)
+        else:
+            enhancer = ImageEnhance.Contrast(srcImg)
+            imgProc = enhancer.enhance(1.5)
+
+        # auto increment output file name
+        nextInc += 1
+        zr = ''  # reset lead-zero count to zero each itr
+        for j in range(n_digits - len(str(nextInc))):
+            zr += '0'
+        strInc = zr + str(nextInc)
+        imgProcNm = imgProcOutNm + strInc + '.jpg'
+
+        imgProcFull = outDir + imgProcNm
+        imio.imwrite(imgProcFull, imgProc)
+
+    return
 
 # // *********************************************************************** //    
 # // *********************************************************************** //

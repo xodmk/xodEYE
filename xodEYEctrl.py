@@ -71,8 +71,8 @@ rootDir = os.path.dirname(currentDir)
 dataDir = rootDir+'/data'
 dataSrcDir = dataDir+'/src'
 
-movSrcDir = dataDir+'/src/mov'
-eyeSrcDir = dataDir+'/src/eye'
+movSrcDir = dataSrcDir+'/mov'
+eyeSrcDir = dataSrcDir+'/eye'
 
 dataOutDir = dataDir+'/res'
 movOutDir = dataDir+'/res/movout'
@@ -142,13 +142,19 @@ print('// //////////////////////////////////////////////////////////////// //')
 # // *---:: CryptResonator USR PARAM ::---*
 # // *--------------------------------------------------------------* //
 
-# *-- wavlength: processing length (seconds) ---------------------*
+# __:: Select EYE Mode ::__
+# EYE_MODE = 'XEYE_T'
+# EYE_MODE = 'XEYE_U'
+# EYE_MODE = 'XEYE_V'
+EYE_MODE = 'XEYE_R'     # render video only
 
+
+# *-- wavlength: processing length (seconds) ---------------------*
 # 0   => full length of input .wav file
 # ### => usr defined length in SECONDS
-
 wavlength = 0
 # wavlength = 56
+
 
 # fs = 48000.0           # audio sample rate:
 framesPerSec = 30       # video frames per second:
@@ -159,100 +165,102 @@ timeSig = 4             # time signature: 4 = 4/4; 3 = 3/4
 # set format of source img { fjpg, fbmp }
 imgFormat = 'fjpg'
 
+# /////////////////////////////////////////////////////////////////////////////
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+# Bypass audio when running Util (EYE_MODE == 'XEYE_T')
+# *-- Bypass Audio Processing ---------------------*
+# 0   => Bypass Audio, do not load wav file (image only processing)
+# 1   => Do not Bypass Audio, load wav file
+
+if EYE_MODE == 'XEYE_T':
+    bypassAudio = True
+else:
+    bypassAudio = False
 
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
+if not bypassAudio:
+    # // *--------------------------------------------------------------* //
+    # // *---:: Set wav file source ::---*
+    # // *--------------------------------------------------------------* //
 
-# // *--------------------------------------------------------------* //
-# // *---:: Set wav file source ::---*
-# // *--------------------------------------------------------------* //
+    # earSrcNm = 'electroCrypt_bshhx01.wav'                 # ~7  sec = ? frames
+    # earSrcNm = 'astroman2020_bts136bpmx03.wav'            # ~14 sec = 434 frames
+    # earSrcNm = 'antimatterbk06.wav'                       # ~14
+    # earSrcNm = 'mescaQuetzalcoatl135x002.wav'             # ~28
+    # earSrcNm = 'glamourgoat014_93bpm.wav'                 # 31
+    # earSrcNm = 'machinekoenji_beat02.wav'                 # ~31
+    # earSrcNm = 'noisefloor2021mvcut46sec.wav'             # 46
+    # earSrcNm = 'cabalisk_abstract.wav'                    # ~53
+    # earSrcNm = 'gedzealah_dtbx56sec.wav'                  # 56
 
-# earSrcNm = 'electroCrypt_bshhx01.wav'                 # ~7  sec = ? frames
-# earSrcNm = 'astroman2020_bts136bpmx03.wav'            # ~14 sec = 434 frames
-# earSrcNm = 'antimatterbk06.wav'                       # ~14
-# earSrcNm = 'mescaQuetzalcoatl135x002.wav'             # ~28
-# earSrcNm = 'glamourgoat014_93bpm.wav'                 # 31
-# earSrcNm = 'machinekoenji_beat02.wav'                 # ~31
-# earSrcNm = 'noisefloor2021mvcut46sec.wav'             # 46
-# earSrcNm = 'cabalisk_abstract.wav'                    # ~53
-# earSrcNm = 'gedzealah_dtbx56sec.wav'                  # 56
+    # earSrcNm = 'heil-kitty-noizz.wav                      # ~57
+    # earSrcNm = 'kingOvSnailsCutx1.wav'                    # 1.00
+    # earSrcNm = 'theTowerHoundsCutOneMin.wav'              # 1.00
+    # earSrcNm = 'tonzuraFiveSix133_cut_u.wav'              # ~1.26
+    # earSrcNm = 'noisefloor2021x133mvcut130.wav'             # 1.30
+    # earSrcNm = 'tonzuraFiveSix133_cut_u.wav'                  # ~1.33
+    # earSrcNm = 'cabalisk_spaced.wav'                      # ~1.49
+    # earSrcNm = 'The_Amen_Break_48K.wav'
+    earSrcNm = 'arapaima_industrial_cut111_133bpm.wav'      # 1:11
 
-# earSrcNm = 'heil-kitty-noizz.wav                      # ~57
-# earSrcNm = 'kingOvSnailsCutx1.wav'                    # 1.00
-# earSrcNm = 'theTowerHoundsCutOneMin.wav'              # 1.00
-# earSrcNm = 'tonzuraFiveSix133_cut_u.wav'              # ~1.26
-earSrcNm = 'noisefloor2021x133mvcut130.wav'             # 1.30
-# earSrcNm = 'cabalisk_spaced.wav'                      # ~1.49
-# earSrcNm = 'The_Amen_Break_48K.wav'
+    earSrc = audioSrcDir + '/' + earSrcNm
 
-earSrc = audioSrcDir + '/' + earSrcNm
+    print('\n// *--------------------------------------------------------------* //')
+    print('// *---:: Audio - Load .wav file ::---*')
+    print('// *--------------------------------------------------------------* //')
 
-print('\n// *--------------------------------------------------------------* //')
-print('// *---:: Audio - Load .wav file ::---*')
-print('// *--------------------------------------------------------------* //')
+    [wavSrc, numChannels, fs, xLength, xSamples] = xodaudio.load_wav(earSrc, wavlength)
+    print('\nLoaded .wav file [ '+earSrc+' ]\n')
 
-[wavSrc, numChannels, fs, xLength, xSamples] = xodaudio.load_wav(earSrc, wavlength)
-print('\nLoaded .wav file [ '+earSrc+' ]\n')
+    if numChannels == 2:
+        wavSrc_ch1 = wavSrc[:, 0]
+        wavSrc_ch2 = wavSrc[:, 1]
+    else:
+        wavSrc_ch1 = wavSrc
+        wavSrc_ch2 = 0
 
-if numChannels == 2:
-    wavSrc_ch1 = wavSrc[:, 0]
-    wavSrc_ch2 = wavSrc[:, 1]
-else:
-    wavSrc_ch1 = wavSrc
-    wavSrc_ch2 = 0
+    # length of input signal - '0' => length of input .wav file
+    print('Channel A Source Audio:')
+    print('wavSrc Channels: --------------------- '+str(len(np.shape(wavSrc))))
+    print('length of input signal in seconds: --- '+str(xLength))
+    print('length of input signal in samples: --- '+str(xSamples))
+    print('audio sample rate: ------------------- '+str(fs))
+    print('wav file datatype: ------------------- '+str(sf.info(earSrc).subtype))
 
-# length of input signal - '0' => length of input .wav file
-print('Channel A Source Audio:')
-print('wavSrc Channels: --------------------- '+str(len(np.shape(wavSrc))))
-print('length of input signal in seconds: --- '+str(xLength))
-print('length of input signal in samples: --- '+str(xSamples))
-print('audio sample rate: ------------------- '+str(fs))
-print('wav file datatype: ------------------- '+str(sf.info(earSrc).subtype))
+    period = 1.0 / fs
 
-period = 1.0 / fs
+    print('\n// *--------------------------------------------------------------* //')
+    print('// *---::Instantiate objects::---*')
+    print('// *--------------------------------------------------------------* //')
 
+    eyeClks = clks.XodClocks(xLength, fs, bpm, framesPerSec)
+    print('\nCreated a xodClocks object')
 
-print('\n// *--------------------------------------------------------------* //')
-print('// *---::Instantiate objects::---*')
-print('// *--------------------------------------------------------------* //')
+    numFrames = int(ceil(xLength * framesPerSec))
 
-eyeClks = clks.XodClocks(xLength, fs, bpm, framesPerSec)
-print('\nCreated a xodClocks object')
+    framesPerBeat = int(np.ceil(eyeClks.framesPerBeat))
 
-numFrames = int(ceil(xLength * framesPerSec))
-
-framesPerBeat = int(np.ceil(eyeClks.framesPerBeat))
-
-n_digits = int(ceil(np.log10(numFrames))) + 3
+    n_digits = int(ceil(np.log10(numFrames))) + 3
 
 # *---------------------------------------------------------------------------*
 
 # /////////////////////////////////////////////////////////////////////////////
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-# // *--------------------------------------------------------------* //
-# // *---:: Select Program Control ::---*')
-# // *--------------------------------------------------------------* //
-
-# __:: Select EYE Mode ::__
-# EYE_MODE = 'XEYE_T'
-# EYE_MODE = 'XEYE_U'
-EYE_MODE = 'XEYE_V'
-# EYE_MODE = 'XEYE_R'     # render video only
-
-
 if EYE_MODE == 'XEYE_T':
     # // *--------------------------------------------------------------* //
-    cntrlEYE = eyedata.xodEYEutil_dict["ResizeAll"]
+    cntrlEYE = eyedata.xodEYEutil_dict["RenameAll"]
     # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpLin"]
     # cntrlEYE = eyedata.xodEYEutil_dict["FrameIntpStride"]
 
-    srcSequence = 1     # 0: direct
+    srcSequence = 0     # 0: direct
     srcReshape = 0
     xfadeSel = 0
     ctrlSel = 0
-    effxSel = 4
+    effxSel = 0
     cntrlOnsetDet = 0
     postProcess = 0
     cntrlRender = 0
@@ -260,11 +268,44 @@ if EYE_MODE == 'XEYE_T':
     SzX = 8018
     SzY = 8018
 
+    xFrames = 1
+    xLength = 0
+
+    # // *---:: Set processing directories ::---*
+
+    # Set top-level XEYE_U directory
+    # xodEyeDir = eyeSrcDir  # dataSrcDir + '/eye'
+    # xodEyeDir = movSrcDir  # dataSrcDir + '/mov'
+    xodEyeDir = dataSrcDir   # dataSrcDir
+
+    # Set Image Source Directory (/eyeSrcDir + ...)
+    # assumes source images located in dataDir
+    sourceDir = ['/arapaima_industrial_xmv/']
+
+    # Set EYE Res Image Name
+    # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
+    eyeOutFileName = 'arapaima_industrial_xmv_'
+
+    # Set EYE Res Directory
+    # *** must have / at end of variable ***
+    outDir = '/testout/arapaima_industrial_xmv/'
+    eyeOutDir = dataOutDir + outDir
+    os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
+
+    numFrames = sum(len(files) for _, _, files in os.walk(dataSrcDir + sourceDir[0]))
+    n_digits = int(ceil(np.log10(numFrames))) + 3
+
     # // *--------------------------------------------------------------* //
 
 elif EYE_MODE == 'XEYE_U':
     # // *--------------------------------------------------------------* //
     cntrlEYE = eyedata.xodEYEu_dict["MskDualESP"]
+
+    # FIXIT FIXIT - implement feature to bypass audio when running Util (EYE_MODE == 'XEYE_T')
+    # *-- Bypass Audio Processing ---------------------*
+    # 0   => Bypass Audio, do not load wav file (image only processing)
+    # 1   => Do not Bypass Audio, load wav file
+    bypassAudio = 0     # (?)
 
     srcSequence = 0     # 0 = NA ;1 = linear array ; 2 = Multi Array
     srcReshape = 0
@@ -277,6 +318,9 @@ elif EYE_MODE == 'XEYE_U':
 
     SzX = 8018
     SzY = 8018
+
+    # offset beginning of output img index if extending existing sequence
+    n_offset = 0
 
     # // *---:: Create a XodEYEu object ::---*
     eyeu = xodeyeu.XodEYEu(xLength, bpm, timeSig, SzX, SzY, imgFormat,
@@ -318,6 +362,12 @@ elif EYE_MODE == 'XEYE_V':
     # cntrlEYE = eyedata.xodEYEv_dict["AutoSeq"]
     # cntrlEYE = eyedata.xodEYEv_dict["ChainSeq"]
 
+    # FIXIT FIXIT - implement feature to bypass audio when running Util (EYE_MODE == 'XEYE_T')
+    # *-- Bypass Audio Processing ---------------------*
+    # 0   => Bypass Audio, do not load wav file (image only processing)
+    # 1   => Do not Bypass Audio, load wav file
+    bypassAudio = 0
+
     srcSequence = 0     # 0 = NA ;1 = linear array ; 2 = Multi Array
     srcReshape = 1
     xfadeSel = 0
@@ -333,15 +383,17 @@ elif EYE_MODE == 'XEYE_V':
     # SzX = 1080
     # SzY = 1920
 
+    # offset beginning of output img index if extending existing sequence
+    n_offset = 0
+
     # // *---:: Create a XodEYEv object ::---*
     eyev = xodeyev.XodEYEv(xLength, bpm, timeSig, SzX, SzY, imgFormat,
                            framesPerSec=framesPerSec, fs=fs)
     print('Created a XodEYEv object')
 
-    # // *---:: Modify frames-per-beat ::---*
-    # xFrames = int(np.ceil(eyeClks.framesPerBeat)
-    xFrames = int(np.ceil(eyeClks.framesPerBeat) * 2)
-    # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
+    # // *---:: # Define Cross-Fade frames ::---*
+    xFramesFactor = 6
+    x_frames = int(framesPerBeat * xFramesFactor)
 
     # // *---:: Set processing directories ::---*
 
@@ -353,10 +405,11 @@ elif EYE_MODE == 'XEYE_V':
     # sourceDir = ['/imgSeqHumanEyeEsp/', '/imgSeqMescal/', '/candyGirl1080/',
     #              '/missiledeathcult1080/', '/metalwitch8018xIII/']
 
-    sourceDir = ['/wizardOvMirror_cthulhuDeathRayLin5/', '/enterTheeDragon_neurohedral1080/', '/wutangKungFuSrc1080/',
-                 '/redSamurai_acidshark1080/', '/hardNeuralMizuguanaMx/', '/russianSpaceWalk1080/',
-                 '/necroFacilityCullorBlind/', '/mzgnaCII_astralCryptMeatIIx1080/', '/imgSeqHumanEyeEsp/',
-                 '/mzgnaCII_xodLolthDemonIIIx1080/', '/wizardOvMirror_lolthHydromaeda1080/', '/bananaSkanks1080/']
+    sourceDir = ['/hardNeuralMizuguanaMx/', '/enterTheeDragon_neurohedral1080/',
+                 '/harpeysBazagaBazumbaria/', '/BlackCobraSnakeCharmer/', '/redSamurai_acidshark1080/',
+                 '/mcpangolinjabijogiContrast/', '/moltenMayhem720/', '/cityScreenContrast/',
+                 '/wizardOvMirror_xodLolthDemonIxLin3/', '/wizardOvMirror_cthulhuDeathRayLin5/',
+                 '/russianSpaceWalk1080/', '/CleopatraEntersRomeContrast/']
 
     # sourceDir = ['/spiceIndicator1080/', '/wutangKungFuSrc1080/',
     #              '/missiledeathcult1080/', '/bananaSkanks1080/']
@@ -366,15 +419,16 @@ elif EYE_MODE == 'XEYE_V':
 
     # Optional - Set Auxiliary Directory (ex: Segmentation Sequence Source, etc..)
     # auxDir = ['/spiceIndicator1080/']
-    auxDir = ['/candyGirl1080/', '/bananaSkanks1080/', '/missiledeathcult1080/', '/erdemKinay1080/', '/imgSeqMescal/',
-              '/wutangKungFuSrc1080/', '/tpopSpaceDancer1080/', '/russianSpaceWalk1080/']
+    auxDir = ['/mcpangolinjabijogiContrast/', '/enterTheeDragon_neurohedral1080/', '/harpeysBazagaBazumbaria/',
+              '/BlackCobraSnakeCharmer/', '/cityScreenContrast/', '/JumpinJiveCabCallowayContrast/',
+              '/LesWeirdosDasWundwebarContrast/', '/CleopatraEntersRomeContrast/', '/theeEpicOvGilgamesh/']
 
     # Set EYE Res Image Name
     # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
-    eyeOutFileName = 'noisefloorCSPHXmv_'
+    eyeOutFileName = 'arapaima_industrial_xmv_'
 
     # *** must have / at end of variable ***
-    outDir = '/testout/noisefloorCSPHXmv/'
+    outDir = '/testout/arapaima_industrial_xmv/'
     eyeOutDir = dataOutDir + outDir
     os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
@@ -406,15 +460,15 @@ elif EYE_MODE == 'XEYE_R':
     SzY = 1080
 
     # // *---:: Modify frames-per-beat ::---*
-    xFrames = 0
+    x_frames = 0
 
     # Set EYE Res Image Name
     # ex: eyeOutFileName = 'eyeSegmentRes_EXP01_'
-    eyeOutFileName = 'noisefloorCSPHXmv'
+    eyeOutFileName = 'arapaima_industrial_xmv'
 
     # Set the output directory that will be used as the srcDir (!input!) for FFmpeg
     # *** must have / at end of variable ***
-    outDir = '/testout/noisefloorCSPHXmvcut130s/'
+    outDir = '/testout/arapaima_industrial_xmv/'
     eyeOutDir = dataOutDir + outDir
     os.makedirs(eyeOutDir, exist_ok=True)  # If Dir does not exist, makedir
 
@@ -460,7 +514,6 @@ if cntrlRender == 1:
 print('EYE Sequence Output Directory:\n' + eyeOutDir + '\n')
 if cntrlRender == 1:
     print('Movie Output Directory:\n' + eyeOutMvDir + '\n')
-print('Wav Source Directory:\n' + earSrc + '\n')
 
 print('// *--------------------------------------------------------------* //')
 print('\n// *--------------------------------------------------------------* //')
@@ -472,11 +525,13 @@ print('CTRL Eye-Algorithm = '+str(cntrlEYE))
 print('CTRL Post-Process  = '+str(postProcess))
 print('CTRL Render Video  = '+str(cntrlRender))
 
-print('\nXodEYE bpm: --------------------------- ' + str(bpm))
-print('XodEYE timeSig: ----------------------- ' + str(timeSig) + '/4')
 print('XodEYE Img Format: -------------------- ' + imgFormat)
 print('XodEYE Img Dimensions [X, Y]: --------- ' + str(SzX) + ' x ' + str(SzY))
-print('XodEYE xFrames (frames-per-beat): ----- ' + str(xFrames))
+
+if bypassAudio == 0:
+    print('Wav Source Directory:\n' + earSrc + '\n')
+    print('\nXodEYE bpm: --------------------------- ' + str(bpm))
+    print('XodEYE timeSig: ----------------------- ' + str(timeSig) + '/4')
 
 # /////////////////////////////////////////////////////////////////////////////
 # *--- End: USER INTERFACE --*
@@ -525,6 +580,7 @@ print('// *--------------------------------------------------------------* //')
 print('\nSequence Length (seconds): ---------- '+str(xLength))
 print('Video Frames per Second: ------------ '+str(framesPerSec))
 print('Video Frame Dimensions [X, Y]: ------ '+str(SzX)+' x '+str(SzY))
+print('Video Cross-Fade EFX frames: -------- '+str(x_frames))
 print('Total Output Frames: ---------------- '+str(numFrames))
 
 # Auxilliary Chained Sequence:
@@ -553,7 +609,7 @@ if cntrlEYE == 'xodRenameAll':
     else:
         srcDir = xodEyeDir + sourceDir[0]
 
-    eyeutil.xodRenameAll(srcDir, n_digits, eyeOutFileName)
+    eyeutil.xodRenameAll(srcDir, eyeOutDir, n_digits, eyeOutFileName)
 
     print('Saved Renamed images to the following location:')
     print(eyeOutDir)
@@ -689,7 +745,6 @@ if cntrlEYE == 'xodLinEFFX':
     fwdRev = 0
     effx = effxSel
 
-    numFrames = int(ceil(xLength * framesPerSec))
     xFrames = int(np.ceil(eyeClks.framesPerBeat))
     # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
 
@@ -740,21 +795,18 @@ if cntrlEYE == 'xodSegmentEFFX':
     os.makedirs(eyeOutDir, exist_ok=True)
     effx = effxSel
 
-    numFrames = int(ceil(xLength * framesPerSec))
+    # numFrames = int(ceil(xLength * framesPerSec))
+    xFrames = x_frames
 
-    # Modify frames-per-beat
-    # xFrames = int(np.ceil(eyeClks.framesPerBeat)
-    xFrames = int(np.ceil(eyeClks.framesPerBeat) * 3)
-    # xFrames = int(np.ceil(eyeClks.framesPerBeat) / 3)
-
-    n_offset = 0
+    nOffset = n_offset
+    nDigits = n_digits
 
     segSeqArray, segSeqDir = eyeutil.createMultiImgSeqArray(xodEyeDir, auxDir)
     imgSeqArray, imgSeqDir = eyeutil.createMultiImgSeqArray(xodEyeDir, sourceDir)
 
     print('\nBegin Processing frames...')
     eyev.xodSegmentEFFX(segSeqArray, imgSeqArray, numFrames, xFrames, effx,
-                        srcReshape, n_offset, n_digits, eyeOutDir, eyeOutFileName)
+                        srcReshape, nOffset, nDigits, eyeOutDir, eyeOutFileName)
 
     print('\nProcessed images output to the following directory:')
     print(eyeOutDir)
@@ -1018,7 +1070,26 @@ if cntrlEYE == 'xodImgXfade':
     print('// *--------------------------------------------------------------* //')
 
 # // *********************************************************************** //    
-    
+
+if cntrlEYE == 'xodBatchPIL':
+
+    if len(sourceDir) > 1:
+        print('sourceDir contains more than one directory')
+    else:
+        srcDir = dataSrcDir + sourceDir[0]
+
+    # pdb.set_trace()
+
+    eyeutil.xodBatchPIL(srcDir, eyeOutDir, ctrlSel, imgOutNm=eyeOutFileName)
+
+    print('Saved Batch Processed images to the following location:')
+    print(eyeOutDir)
+    print('\n')
+    print('// *--------------------------------------------------------------* //')
+
+# // *********************************************************************** //
+
+
 if cntrlEYE == 'xodXfadeTelescopeI':
 
     print('\n')

@@ -444,6 +444,8 @@ class XodEYEv:
             xFramesAlt = 4 * xFrames
         else:
             xFramesAlt = xFrames
+        if xFramesAlt > numFrames:
+            xFramesAlt = numFrames
         xBeats = int(np.floor(numFrames / xFramesAlt))
         xTail = int(np.floor(numFrames - xBeats * xFramesAlt))
 

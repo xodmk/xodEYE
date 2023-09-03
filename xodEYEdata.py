@@ -48,6 +48,7 @@ xodEYEutil_dict = {
             "FrameIntpLin"      : 'xodFrameIntpLin',    # ctrl 0: start[0], start[rndoffset]
             "FrameIntpCos"      : 'xodFrameIntpCos',    # ctrl 0: start[0], start[rndoffset]
             "FrameIntpStride"   : 'xodStrideIntp',
+            "BatchPIL"          : 'xodBatchPIL',
             "MirrorLR"          : 'xodMirrorLR',
             "ImgRndSel"         : 'xodImgRndSel',
             "ImgRotateSeq"      : 'xodImgRotateSeq',
